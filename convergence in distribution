@@ -1,0 +1,56 @@
+library(shiny)
+library(ConvergenceConcepts)
+
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+
+    # Application title
+    titlePanel("convergence in distribution"),
+
+    # Sidebar with a slider input for number of bins 
+    sidebarLayout(
+        sidebarPanel(
+            sliderInput("number",
+                        "Number of points in each path",
+                        min = 1,
+                        max = 1000,
+                        step=50,
+                        value = 30),
+            sliderInput("numberS",
+                        "Number of sample paths",
+                        min = 1,
+                        max = 500,
+                        step=30,
+                        value = 30) 
+        ),
+
+        # Show a plot of the generated distribution
+        mainPanel(
+           plotOutput("distPlot"),
+           plotOutput("distPlot1")
+    
+    )
+))
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+
+    output$distPlot <- renderPlot({
+        n=input$number
+        ns=input$numberS
+        
+        rand <- function(n){(cumsum(rchisq(n,df=1))-(1:n))/sqrt(2*(1:n))}
+        data <- generate(randomgen=rand,nmax=n,M=ns)$data
+        law.plot3d(data,pnorm)
+    })
+  
+    output$distPlot1 <- renderPlot({
+        n=input$number
+        ns=input$numberS
+        rand <- function(n){(cumsum(rchisq(n,df=1))-(1:n))/sqrt(2*(1:n))}
+        data <- generate(randomgen=rand,nmax=n,M=ns)$data
+        visualize.sp(data,main="Ten sample paths",col="grey")})
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
