@@ -1,0 +1,91 @@
+library(shiny)
+
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+
+    # Application title
+    titlePanel("Convergence in probability doesn't imply almost sure"),
+
+    # Sidebar with a slider input for number of bins 
+    sidebarLayout(
+        sidebarPanel(
+            sliderInput("number",
+                        "Number of points in each sample path",
+                        min = 1,
+                        max = 1000,
+                        step=50,
+                        value = 100),
+            sliderInput("numberS",
+                        "Number of sample paths",
+                        min = 1,
+                        max = 500,
+                        step=50,
+                        value = 50)
+        ),
+
+        # Show a plot of the generated distribution
+        mainPanel(
+           splitLayout(
+               plotOutput("distPlot"),
+           plotOutput("distPlot1")
+           
+        ),
+        splitLayout(
+            plotOutput("distPlot2"),
+            plotOutput("distPlot3")
+            
+        )
+    )
+))
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+    
+   
+
+    output$distPlot <- renderPlot({
+        n=input$number
+        ns=input$numberS
+        myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
+        data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
+        hist(criterion(data,mode="as")$crit,main="Histogram for criteria almost sure", 
+             xlab="Xn", 
+             border="blue", 
+             col="green")
+        
+    })
+    output$distPlot1 <- renderPlot({
+        n=input$number
+        ns=input$numberS
+        myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
+        data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
+        critr1 <- criterion(data,epsilon=0.05,mode="as")$crit
+        visualize.crit(critr1,main="Convergence almost surely?",col="red")
+        legend(0,5,legend=expression(hat(e)["n,2"]),lty=1,col="red")
+        
+    })
+    
+    output$distPlot2 <- renderPlot({
+        n=input$number
+        ns=input$numberS
+        myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
+        data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
+        hist(criterion(data,mode="p")$crit,main="Histogram for criteria in probability",xlab="Xn",border="red",col="purple")
+        
+    })
+    output$distPlot3 <- renderPlot({
+        n=input$number
+        ns=input$numberS
+        myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
+        data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
+        critr2 <- criterion(data,epsilon=0.05,mode="p")$crit
+        visualize.crit(critr2,main="Convergence in probability?",col="red")
+        legend(0,5,legend=expression(hat(e)["n,2"]),lty=1,col="red")
+        
+    })
+    
+    
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
