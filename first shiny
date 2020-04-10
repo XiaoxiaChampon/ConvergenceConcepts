@@ -1,4 +1,5 @@
 library(shiny)
+library(ConvergenceConcepts)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -27,12 +28,14 @@ ui <- fluidPage(
         mainPanel(
            splitLayout(
                plotOutput("distPlot"),
-           plotOutput("distPlot1")
+           plotOutput("distPlot1"),
+           plotOutput("distPlot2")
            
         ),
         splitLayout(
-            plotOutput("distPlot2"),
-            plotOutput("distPlot3")
+            plotOutput("distPlot3"),
+            plotOutput("distPlot4"),
+            plotOutput("distPlot5")
             
         )
     )
@@ -41,17 +44,13 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     
-   
-
+    
     output$distPlot <- renderPlot({
         n=input$number
         ns=input$numberS
         myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
         data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
-        hist(criterion(data,mode="as")$crit,main="Histogram for criteria almost sure", 
-             xlab="Xn", 
-             border="blue", 
-             col="green")
+        hist(criterion(data,mode="p")$crit,main="Hist. for crit. in probability",xlab="Xn",border="red",col="purple")
         
     })
     output$distPlot1 <- renderPlot({
@@ -59,18 +58,17 @@ server <- function(input, output) {
         ns=input$numberS
         myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
         data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
-        critr1 <- criterion(data,epsilon=0.05,mode="as")$crit
-        visualize.crit(critr1,main="Convergence almost surely?",col="red")
+        critr2 <- criterion(data,epsilon=0.05,mode="p")$crit
+        visualize.crit(critr2,main="Convergence in probability?",col="red")  ##visualisation of convergence criterion curvers
         legend(0,5,legend=expression(hat(e)["n,2"]),lty=1,col="red")
         
     })
-    
     output$distPlot2 <- renderPlot({
         n=input$number
         ns=input$numberS
         myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
         data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
-        hist(criterion(data,mode="p")$crit,main="Histogram for criteria in probability",xlab="Xn",border="red",col="purple")
+        visualize.sp(data,main="Ten sample paths", col="grey")      #visualize 10 sample paths
         
     })
     output$distPlot3 <- renderPlot({
@@ -78,9 +76,28 @@ server <- function(input, output) {
         ns=input$numberS
         myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
         data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
-        critr2 <- criterion(data,epsilon=0.05,mode="p")$crit
-        visualize.crit(critr2,main="Convergence in probability?",col="red")
+        hist(criterion(data,mode="as")$crit,main="Hist. for crit. almost sure", 
+             xlab="Xn", 
+             border="blue", 
+             col="green")
+        
+    })
+    output$distPlot4 <- renderPlot({
+        n=input$number
+        ns=input$numberS
+        myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
+        data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
+        critr1 <- criterion(data,epsilon=0.05,mode="as")$crit
+        visualize.crit(critr1,main="Convergence almost surely?",col="red")   #visualisation of convergence criterion curvers
         legend(0,5,legend=expression(hat(e)["n,2"]),lty=1,col="red")
+        
+    })
+    output$distPlot5 <- renderPlot({
+        n=input$number
+        ns=input$numberS
+        myrbinom <- function(n,alpha){rbinom(n,1,1/(1:n))*((1:n)**alpha)}
+        data <- generate(nmax=n,M=ns,myrbinom,args=list(alpha=0.5))$data
+        visualize.sp(data,main="Ten sample paths", col="grey")
         
     })
     
