@@ -59,7 +59,7 @@ server <- function(input, output) {
         beta=input$beta
         myrgamma=function(n){mean(rgamma(1:n,shape=alpha,scale=beta))}
         data=generate(nmax=ns,M=n,myrgamma)$data
-        hist(data,xlab=mu,col="green",border = "red")
+        hist(data,xlab="mu",col="green",border = "red")
         
     })
     output$distPlot1 <- renderPlot({
