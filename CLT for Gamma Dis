@@ -22,28 +22,32 @@ ui <- fluidPage(
                         max = 1000,
                         step=50,
                         value = 50),
-            sliderInput("ave",
-                        "mu",
-                        min = 0,
-                        max = 100,
-                        step=5,
-                        value = 10),
-            sliderInput("sig",
-                        "Standard deviation",
+            sliderInput("alpha",
+                        "alpha",
                         min = 1,
                         max = 50,
-                        step=2,
+                        step=5,
+                        value = 3),
+            sliderInput("beta",
+                        "beta",
+                        min = 1,
+                        max = 50,
+                        step=5,
                         value = 3)
+          
+                
+            ),
             
-        ),
+    
 
         # Show a plot of the generated distribution
         mainPanel(
            plotOutput("distPlot"),
-           plotOutput("distPlot1")
+           plotOutput("distPlot1"),
+           textOutput("mu" )
         )
-    )
-)
+    ))
+
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
@@ -51,23 +55,27 @@ server <- function(input, output) {
     output$distPlot <- renderPlot({
         n=input$samples
         ns=input$samplesize
-        mu=input$ave
-        sig=input$sig
-        myrnorm=function(n){mean(rnorm(1:n,mean=mu,sd=sig))}
-        data=generate(nmax=ns,M=n,myrnorm)$data
-        hist(data)
+        alpha=input$alpha
+        beta=input$beta
+        myrgamma=function(n){mean(rgamma(1:n,shape=alpha,scale=beta))}
+        data=generate(nmax=ns,M=n,myrgamma)$data
+        hist(data,col="green",border = "red")
         
     })
     output$distPlot1 <- renderPlot({
         n=input$samples
         ns=input$samplesize
-        mu=input$ave
-        sig=input$sig
-        myrnorm=function(n){mean(rnorm(1:n,mean=mu,sd=sig))}
-        data=generate(nmax=ns,M=n,myrnorm)$data
+        alpha=input$alpha
+        beta=input$beta
+        myrgamma=function(n){mean(rgamma(1:n,shape=alpha,scale=beta))}
+        data=generate(nmax=ns,M=n,myrgamma)$data
         visualize.sp(data,main="Ten sample paths", col="grey")
         
     })
+    output$mu <- renderText({ 
+        paste("mu=", input$alpha*input$beta)
+    })
+    
 }
 
 # Run the application 
