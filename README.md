@@ -1,2 +1,0 @@
-# champon
-NCSU
