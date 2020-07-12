@@ -609,13 +609,13 @@ server <- function(input, output, session) {
     as_Pn_data <- generate(nmax=as_Pn_n,M=as_Pn_ns,as_Pn_f)$data
     as_Pn_critr <- criterion(as_Pn_data,epsilon=as_Pn_eps,mode="p")$crit
     as_y_Pn=max(hist(as_Pn_critr)$counts)+100
-    as_hist_Pn=hist(as_Pn_critr,main=mtext(bquote(bold("Histogram of"~hat(p[n]))),col="darkblue"),
-                    xlab=expression(hat(p[n])),
+    as_hist_Pn=hist(as_Pn_critr,main=mtext(bquote(bold("Histogram of"~hat(p[k]))),col="darkblue"),
+                    xlab=expression(hat(p[k])),
                     ylim=c(0,as_y_Pn),
                     border="red",col="purple")
     
     text(as_hist_Pn$mids,as_hist_Pn$counts,labels=as_hist_Pn$counts, adj=c(0.5, -0.5))
-    text(x=0.9,y=as_y_Pn,bquote(bold("most"~hat(p[n])~"will be 0")),col="red",adj=1)
+    text(x=0.9,y=as_y_Pn,bquote(bold("most"~hat(p[k])~"will be 0")),col="red",adj=1)
     
   })
   
@@ -644,8 +644,8 @@ server <- function(input, output, session) {
     
     plot(x=Pn_critr_x,y=as_Pn_critr,xlab="n",ylab=bquote(hat(p[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(p[n])~"Curve")),col="darkblue"),col="red",type="l")
     points(x=as_Pn_x,y=as_Pn_y,pch=23,col="darkblue",bg="darkblue",cex=2)
-    text(x=as_Pn_x+0.25*(as_Pn_x),y=as_Pn_y,bquote(bold(hat(p[n])==.(as_Pn_y))),cex=1.5,adj=0)
-    text(x =as_Pn_n, y = max(as_Pn_critr),bquote(bold(hat(p[n])~"will tend to and stay at 0")),col="red",adj=1)
+    text(x=as_Pn_x+0.25*(as_Pn_x),y=as_Pn_y,bquote(bold(hat(p[k])==.(as_Pn_y))),cex=1.5,adj=0)
+    text(x =as_Pn_n, y = max(as_Pn_critr),bquote(bold(hat(p[k])~"will tend to and stay at 0")),col="red",adj=1)
     
     
   })
@@ -675,14 +675,14 @@ server <- function(input, output, session) {
         as_An_data <- generate(nmax=as_An_n,M=as_An_ns,as_An_f)$data
         as_An_critr <- criterion(as_An_data,epsilon=as_An_eps,mode="as")$crit
         as_y_An=max(hist(as_An_critr)$counts)+100
-        as_hist_An=hist(as_An_critr,main=mtext(bquote(bold("Histogram of"~hat(a[n]))),col="darkblue"), 
-             xlab=expression(hat(a[n])), 
+        as_hist_An=hist(as_An_critr,main=mtext(bquote(bold("Histogram of"~hat(a[k]))),col="darkblue"), 
+             xlab=expression(hat(a[k])), 
              border="blue", 
              col="green",
              ylim =c(0,as_y_An))
         as_hist_An
         text(as_hist_An$mids,as_hist_An$counts,labels=as_hist_An$counts, adj=c(0.5, -0.5))
-        text(x=0.9,y=as_y_An,bquote(bold("most"~hat(a[n])~"will be 0")),col="red",adj=1)
+        text(x=0.9,y=as_y_An,bquote(bold("most"~hat(a[k])~"will be 0")),col="red",adj=1)
         
     })
     
@@ -711,8 +711,8 @@ server <- function(input, output, session) {
       
       plot(x=An_critr_x,y=as_An_critr,xlab="n",ylab=bquote(hat(a[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(a[n])~"Curve")),col="darkblue"),col="red",type="l")
       points(x=as_An_x,y=as_An_y,pch=23,col="darkblue",bg="darkblue",cex=2)
-      text(x=as_An_x+0.25*(as_An_x),y=as_An_y,bquote(bold(hat(a[n])==.(as_An_y))),cex=1.5,adj=0)
-      text(x =as_An_n, y = max(as_An_critr),bquote(bold(hat(a[n])~"will tend to and stay at 0")),col="red",adj=1)
+      text(x=as_An_x+0.25*(as_An_x),y=as_An_y,bquote(bold(hat(a[k])==.(as_An_y))),cex=1.5,adj=0)
+      text(x =as_An_n, y = max(as_An_critr),bquote(bold(hat(a[k])~"will tend to and stay at 0")),col="red",adj=1)
       
       
     })
@@ -742,13 +742,13 @@ server <- function(input, output, session) {
         
         
         sub1_y_Pn=max(hist(sub1_critr_Pn)$counts)+100
-        sub1_hist_Pn=hist(sub1_critr_Pn,main=mtext(bquote(bold("Histogram of"~hat(p[n]))),col="darkblue"),
-                        xlab=expression(hat(p[n])),
+        sub1_hist_Pn=hist(sub1_critr_Pn,main=mtext(bquote(bold("Histogram of"~hat(p[k]))),col="darkblue"),
+                        xlab=expression(hat(p[k])),
                         ylim=c(0,sub1_y_Pn),
                         border="red",col="purple")
         sub1_hist_Pn
         text(sub1_hist_Pn$mids,sub1_hist_Pn$counts,labels=sub1_hist_Pn$counts, adj=c(0.5, -0.5))
-        text(x=0.9,y=sub1_y_Pn,bquote(bold("most"~hat(p[n])~"will be 0")),col="red",adj=1)
+        text(x=0.9,y=sub1_y_Pn,bquote(bold("most"~hat(p[k])~"will be 0")),col="red",adj=1)
     })
     
     
@@ -776,7 +776,7 @@ server <- function(input, output, session) {
       
       plot(x=sub1_Pn_critr_x,y=sub1_critr_Pn,xlab="n",ylab=bquote(hat(p[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(p[n])~"Curve")),col="darkblue"),col="red",type="l")
       points(x=sub1_Pn_x,y=sub1_Pn_y,pch=23,col="darkblue",bg="darkblue",cex=2)
-      text(x=sub1_Pn_x+0.25*(sub1_Pn_x),y=sub1_Pn_y+0.25*(sub1_Pn_y),bquote(bold(hat(p[n])==.(sub1_Pn_y))),cex=1.5,adj=0)
+      text(x=sub1_Pn_x+0.25*(sub1_Pn_x),y=sub1_Pn_y+0.25*(sub1_Pn_y),bquote(bold(hat(p[k])==.(sub1_Pn_y))),cex=1.5,adj=0)
       text(x =sub1_n_Pn, y = max(sub1_critr_Pn)-0.02,bquote(bold(lim(hat(p[n]),n%->%infinity)~"=0")),col="red",adj=1)
           
     })
@@ -805,14 +805,14 @@ server <- function(input, output, session) {
         
         
         sub1_y_An=max(hist(sub1_critr_An)$counts)+100
-        sub1_hist_An=hist(sub1_critr_An,main=mtext(bquote(bold("Histogram of"~hat(a[n]))),col="darkblue"), 
-                        xlab=expression(hat(a[n])), 
+        sub1_hist_An=hist(sub1_critr_An,main=mtext(bquote(bold("Histogram of"~hat(a[k]))),col="darkblue"), 
+                        xlab=expression(hat(a[k])), 
                         border="blue", 
                         col="green",
                         ylim =c(0,sub1_y_An))
         sub1_hist_An
         text(sub1_hist_An$mids,sub1_hist_An$counts,labels=sub1_hist_An$counts, adj=c(0.5, -0.5))
-        text(x=1.045,y=sub1_y_An,bquote(bold(hat(a[n])~"will be randomly distributed")),col="red",adj=1)
+        text(x=1.045,y=sub1_y_An,bquote(bold(hat(a[k])~"will be randomly distributed")),col="red",adj=1)
         
     })
     
@@ -840,8 +840,8 @@ server <- function(input, output, session) {
       
       plot(x=sub1_An_critr_x,y=sub1_critr_An,xlab="n",ylab=bquote(hat(a[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(a[n])~"Curve")),col="darkblue"),col="red",type="l")
       points(x=sub1_An_x,y=sub1_An_y,pch=23,col="darkblue",bg="darkblue",cex=2)
-      text(x=sub1_An_x+0.25*(sub1_An_x),y=sub1_An_y,bquote(bold(hat(a[n])==.(sub1_An_y))),cex=1.5,adj=0)
-      text(x =sub1_n_An, y = max(sub1_critr_An),bquote(bold(hat(a[n])~"will not stay at 0")),col="red",adj=1) 
+      text(x=sub1_An_x+0.25*(sub1_An_x),y=sub1_An_y,bquote(bold(hat(a[k])==.(sub1_An_y))),cex=1.5,adj=0)
+      text(x =sub1_n_An, y = max(sub1_critr_An),bquote(bold(hat(a[k])~"will not stay at 0")),col="red",adj=1) 
         
     })
     output$subMenu1_sp_An <- renderPlot({
@@ -869,13 +869,13 @@ server <- function(input, output, session) {
       sub2_critr_Pn <- criterion(sub2_data_Pn,epsilon=sub2_eps_Pn,mode="p")$crit
       
       sub2_y_Pn=max(hist(sub2_critr_Pn)$counts)+100
-      sub2_hist_Pn=hist(sub2_critr_Pn,main=mtext(bquote(bold("Histogram of"~hat(p[n]))),col="darkblue"),
-                        xlab=expression(hat(p[n])),
+      sub2_hist_Pn=hist(sub2_critr_Pn,main=mtext(bquote(bold("Histogram of"~hat(p[k]))),col="darkblue"),
+                        xlab=expression(hat(p[k])),
                         ylim=c(0,sub2_y_Pn),
                         border="red",col="purple")
       sub2_hist_Pn
       text(sub2_hist_Pn$mids,sub2_hist_Pn$counts,labels=sub2_hist_Pn$counts, adj=c(0.5, -0.5))
-      text(x=0.9,y=sub2_y_Pn,bquote(bold("most"~hat(p[n])~"will be 0")),col="red",adj=1)
+      text(x=0.9,y=sub2_y_Pn,bquote(bold("most"~hat(p[k])~"will be 0")),col="red",adj=1)
       
       
     })
@@ -903,7 +903,7 @@ server <- function(input, output, session) {
       
       plot(x=sub2_Pn_critr_x,y=sub2_critr_Pn,xlab="n",ylab=bquote(hat(p[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(p[n])~"Curve")),col="darkblue"),col="red",type="l")
       points(x=sub2_Pn_x,y=sub2_Pn_y,pch=23,col="darkblue",bg="darkblue",cex=2)
-      text(x=sub2_Pn_x+0.25*(sub2_Pn_x),y=sub2_Pn_y+0.25*(sub2_Pn_y),bquote(bold(hat(p[n])==.(sub2_Pn_y))),cex=1.5,adj=0)
+      text(x=sub2_Pn_x+0.25*(sub2_Pn_x),y=sub2_Pn_y+0.25*(sub2_Pn_y),bquote(bold(hat(p[k])==.(sub2_Pn_y))),cex=1.5,adj=0)
       text(x =sub2_n_Pn, y = max(sub2_critr_Pn)-0.02,bquote(bold(lim(hat(p[n]),n%->%infinity)~"=0")),col="red",adj=1)
       
     })
@@ -932,14 +932,14 @@ server <- function(input, output, session) {
       
       
       sub2_y_An=max(hist(sub2_critr_An)$counts)+100
-      sub2_hist_An=hist(sub2_critr_An,main=mtext(bquote(bold("Histogram of"~hat(a[n]))),col="darkblue"), 
-                        xlab=expression(hat(a[n])), 
+      sub2_hist_An=hist(sub2_critr_An,main=mtext(bquote(bold("Histogram of"~hat(a[k]))),col="darkblue"), 
+                        xlab=expression(hat(a[k])), 
                         border="blue", 
                         col="green",
                         ylim =c(0,sub2_y_An))
       sub2_hist_An
       text(sub2_hist_An$mids,sub2_hist_An$counts,labels=sub2_hist_An$counts, adj=c(0.5, -0.5))
-      text(x=1.045,y=sub2_y_An,bquote(bold(hat(a[n])~"will be randomly distributed")),col="red",adj=1)
+      text(x=1.045,y=sub2_y_An,bquote(bold(hat(a[k])~"will be randomly distributed")),col="red",adj=1)
     })
     
     
@@ -967,8 +967,8 @@ server <- function(input, output, session) {
       
       plot(x=sub2_An_critr_x,y=sub2_critr_An,xlab="n",ylab=bquote(hat(a[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(a[n])~"Curve")),col="darkblue"),col="red",type="l")
       points(x=sub2_An_x,y=sub2_An_y,pch=23,col="darkblue",bg="darkblue",cex=2)
-      text(x=sub2_An_x+0.25*(sub2_An_x),y=sub2_An_y,bquote(bold(hat(a[n])==.(sub2_An_y))),cex=1.5,adj=0)
-      text(x =sub2_n_An, y = max(sub2_critr_An),bquote(bold(hat(a[n])~"will not stay at 0")),col="red",adj=1) 
+      text(x=sub2_An_x+0.25*(sub2_An_x),y=sub2_An_y,bquote(bold(hat(a[k])==.(sub2_An_y))),cex=1.5,adj=0)
+      text(x =sub2_n_An, y = max(sub2_critr_An),bquote(bold(hat(a[k])~"will not stay at 0")),col="red",adj=1) 
       
     })
     output$subMenu2_sp_An <- renderPlot({
