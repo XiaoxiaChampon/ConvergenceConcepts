@@ -2,7 +2,12 @@
 
 ## 1/19/2023
 
-What do we want to create/produce
+### Abstract 
+- Focus on same thing as the paper but perhaps with more application/focus on convergence in distribution.
+- Sent on 25, chat about on the 26th, submit by the 29th
+
+
+### What do we want to create/produce (bigger picture here)
 
 - A set of notes with apps embedded created using R Markdown with shiny running in the background. 
     + I'd expect most people teaching these courses have experience in R and would have no issue modifying the notes as needed
@@ -16,6 +21,7 @@ What do we want to create/produce
 - Perhaps add more Monte Carlo simulation type things
     + Could make it a bit more general and look at things like confidence interval comparisons and alpha/power control via simulation
 - Provide example projects/homework problems (but with more context if we can)
+- Framework for infusing computing throughout the sequence (starting with basic probability calculation through simulation studies)
 
 ## 1/12/2023
 
