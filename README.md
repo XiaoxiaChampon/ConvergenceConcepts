@@ -18,14 +18,14 @@ Participants will see a demonstration of the tools and walk away with a number o
 
 ### To do for next meeting:
 
-- Convert 'notes' pptx to a markdown document (HTML output) with shiny runtime (template .Rmd file in repo)
+- Convert 'notes' pptx to a markdown document ([cheat sheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf)) (HTML output) with shiny runtime (template .Rmd file in repo)
     - Start with Convergence in distribution and build toward more complicated convergence topics
     - Add some 'play buttons'
     - Example that the instructor would walk through followed by an example the students would work through for each 'topic' we have these visuals for
     - Later convert those to HTML slides (Justin will provide template)
 - Develop a version for more intro stat crowd that just cares about convergence in distribution
 - Develop homework problems that could be used with the app (may require modification/generalization)
-- Need to give more credit to the original authors of the package as well since we are using their code directly in many places (it seems). If we rewrote the code then we just give them credit for the inspiration up front.
+- Need to give more credit to the original authors of the package as inspiration. If we rewrote the code then we just give them credit for the inspiration up front.
 
 
 
