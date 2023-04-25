@@ -1,545 +1,504 @@
 ---
-title: "Convergence Concepts"
-author: "Xiaoxia Champon & Justin Post"
-date: "2023-04-18"
+title: "Convergence Concepts with Shiny"
+author: "Xiaoxia Champon, Justin Post"
+date: "2023-04-25"
 output: html_document
 runtime: shiny
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE,warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 ```
 
-The plots below don't show up where they should but this is how I port my apps in. I use the `shinyApp()` function and then specify the `shinyUI()` within that. From there you can just pull in the UI elements. When you close that function, just put a comma after it and then place the relevant `shinyServer()` code below that. Then you close up the `shinyApp()` function and that's it.
 
-```{r echo=FALSE, message = FALSE}
+
+
+```{r include=FALSE,warning=FALSE}
+#add library
 library(shiny)
 library(shinydashboard)
-#number of data sets to create
-NumData<-10000
-
-shinyApp(
-  shinyUI(
-      fluidRow(
-          column(3,
-               selectizeInput("dist",label=h3("Distribution"),selected="Uniform",choices=sort(c("Uniform","Normal","Gamma","Exponential","Chi-Square","Beta","Binomial","Geometric","Poisson","Cauchy"))),
-               numericInput("param1","Lower Limit",value=0,step=1),
-               conditionalPanel(condition= "(input.dist=='Uniform')||(input.dist=='Normal')||(input.dist=='Gamma')||(input.dist=='Beta')||(input.dist=='Cauchy')",numericInput("param2","Upper Limit",value=1,step=1)), 
-               selectizeInput("stat",label=h3("Statistic"),selected="Sample Mean",choices=c("Sample Mean","Standardized Sample Mean","Sample Variance","Sample Standard Deviation","Sample Median","Sample Max","Sample Min")),
-               numericInput("n",label=h4("Sample Size (2 if blank)"),value=10,min=2,step=1),
-               sliderInput("N", label=h4("Number of Data Sets:"),min = 1, max = 10000, value = 1, step = 1,animate=list(TRUE, interval=350,loop=TRUE)),
-               numericInput("rows",label=h4("Number of Rows of Data to Display"),value=5,step=1,min=1,max=25)
-          ), 
-          column(9,
-            fluidRow(
-                #Show a plot of the parent population  
-                plotOutput("parentPlot"),
-              # Show a plot of the sampling distribution
-                plotOutput("samplePlot")
-            ),
-            br(),
-            fluidRow(
-                plotOutput("statPlot"),
-                tableOutput("sampStatTable"),
-                tableOutput("statTable"),
-                tableOutput("dataTable")   
-              )
-          )
-      )
-  ), 
-  
-  # Define server logic required to draw the plots
-  shinyServer(function(input, output,session) {
-    
-    #generate data
-    simData<-reactive({
-      #get reactive things and inputs
-      input$dist
-      input$n
-      input$param1
-      input$param2
-          
-      #sample size
-      n<-input$n
-      #Num samples
-      dist<-input$dist
-          
-      if (is.na(n)){n<-2}
-      
-      #get samples from appropriate distribution 
-      if (dist=="Uniform"){
-        min<-input$param1
-        max<-input$param2
-        samples<-matrix(runif(n*NumData,min=min,max=max),nrow=NumData,ncol=n)
-      } else if (dist=="Normal") {
-        mean<-input$param1
-        sd<-input$param2
-        samples<-matrix(rnorm(n*NumData,mean=mean,sd=sd),nrow=NumData,ncol=n)
-      } else if (dist=="Gamma") {
-        alpha<-input$param1
-        lambda<-input$param2
-        samples<-matrix(rgamma(n*NumData,shape=alpha,rate=lambda),nrow=NumData,ncol=n)
-      } else if (dist=="Exponential") {
-        lambda<-input$param1
-        samples<-matrix(rexp(n*NumData,rate=lambda),nrow=NumData,ncol=n)
-      } else if (dist=="Chi-Square") {
-        df<-input$param1
-        samples<-matrix(rchisq(n*NumData,df=df),nrow=NumData,ncol=n)
-      } else if (dist=="Beta") {
-        alpha<-input$param1
-        beta<-input$param2
-        samples<-matrix(rbeta(n*NumData,shape1=alpha,shape2=beta),nrow=NumData,ncol=n)
-      } else if (dist=="Binomial") {
-        prob<-input$param1
-        samples<-matrix(rbinom(n*NumData,size=1,prob=prob),nrow=NumData,ncol=n)
-      } else if (dist=="Geometric") {
-        prob<-input$param1
-        samples<-matrix(rgeom(n*NumData,prob=prob),nrow=NumData,ncol=n)
-      } else if (dist=="Poisson") {
-        lambda<-input$param1
-        samples<-matrix(rpois(n*NumData,lambda=lambda),nrow=NumData,ncol=n)
-      } else if (dist=="Cauchy") {
-        location<-input$param1
-        scale<-input$param2
-        samples<-matrix(rcauchy(n*NumData,location=location,scale=scale),nrow=NumData,ncol=n)
-      }
-      
-      #return data
-      samples
-    })
-  
-   
-    #update parameters in ui  
-    observe({
-      #get input
-      dist <- input$dist
-          
-      #update the values of the parameters in the ui based on the distribution
-      if (dist=="Uniform"){
-        updateNumericInput(session, "param1", label="Lower Limit",value = 0,step=1)
-        updateNumericInput(session, "param2", label="Upper Limit",value = 1,step=1)
-      } else if (dist=="Normal") {
-        updateNumericInput(session, "param1", label="Mean",value = 0,step=1)
-        updateNumericInput(session, "param2", label="Standard Deviation",value = 1,min=0,step=1)
-      } else if (dist=="Gamma") {
-        updateNumericInput(session, "param1", label="Alpha (Shape)",value = 1,min=0,step=1)
-        updateNumericInput(session, "param2", label="Lambda (Rate)",value = 1,min=0,step=1)
-      } else if (dist=="Exponential") {
-        updateNumericInput(session, "param1", label="Lambda (Rate)",value = 1,min=0,step=1)
-        updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
-      } else if (dist=="Chi-Square") {
-        updateNumericInput(session, "param1", label="DF",value = 1,min=0,step=1)
-        updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
-      } else if (dist=="Beta") {
-        updateNumericInput(session, "param1", label="alpha",value = 1,min=0,step=1)
-        updateNumericInput(session, "param2", label="beta",value = 1,min=0,step=1)
-      } else if (dist=="Binomial") {
-        updateNumericInput(session, "param1", label="Probability of Success",value = 0.5,min=0,max=1,step=0.05)
-        updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
-      } else if (dist=="Geometric") {
-        updateNumericInput(session, "param1", label="Probability of Success",value = 0.5,min=0,max=1,step=0.05)
-        updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
-      } else if (dist=="Poisson") {
-        updateNumericInput(session, "param1", label="Lambda (Mean)",value = 1,min=0,step=1)
-        updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
-      } else if (dist=="Cauchy") {
-        updateNumericInput(session, "param1", label="Location",value = 0,step=1)
-        updateNumericInput(session, "param2", label="Scale",value = 1,min=0,step=1)
-      }  
-  
-    })
-  
-    
-    #create parent population plot
-    output$parentPlot<-renderPlot({
-      #input distribution
-      dist<-input$dist
-      #sample size
-      n<-input$n
-      
-      #choose appropriate distribution  
-      if (dist=="Uniform"){
-        #parameters
-        min<-input$param1
-        max<-input$param2
-        #Plotting sequence
-        x <- seq(from=min,to=max,length=2)
-        #draw the parent distribution plot
-        plot(x=x,y=dunif(x=x,min=min,max=max),main=paste(dist," Density"),
-             xlab="y", ylab="f(y)",type="l")
-      } else if (dist=="Normal") {
-        #parameters
-        mean<-input$param1
-        sd<-input$param2
-        #Plotting sequence
-        x <- seq(from=mean-4*sd,to=mean+4*sd,length=1000)
-        #draw the parent distribution plot
-        plot(x=x,y=dnorm(x=x,mean=mean,sd=sd),main=paste(dist," Density"),
-             xlab="y", ylab="f(y)",type="l")
-      } else if (dist=="Gamma") {
-        #parameters
-        alpha<-input$param1
-        lambda<-input$param2
-        #Plotting sequence
-        x <- seq(from=0,to=alpha/lambda+4*sqrt(alpha/lambda^2),length=1000)
-        #draw the parent distribution plot
-        plot(x=x,y=dgamma(x=x,shape=alpha,rate=lambda),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
-      } else if (dist=="Exponential") {
-        #parameters
-        lambda<-input$param1
-        #Plotting sequence
-        x <- seq(from=0,to=5/lambda,length=1000)
-        #draw the parent distribution plot
-        plot(x=x,y=dexp(x=x,rate=lambda),main=paste(dist," Density"),xlab="y", ylab="f(y)",type="l")
-      } else if (dist=="Chi-Square") {
-        #parameters
-        df<-input$param1
-        #Plotting sequence
-        x <- seq(from=0,to=df+4*sqrt(2*df),length=1000)
-        #draw the parent distribution plot
-        plot(x=x,y=dchisq(x=x,df=df),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
-      } else if (dist=="Beta") {
-        #Plotting sequence
-        x <- seq(from=0,to=1,length=1000)
-        #parameters
-        alpha<-input$param1
-        beta<-input$param2
-        #draw the parent distribution plot
-        plot(x=x,y=dbeta(x=x,shape1=alpha,shape2=beta),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
-      } else if (dist=="Binomial") {
-        #Plotting sequence
-        x <- seq(from=0,to=n,by=1)
-        #parameters
-        prob<-input$param1
-        #draw the parent distribution plot
-        plot(x=x,y=dbinom(x=x,size=n,prob=prob),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="h")
-      } else if (dist=="Geometric") {
-        #parameters
-        prob<-input$param1
-        #Plotting sequence
-        x<-seq(from=0,to=1/prob+4*sqrt((1-prob)/prob^2)+2,by=1)
-        #draw the parent distribution plot
-        plot(x=x,y=dgeom(x=x,prob=prob),main=paste(dist," Density"),xlab="y", ylab="f(y)",type="h")
-      } else if (dist=="Poisson") {
-        #parameters
-        lambda<-input$param1
-        #Plotting sequence
-        x <- seq(from=0,to=lambda+4*sqrt(lambda),by=1)
-        #draw the parent distribution plot
-        plot(x=x,y=dpois(x=x,lambda=lambda),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="h")
-      } else if (dist=="Cauchy") {
-        #Plotting sequence
-        #parameters
-        location<-input$param1
-        scale<-input$param2
-        x <- seq(from=location-6*scale,to=location+6*scale,length=1000)
-        #draw the parent distribution plot
-        plot(x=x,y=dcauchy(x=x,location=location,scale=scale),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
-      }
-      
-    })
-    
-    
-    #get plot of sample data for current data set
-    output$samplePlot<-renderPlot({
-      #input data set number
-      N<-input$N
-      #sample size
-      n<-input$n
-      #Get data for data set N
-      samples<-simData()
-      samples<-samples[N,]
-  
-      #Get statistic being used
-      statistic<-input$stat
-  
-      #create histogram and save it, need to find where stat lies so we can color it
-      temp<-hist(samples,main=paste("Histogram of Sample ",N,"'s data"),xlab="Data Values, y",prob=TRUE)    
-  
-      #calculate value of statistic
-      if ((statistic=="Sample Mean")||(statistic=="Standardized Sample Mean")){
-        statval<-mean(samples)
-      } else if (statistic=="Sample Variance"){
-        statval<-var(samples)
-      } else if (statistic=="Sample Standard Deviation"){
-        statval<-sd(samples)
-      } else if (statistic=="Sample Median"){
-        statval<-median(samples)
-      } else if (statistic=="Sample Max"){
-        statval<-max(samples)
-      } else if (statistic=="Sample Min"){
-        statval<-min(samples)
-      }
-          
-      #get the break from the histogram where the stat occurs
-      index<-which((temp$breaks[1:(length(temp$breaks)-1)]<statval)*(statval<temp$breaks[2:length(temp$breaks)])==1)
-      #create the color vector to color the histogram
-      clr<-rep("white",length(temp$breaks))
-      if ((statistic=="Sample Mean")||(statistic=="Standardized Sample Mean")||(statistic=="Sample Median")||(statistic=="Sample Max")||(statistic=="Sample Min")){
-        clr[index]<-"blue"
-      }
-        #create histogram
-        hist(samples,main=paste("Histogram of Sample ",N,"'s data"),xlab="Data Values, y",prob=TRUE,col=clr)    
-        
-    })
-  
-      
-    #get histogram of statistic based on data sets so far
-    output$statPlot <- renderPlot({
-      #sample size
-      n<-input$n
-      #Num samples
-      N<-input$N
-      #distribution
-      dist<-input$dist
-      #stat
-      statistic<-input$stat
-      
-      #figure out what mean and standard deviation of parent are for z-score
-      if (dist=="Uniform"){
-        min<-input$param1
-        max<-input$param2
-        meanz<-(min+max)/2
-        varz<-(max-min)^2/12
-      } else if (dist=="Normal") {
-        mean<-input$param1
-        sd<-input$param2
-        meanz<-mean
-        varz<-sd^2
-      } else if (dist=="Gamma") {
-        alpha<-input$param1
-        lambda<-input$param2
-        meanz<-alpha/lambda
-        varz<-alpha/lambda^2
-      } else if (dist=="Exponential") {
-        lambda<-input$param1
-        meanz<-1/lambda
-        varz<-1/lambda^2
-      } else if (dist=="Chi-Square") {
-        df<-input$param1
-        meanz<-df
-        varz<-2*df
-      } else if (dist=="Beta") {
-        alpha<-input$param1
-        beta<-input$param2
-        meanz<-alpha/(alpha+beta)
-        varz<-(alpha*beta)/((alpha+beta)^2*(alpha+beta+1))
-      } else if (dist=="Binomial") {
-        prob<-input$param1
-        meanz<-n*prob
-        varz<-n*prob*(1-prob)
-      } else if (dist=="Geometric") {
-        prob<-input$param1
-        meanz<-1/prob
-        varz<-(1-prob)/prob^2
-      } else if (dist=="Poisson") {
-        lambda<-input$param1
-        meanz<-varz<-lambda
-      } else if (dist=="Cauchy") {
-        location<-input$param1
-        scale<-input$param2
-        meanz<-location
-        varz<-scale
-      }
-      
-      #get values of the stat for each sample
-      samples<-simData()
-      if(N==1){
-        if (statistic=="Sample Mean"){
-          statvals<-mean(samples[1,])
-        } else if (statistic=="Standardized Sample Mean"){
-          statvals<-(mean(samples[1,])-meanz)/sqrt(varz/n)
-        } else if (statistic=="Sample Variance"){
-          statvals<-var(samples[1,])
-        } else if (statistic=="Sample Standard Deviation"){
-          statvals<-sd(samples[1,])
-        } else if (statistic=="Sample Median"){
-          statvals<-median(samples[1,])
-        } else if (statistic=="Sample Max"){
-          statvals<-max(samples[1,])
-        } else if (statistic=="Sample Min"){
-          statvals<-min(samples[1,])
-        }
-      } else if (N>1){
-        if (statistic=="Sample Mean"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=mean)
-        } else if (statistic=="Standardized Sample Mean"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=function(x,meanz,varz){(mean(x)-meanz)/sqrt(varz/n)}, meanz,varz)
-        } else if (statistic=="Sample Variance"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=var)
-        } else if (statistic=="Sample Standard Deviation"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=sd)
-        } else if (statistic=="Sample Median"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=median)
-        } else if (statistic=="Sample Max"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=max)
-        } else if (statistic=="Sample Min"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=min)
-        }
-      }
-  
-      #get the break from the histogram where the stat for data set N occurs
-      temp<-hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values") 
-      index<-which((temp$breaks[1:(length(temp$breaks)-1)]<statvals[N])*(statvals[N]<temp$breaks[2:length(temp$breaks)])==1)
-      #create the color vector to color the histogram
-      clr<-rep("white",length(temp$breaks))
-      clr[index]<-"blue"
-      
-      # draw the sampling distribution
-      if ((dist=="Cauchy")&&(N>1)&&(N<2000)){
-        hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values",breaks=100,col=clr) 
-      } else {
-        hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values",col=clr) 
-      }
-  
-    })
-  
-    
-    #get table of data
-    output$dataTable<-renderTable({
-      #input # of rows to display
-      rows<-input$rows
-      #sample size
-      n<-input$n
-      rows<-min(n,rows)
-      #Number of data set
-      N<-input$N
-      #Get data for data set N
-      samples<-simData()
-      datadisplay<-data.frame(Obs=1:rows,DataValue=sprintf("%.4f",samples[N,1:rows]))
-      datadisplay
-    },include.colnames=FALSE)
-  
-    
-    #get summary stats for sample
-    output$statTable<-renderTable({
-      #Number of data set
-      N<-input$N
-      #Get data for data set N
-      samples<-simData()
-      samples<-samples[N,]
-      
-      #find stats
-      statdisplay<-data.frame(Stats=c("Sample Mean","Sample Var","Sample SD","Sample Min","Sample Median","Sample Max"), Value=c(sprintf("%.4f",mean(samples)),sprintf("%.4f",var(samples)),sprintf("%.4f",sd(samples)), sprintf("%.4f",min(samples)),sprintf("%.4f",median(samples)),sprintf("%.4f",max(samples))))
-  
-      statdisplay
-    },include.colnames=FALSE)
-      
-    
-    #get statistics about the sampling distribution  
-    output$sampStatTable<-renderTable({
-      #sample size
-      n<-input$n
-      #Num samples
-      N<-input$N
-      #distribution
-      dist<-input$dist
-      #stat
-      statistic<-input$stat
-      
-      #figure out what mean and standard deviation of parent are for z-score
-      if (dist=="Uniform"){
-        min<-input$param1
-        max<-input$param2
-        meanz<-(min+max)/2
-        varz<-(max-min)^2/12
-      } else if (dist=="Normal") {
-        mean<-input$param1
-        sd<-input$param2
-        meanz<-mean
-        varz<-sd^2
-      } else if (dist=="Gamma") {
-        alpha<-input$param1
-        lambda<-input$param2
-        meanz<-alpha/lambda
-        varz<-alpha/lambda^2
-      } else if (dist=="Exponential") {
-        lambda<-input$param1
-        meanz<-1/lambda
-        varz<-1/lambda^2
-      } else if (dist=="Chi-Square") {
-        df<-input$param1
-        meanz<-df
-        varz<-2*df
-      } else if (dist=="Beta") {
-        alpha<-input$param1
-        beta<-input$param2
-        meanz<-alpha/(alpha+beta)
-        varz<-(alpha*beta)/((alpha+beta)^2*(alpha+beta+1))
-      } else if (dist=="Binomial") {
-        prob<-input$param1
-        meanz<-n*prob
-        varz<-n*prob*(1-prob)
-      } else if (dist=="Geometric") {
-        prob<-input$param1
-        meanz<-1/prob
-        varz<-(1-prob)/prob^2
-      } else if (dist=="Poisson") {
-        lambda<-input$param1
-        meanz<-varz<-lambda
-      } else if (dist=="Cauchy") {
-        location<-input$param1
-        scale<-input$param2
-        meanz<-location
-        varz<-scale
-      }
-        
-      #get values of the stat for each sample
-      samples<-simData()
-      if(N==1){
-        if (statistic=="Sample Mean"){
-          statvals<-mean(samples[1,])
-        }else if (statistic=="Standardized Sample Mean"){
-          statvals<-(mean(samples[1,])-meanz)/sqrt(varz)
-        } else if (statistic=="Sample Variance"){
-          statvals<-var(samples[1,])
-        } else if (statistic=="Sample Standard Deviation"){
-          statvals<-sd(samples[1,])
-        } else if (statistic=="Sample Median"){
-          statvals<-median(samples[1,])
-        } else if (statistic=="Sample Max"){
-          statvals<-max(samples[1,])
-        } else if (statistic=="Sample Min"){
-          statvals<-min(samples[1,])
-        }
-      } else if (N>1){
-        if (statistic=="Sample Mean"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=mean)
-        } else if (statistic=="Standardized Sample Mean"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=function(x,meanz,varz){(mean(x)-meanz)/sqrt(varz/n)}, meanz,varz)
-        } else if (statistic=="Sample Variance"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=var)
-        } else if (statistic=="Sample Standard Deviation"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=sd)
-        } else if (statistic=="Sample Median"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=median)
-        } else if (statistic=="Sample Max"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=max)
-        } else if (statistic=="Sample Min"){
-          statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=min)
-        }
-      }
-      sampstatdisplay<-data.frame(Stats=c("Sample Mean","Sample Var","Sample SD","Sample Min","Sample Median","Sample Max"),Value=c(sprintf("%.4f",mean(statvals)),sprintf("%.4f",var(statvals)),sprintf("%.4f",sd(statvals)),sprintf("%.4f",min(statvals)),sprintf("%.4f",median(statvals)),sprintf("%.4f",max(statvals))))
-      
-      sampstatdisplay
-    },include.colnames=FALSE)
-    
-  })    
-)
-  
+library(ConvergenceConcepts)
 ```
+
+# Convergence Concepts
+The convergence of random variables is important for asymptotic inference. As we can never collect infinity number of data, asymptotic result is critical to approximate the distribution of statistics of interest with finite sample size. We will discuss the most common three types of convergence.
+
+Notation:
+
+* Let $X_1,X_2,\cdots,X_n$ be a sequence of iid random variables and $X$ be a random variable such that $E(X_i)=\mu, Var(X_i)=\sigma^2 < \infty, \forall i$
+  * Convergence in distirbution $X_n\stackrel{d}{\rightarrow} X$
+  * Convergence in probability $X_n\stackrel{p}{\rightarrow} X$
+  * Convergence almost surely $X_n\stackrel{a.s.}{\rightarrow} X$
+
+
+
+
+
+
+
+
+:::: {style="display: flex;"}
+
+::: {}
+
+## Convergence in Distribution
+* Definition $lim_{n \rightarrow \infty} F_{X_n}(x)=F_{X}(x)$, or
+            $lim_{n \rightarrow \infty} |F_{X_n}(x)-F_{X}(x)|=0$
+  * $F_X(x)$ is continuous
+  * Cumulative Density Function (CDF)
+
+
+![](/Users/xzhao17/Desktop/convergence/cid2.png) 
+:::
+
+::: {}
+
+
+## Central Limit Theorem
+Define $\overline{X}=\frac{1}{n} \sum_{i=1}^{n} X_i$ such that $E(X_i)=\mu, Var(X_i)=\sigma^2 < \infty, \forall i$ and $X \sim N (0, 1)$
+
+* $\frac{\sqrt{n} (\overline{X_n}-\mu)}{\sigma} \stackrel {d} {\rightarrow} X$
+
+
+
+
+![](/Users/xzhao17/Desktop/convergence/cid.png) 
+:::
+
+::::
+
+
+
+
+## R shiny demonstration by the instructor
+
+### This section illustrates convergence in distribution
+
+#### "\\(\\star\\)By definition, \\(X_n \\overset{d} {\\to} X\\) or \\(X_n \\overset{L} {\\to} X\\) if and only if \\(l_n= \\lvert F_{X_n}(t)-F_X(t) \\rvert \\underset{n\\to \\infty} \\rightarrow  0\\) for all \\(t\\) and \\(F_X(x)\\) is continuous. "
+
+#### "\\(\\star\\) \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) is used for convergence in distribution. \\(F_X(t)\\) is the cumulative distribution function of \\(X\\) and \\(\\widehat F_{X_n} (t)\\) is the empirical distribution function of \\(X_n\\) such that  \\(\\widehat F_{X_n} (t)=\\frac{\\# \\{x_n^{j} \\leq t \\}}{M}, \forall j =1,\\cdots, M\\)."
+
+
+
+
+
+
+```{r eruptions, echo=FALSE}
+sidebarPanel(
+      
+                      sliderInput("d_n",
+                                  "n: the nth element in the sequence",
+                                  min = 1,
+                                  max = 1000,
+                                  step=50,
+                                  value = 100,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")    
+                                  ),
+                    
+                      helpText("As \\(n\\) increases,"),
+                      helpText("\\(\\star\\) More points will be created in each sequence and the density plot will vary"),
+                      
+
+#########
+                      
+                    
+                        sliderInput("d_ns",
+                                    "M: the number of simulations of the sequence",
+                                    min = 1,
+                                    max = 2000,
+                                    step=30,
+                                    value = 50,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")) ,
+                      
+                        
+                        helpText("As \\(M\\) increases,"),
+                        helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
+                        helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
+                        
+      #####
+                    
+                          sliderInput("d_k",
+                                      helpText("\\(K\\)=position of \\(X_n\\) and \\(K\\leq n_{max}\\)"),
+                                      min = 1,
+                                      max = 1000,
+                                      step=1,
+                                      value = 10,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                          helpText("As \\(K\\) increases,"),
+                          helpText("\\(\\star\\) Density plot of \\(X_n\\) values will resemble a standard normal curve"),
+                          helpText("\\(\\star\\) \\(\\widehat F_{X_n}(t)\\) will approach to \\(F_X(t)\\) ")
+                      
+)
+
+############
+mainPanel(
+                          helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim \\chi_1^2\\), \\(Xn=\\frac {\\sum Y_i-n}{\\sqrt{2*n}} \\) and \\(X\\sim N(0,1)\\).')),
+                      
+                      helpText(h4("\\(F_{X_n}(t)\\) is the empirical distribution of \\(X_n\\) and \\(F_X(t)\\) is cdf of \\(X\\). We use \\(\\widehat F_{X_n} (t)\\) to approximate \\(F_{X_n}(t)\\). ")),
+   
+                      
+                      
+ 
+                  
+####
+#  splitLayout(plotOutput("d_hist"),
+#               plotOutput("d_3D")
+#   ),
+# 
+# 
+# splitLayout(plotOutput("d_F"),
+#               plotOutput("d_sp"))
+
+
+                        
+# d_hist=
+splitLayout(
+
+renderPlot({
+      set.seed(1)
+      d_n=input$d_n
+      d_ns=input$d_ns
+      d_k=input$d_k
+      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
+      d_data=data.frame()
+      for (s in 1:d_ns){
+        d_data=rbind(d_data,d_f(d_n))
+      }
+      d_h=hist(data.matrix(d_data[d_k]),main=mtext(bquote(bold("Density plot of"~X[n]~"values")),col="darkblue"),xlab="Xn values",col="green",border = "red",prob = T, xlim = c(-4,4))
+     
+      lines(seq(-4,4,length=d_ns),dnorm(seq(-4,4,length=d_ns)),col="darkblue",lwd=3)
+      
+      legend('topleft', c(expression(hat(f[X[n]](t))),expression(f[X](t))),
+             fill =c("green", "darkblue"))
+      
+      text(x=4,y=max(d_h$density),bquote(bold(f[X[n]](t)~"will resemble"~f[X](t))),col="red",adj=1)
+    }),
+#d_hist
+#######
+#d_3D=renderPlot({
+renderPlot({
+      set.seed(1)
+      d_n=input$d_n
+      d_ns=input$d_ns
+        
+      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
+        d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
+        law.plot3d(d_data_3D,pnorm)
+    })
+ #d_3D 
+###########
+  
+  
+
+),
+####################
+splitLayout(
+ # d_F=renderPlot({
+     renderPlot({
+      set.seed(1)
+
+      d_n=input$d_n
+      d_ns=input$d_ns
+      d_k=input$d_k
+      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
+      d_data=data.frame()
+      for (s in 1:d_ns){
+        d_data=rbind(d_data,d_f(d_n))
+      }
+      d_h=hist(data.matrix(d_data[d_k]),main=mtext(bquote(bold(.(d_ns)~"sample paths of"~X[n]~"values")),col="darkblue"),xlab="Xn values",col="green",border = "red",xlim = c(-4,4),prob=T,breaks = d_ns)
+
+      d_y=d_h$density
+      d_x=seq(-4,4,length.out =length(d_y))
+
+      plot(d_x,cumsum(d_y)/max(cumsum(d_y)),type="l",lwd=2,main=mtext(bquote(bold(hat(F[X[n]](t))~"and"~F[X](t))),col="darkblue"),col="green",xlim=c(-4,4),xlab = "X", ylab = "Cumulative probability" )
+      lines(d_x,pnorm(d_x),col="darkblue")
+      legend('topleft', c(expression(hat(F[X[n]](t))),expression(F[X](t))),lty = c(1,1),col = c("green", "darkblue") )
+             #fill =c("green", "darkblue"))
+
+      text(x=4,y=0.05,bquote(bold(F[X[n]](t)~"will resemble"~F[X](t))),col="red",adj=1)
+    }),
+   #d_F
+    ####
+    #d_sp=renderPlot({
+      renderPlot({
+      set.seed(1)
+      d_n=input$d_n
+      d_ns=input$d_ns
+        #eps2=input$ep2
+      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
+      d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
+        visualize.sp(d_data_3D,nb.sp=d_ns,epsilon=3,main=mtext(bquote(bold(.(d_ns)~"sample paths of"~X[n]~"values")),col="darkblue"), col="grey")
+    })
+#d_sp
+
+
+)
+
+)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+## Your Turn
+
+```{r  echo=FALSE}
+sidebarPanel(
+sliderInput("clt_n",
+                                  "n: the nth element in the sequence",
+                                  min = 10,
+                                  max = 1000,
+                                  step=5,
+                                  value = 100,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                      
+                      
+                      
+                      helpText("As \\(n\\) increases,"),
+                      helpText("\\(\\star\\) More points will be created in each sample path and the density plot will vary"),
+                      
+####
+sliderInput("clt_ns",
+                                    "M: the number of simulations of the sequence",
+                                    min = 1,
+                                    max = 2000,
+                                    step=5,
+                                    value = 50,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                      
+                      helpText("As \\(M\\) increases,"),
+                      helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
+                      helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
+############
+sliderInput("clt_k",
+                                      helpText("\\(K\\)=position of \\(X_n\\) and \\(K\\leq n_{max}\\)"),
+                                      min = 1,
+                                      max = 1000,
+                                      step=1,
+                                      value = 10,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                          helpText("As \\(K\\) increases,"),
+                          helpText("\\(\\star\\) Density plot of \\(X_n\\) values will resemble a standard normal curve"),
+                          helpText("\\(\\star\\) \\(\\widehat F_{Xn}(t)\\) will approach to \\(F_X(t)\\)"),
+#####
+sliderInput("clt_alpha",
+                                    helpText("\\(\\alpha\\)=shape parameter"),
+                                    min = 0.0001,
+                                    max = 10,
+                                    step=0.1,
+                                    value = 2,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                    
+                      
+                      helpText("\\(\\star\\) As \\(\\alpha\\) increases, the histogram will be more symmetric "),
+#######
+sliderInput("clt_beta",
+                                    helpText("\\(\\beta\\)=scale parameter"),
+                                    min = 0.0001,
+                                    max = 10,
+                                    step=0.1,
+                                    value = 1,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                        
+                        helpText("\\(\\star\\) As \\(\\beta\\) increases, the histogram will spread out more  ")
+)
+#######
+mainPanel(
+helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overline Y_i-\\mu)  )}{\\sigma} \\overset {d}{\\to} X\\sim N(0,1) \\; or\\; X_n=\\frac{\\sqrt{n} ( \\overline Y_i-\\mu)  )}{\\sigma} \\overset {L}{\\to} X\\sim N(0,1) \\).")),
+                      helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim Gamma(\\alpha,\\beta)\\) and \\(Xn=\\frac{\\sqrt{n}*(\\overline Y_i-\\alpha*\\beta)}{\\sqrt{\\alpha*\\beta^2}}\\).')),
+                      helpText(h4("\\(F_{X_n}(t)\\) is the empirical distribution of \\(X_n\\) and \\(F_X(t)\\) is cdf of \\(X\\). We use \\(\\widehat F_{X_n} (t)\\) to approximate \\(F_{X_n}(t)\\).  ")),
+
+
+splitLayout(
+  #clt_hist <- renderPlot({
+    renderPlot({
+      set.seed(1)
+        clt_n=input$clt_n
+        clt_ns=input$clt_ns
+        clt_alpha=input$clt_alpha
+        clt_beta=input$clt_beta
+        clt_k=input$clt_k
+        clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
+        
+        clt_data=data.frame()
+        
+        for (t in 1:clt_ns){
+          clt_data=rbind(clt_data,clt_f(clt_n))
+        }
+        clt_h=hist(data.matrix(clt_data[clt_k]),main=mtext(bquote(bold("Density plot of"~X[n]~"values")),col="darkblue"),xlab="Xn values",col="green",border = "red",xlim = c(-4,4),prob=T)
+        
+        lines(seq(-4,4,length=length(clt_h$density)),dnorm(seq(-4,4,length=length(clt_h$density))),col="darkblue",lwd=3)
+        
+        legend('topleft', c(expression(hat(f[X[n]](t))),expression(f[X](t))),
+               fill =c("green", "darkblue"))
+        
+        text(x=4,y=max(clt_h$density),bquote(bold(f[X[n]](t)~"will resemble"~f[X](t))),col="red",adj=1)
+        
+        
+        }),
+    
+                      #clt_hist
+    
+    #clt_3D <- renderPlot({
+       renderPlot({
+      set.seed(1)
+      clt_n=input$clt_n
+      clt_ns=input$clt_ns
+      clt_alpha=input$clt_alpha
+      clt_beta=input$clt_beta
+      clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
+      
+      clt_data_3D=data.frame()
+      for (t in 1:clt_ns){
+        clt_data_3D=rbind(clt_data_3D,clt_f(clt_n))
+      }
+      law.plot3d(data.matrix(clt_data_3D),pnorm)
+    })
+#clt_3D
+  
+),
+
+splitLayout(
+  ###
+#clt_F <- renderPlot({ 
+  renderPlot({ 
+      set.seed(1)
+      clt_n=input$clt_n
+      clt_ns=input$clt_ns
+      clt_alpha=input$clt_alpha
+      clt_beta=input$clt_beta
+      clt_k=input$clt_k
+      clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
+      
+      clt_data=data.frame()
+      
+      for (t in 1:clt_ns){
+        clt_data=rbind(clt_data,clt_f(clt_n))
+      }
+      clt_h=hist(data.matrix(clt_data[clt_k]),main=mtext(bquote(bold("Density plot of"~X[n]~"values")),col="darkblue"),xlab="Xn values",col="green",border = "red",xlim = c(-4,4),prob=T,breaks = clt_ns)
+      clt_y=clt_h$density
+      clt_x=seq(-4,4,length=length(clt_y))
+      
+      plot(clt_x,cumsum(clt_y)/max(cumsum(clt_y)),type="l",lwd=2,col="green",main=mtext(bquote(bold(hat(F[X[n]](t))~"and"~F[X](t))),col="darkblue"), xlim=c(-4,4),xlab = "X", ylab = "Cumulative probability")
+      lines(clt_x,pnorm(clt_x),col="darkblue")
+      legend('topleft', c(expression(hat(F[X[n]](t))),expression(F[X](t))),lty = c(1,1),col = c("green", "darkblue") )
+            # fill =c("green", "darkblue"))
+      
+      text(x=4,y=0.1,bquote(bold(F[X[n]](t)~"will resemble"~F[X](t))),col="red",adj=1)
+    }),
+#clt_F
+  
+#####
+#clt_sp <- renderPlot({
+renderPlot({
+      set.seed(1)
+      clt_n=input$clt_n
+      clt_ns=input$clt_ns
+      clt_alpha=input$clt_alpha
+      clt_beta=input$clt_beta
+        #eps3=input$ep3
+      clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
+        clt_data_3D=data.frame()
+        for (t in 1:clt_ns){
+          clt_data_3D=rbind(clt_data_3D,clt_f(clt_n))
+        }
+        visualize.sp(data.matrix(clt_data_3D),nb.sp=clt_ns,epsilon=3,main=mtext(bquote(bold(.(clt_ns)~"sample paths of"~X[n])),col="darkblue"), col="grey")
+        
+    })
+#clt_sp
+
+)
+
+)
+
+
+
+
+```
+
+
+
+<div class = "clearfix"> </div>
+
+### Homework practice
+Let $X_2, X_3,  X_4, \cdots $ be a sequence of random variable such that
+$$F_{X_n}(x)=\begin{cases}
+      1-(1-\frac{1}{n})^{nx} \ , \  x>0
+      \\
+      0 \ \ \ \ \ \ \ \ \ \ \ \ \ , \ otherwise
+    \end{cases}    $$
+Show that $X_n$ converges in distribution to Exponential(1).
+
+
+Solution: Let $X \sim Exponential (1)$. For $x \leq 0$, we have
+$$F_{X_n}(x)=F_x(x)=0,$$ for $n=2,3,4,\cdots$.
+For $x \geq 0$, we have 
+$$ \begin{aligned} lim_{n \rightarrow \infty} F_{X_n}(x)&=lim_{n \rightarrow \infty} (1-(1-\frac{1}{n})^{nx}) \\
+&=1-lim_{n\rightarrow \infty} (1-\frac{1}{n})^{nx} \\
+&=1-e^{-x}\\
+&=F_X(x)\end{aligned}$$, for all $x$.
+Thus, we conclude that $X_n \stackrel {d}{\rightarrow}X$.
+
+
+
+
+
+
+
 
 ## Embedded Application
 
 It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
 
-```{r echo=FALSE, eval = FALSE}
+```{r tabsets, echo=FALSE}
 shinyAppDir(
   system.file("examples/06_tabsets", package = "shiny"),
   options = list(
     width = "100%", height = 550
   )
 )
+
 ```
 
 Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
