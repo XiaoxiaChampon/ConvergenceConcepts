@@ -2,15 +2,33 @@
 title: "Convergence Concepts with Shiny"
 author: "Xiaoxia Champon, Justin Post"
 date: "2023-04-25"
-output: html_document
+output: 
+  html_document:
+    css: "style.css"
 runtime: shiny
 ---
 
-```{r setup, include=FALSE,warning=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{js, echo = FALSE}
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.display === "block") {
+      content.style.display = "none";
+    } else {
+      content.style.display = "block";
+    }
+  });
+}
 
 ```
 
+```{r setup, include=FALSE,warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 
 
@@ -22,14 +40,20 @@ library(ConvergenceConcepts)
 ```
 
 # Convergence Concepts
+
+
 The convergence of random variables is important for asymptotic inference. As we can never collect infinity number of data, asymptotic result is critical to approximate the distribution of statistics of interest with finite sample size. We will discuss the most common three types of convergence.
 
-Notation:
-
-* Let $X_1,X_2,\cdots,X_n$ be a sequence of iid random variables and $X$ be a random variable such that $E(X_i)=\mu, Var(X_i)=\sigma^2 < \infty, \forall i$
+Just for proof of concept. Notation:
+<button type="button" class="collapsible">Open Collapsible</button>
+<div class="content">
+  * Let $X_1,X_2,\cdots,X_n$ be a sequence of iid random variables and $X$ be a random variable such that $E(X_i)=\mu, Var(X_i)=\sigma^2 < \infty, \forall i$
   * Convergence in distirbution $X_n\stackrel{d}{\rightarrow} X$
   * Convergence in probability $X_n\stackrel{p}{\rightarrow} X$
   * Convergence almost surely $X_n\stackrel{a.s.}{\rightarrow} X$
+</div>
+
+
 
 
 
