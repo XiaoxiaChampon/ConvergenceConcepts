@@ -41,6 +41,100 @@ library(ConvergenceConcepts)
 
 # Convergence Concepts
 
+## What is Limit Theory?
+
+By limit or asymptotic theory we mean we want to understand the behavior of some quantity, usually a statistic, as something changes, usually the sample size. For instance, we will investigate the behavior of the sample mean as the sample size grows. We'll look at questions like
+
+- When the distribution of a statistic (called a **sampling distribution**) is difficult to derive *exactly*, is there a good **approximating** distribution we can use to get **approximate** probability statements about $\bar{Y}$?
+- What value does $\bar{Y}$ *get close to* as the sample size grows? (We hope the population mean we are often trying to estimate, $\mu$.)
+
+## Common Assumptions & Definitions
+
+We must make some assumptions about how we observe our random variables in order to investigate these types of questions. For simplicity, we often assume we have a **random sample**.
+
+Random Sample
+: $Y_1,..., Y_n$ are a random sample (RS) of size $n$ if the random variables are independent and identically distributed (iid). 
+
+We'll often say 'assume we have a random sample' from some distribution or that 'our random variables are iid' from some distribution. These are equivalent ways of stating this assumption.
+
+We'll be interested in some function or **statistic** from the random sample.
+
+Statistic
+: A function of $Y_1,Y_2,...,Y_n$ from a random sample that does not involve any unknown parameters is called a statistic.
+
+Commonly studied statistics:  
+
+- $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$
+- $S^2 = \frac{1}{n-1}\sum_{i=1}^{n}(Y_i-\bar{Y})^2$
+- $Y_{(n)} = \mbox{the maximum value from the sample}$
+
+Quantities that aren't statistics:  
+
+- $\frac{\bar{Y}-\mu}{S/\sqrt{n}}$ (since $\mu$ is unknown) (if we assume it is known (like when we do a test statistic) then this is a statistic)
+- $\frac{(n-1)S^2}{\sigma^2}$ (since $\sigma^2$ is unk)
+
+One type of convergence we'll look at is focused on how these statistics are observed, that is the **sampling distribution** of the statistics.
+
+Sampling Distribution
+: The distribution of a statistic is called a sampling distribution.
+
+Recall that a distribution is just the pattern and frequency with which we observe a random variable. With a statistic, we give this distribution the special name of sampling distribution. This is because we can think of how that distribution is formed by considering repeated samples from the population, each sample producing the statistic of interest.
+
+## Convergence in Distribution
+
+One of the most famous theorems in statistics is the **Central Limit Theorem** (or CLT). This is a result about the large-sample or asymptotic behavior of the sample mean. Before we look at the technical details, let's consider an example to motivate the idea!
+
+### Motivating Example
+
+(Should we give context to this? Something like the amount of rain delivered by storms or something? Then apply a probability calculation at the end?)
+
+- Suppose that $Y_i\stackrel{iid}\sim Gamma(\alpha = 5, \lambda = 1)$. (That is, assume we have a random sample from a Gamma distribution.) 
+- Consider the *statistic* $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$. 
+- We often want to understand the *sampling distribution* of our statistic so that we can make (at least approximate) probabilistic statements about $\bar{Y}$. These will allow us to create **confidence intervals** or **hypothesis tests**, which will be studied later.
+
+How to learn about the sampling distribution? 
+
+A distribution is just the pattern and frequency with which we observe the quantity. With an assumption about how our data is generated (random sample from a gamma distribution with the given parameters), we can easily use software to generate many values of our statistic. We can then plot these values on a histogram to get an idea about the distribution!
+
+**Here we would put stills from the app, but just hard coded, for different sample sizes so we can see the behavior. We note that as $n$ grows we start to see a roughly normally distributed curve.**
+
+**Then we put the app here and have them consider different values of $\alpha$, $\lambda$, and $n$ with guidance for trying to find some 'rule' for when the normal distribution might be appropriate.**
+
+
+### Definitions
+
+We can see that there may be a distinction between the *actual* distribution and an approximating distribution. We call these by different names.
+
+Exact Distribution:
+The (sampling) distribution of a quantity that is valid for any sample size (or, occasionally, values of the parameters of the population distribution).
+
+Large-Sample or Approximate Distribution:
+A (sampling) distribution that is reasonable to use for a quantity for a *large* sample size (or occasionally other parameter values). 
+
+We use the notation
+$$Statistic \stackrel{\bullet}\sim f$$
+to denote a large-sample approximating distribution.
+
+Let's formally define convergence in distribution! Recall the Cumulative Distribution Function (or CDF) of a random variable $Y$ is defined as 
+$$F_Y(y) = P(Y\leq y)$$. We define convergence in distribution via the CDF.
+
+Convergence in Distribution:
+The quantity $Y_n$ converges in distribution to $Y$ if
+$$\lim_{n \rightarrow \infty} F_{Y_n}(y)=F_{Y}(y)$$
+or equivalently
+$$\lim_{n \rightarrow \infty} |F_{Y_n}(y)-F_{Y}(y)|=0$$
+(at all points $y$ where $F_Y(y)$ is continuous)
+
+For example, given a random sample from a distribution with finite variance, 
+$$Z_n = \frac{\bar{Y}_n - \mu}{\sigma/\sqrt{n}}$$
+can be shown to converge in distribution to a standard normal distribution. Here the subscript $n$ is just to explicitly note the dependence of the quantity on the sample size. We'll later show that
+$$\lim_{n \rightarrow \infty} F_{Z_n}(z)=F_{Z}(z)$$
+where $Z\sim N(0,1)$.
+
+
+## Why do we care about limit theory? 
+
+Ideally as our sample size grows the statistics we are using will **converge** to their *true* values, often a parameter they are estimating, in some sense. For instance, we hope that the sample mean gets closer and closer to the population mean we are interested in. Also, the distr
 
 The convergence of random variables is important for asymptotic inference. As we can never collect infinity number of data, asymptotic result is critical to approximate the distribution of statistics of interest with finite sample size. We will discuss the most common three types of convergence.
 
