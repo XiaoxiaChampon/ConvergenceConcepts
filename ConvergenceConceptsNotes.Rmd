@@ -201,27 +201,8 @@ Define $\overline{X}=\frac{1}{n} \sum_{i=1}^{n} X_i$ such that $E(X_i)=\mu, Var(
 
 
 
-
 ```{r eruptions, echo=FALSE}
-sidebarPanel(
-      
-                      sliderInput("d_n",
-                                  "n: the nth element in the sequence",
-                                  min = 1,
-                                  max = 1000,
-                                  step=50,
-                                  value = 100,
-                                  animate=animationOptions(
-                                  interval = 1000,
-                                  loop = TRUE,
-                                  playButton = "Play",
-                                  pauseButton = "Stop")    
-                                  ),
-                    
-                      helpText("As \\(n\\) increases,"),
-                      helpText("\\(\\star\\) More points will be created in each sequence and the density plot will vary"),
-                      
-
+ sidebarPanel(d_n=1000,
 #########
                       
                     
@@ -267,27 +248,12 @@ mainPanel(
                       
                       helpText(h4("\\(F_{X_n}(t)\\) is the empirical distribution of \\(X_n\\) and \\(F_X(t)\\) is cdf of \\(X\\). We use \\(\\widehat F_{X_n} (t)\\) to approximate \\(F_{X_n}(t)\\). ")),
    
-                      
-                      
- 
-                  
-####
-#  splitLayout(plotOutput("d_hist"),
-#               plotOutput("d_3D")
-#   ),
-# 
-# 
-# splitLayout(plotOutput("d_F"),
-#               plotOutput("d_sp"))
-
-
-                        
-# d_hist=
 splitLayout(
 
 renderPlot({
       set.seed(1)
-      d_n=input$d_n
+      #d_n=input$d_n
+     d_n=1000
       d_ns=input$d_ns
       d_k=input$d_k
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
@@ -306,29 +272,11 @@ renderPlot({
     }),
 #d_hist
 #######
-#d_3D=renderPlot({
-renderPlot({
-      set.seed(1)
-      d_n=input$d_n
-      d_ns=input$d_ns
-        
-      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
-        d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
-        law.plot3d(d_data_3D,pnorm)
-    })
- #d_3D 
-###########
-  
-  
-
-),
-####################
-splitLayout(
- # d_F=renderPlot({
-     renderPlot({
+  renderPlot({
       set.seed(1)
 
-      d_n=input$d_n
+      #d_n=input$d_n
+       d_n=1000
       d_ns=input$d_ns
       d_k=input$d_k
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
@@ -347,13 +295,146 @@ splitLayout(
              #fill =c("green", "darkblue"))
 
       text(x=4,y=0.05,bquote(bold(F[X[n]](t)~"will resemble"~F[X](t))),col="red",adj=1)
-    }),
+    })
+###########
+)
+)
+
+```
+<div class = "clearfix"> </div>
+```{r  echo=FALSE}
+#split the 3d plot and sample path
+#same slider panel
+ sidebarPanel(
+d_n=1000,
+#########
+                      
+                    
+                        sliderInput("d_ns",
+                                    "M: the number of simulations of the sequence",
+                                    min = 1,
+                                    max = 2000,
+                                    step=30,
+                                    value = 50,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")) ,
+                      
+                        
+                        helpText("As \\(M\\) increases,"),
+                        helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
+                        helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
+                        
+      #####
+                    
+                          sliderInput("d_k",
+                                      helpText("\\(K\\)=position of \\(X_n\\) and \\(K\\leq n_{max}\\)"),
+                                      min = 1,
+                                      max = 1000,
+                                      step=1,
+                                      value = 10,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                          helpText("As \\(K\\) increases,"),
+                          helpText("\\(\\star\\) Density plot of \\(X_n\\) values will resemble a standard normal curve"),
+                          helpText("\\(\\star\\) \\(\\widehat F_{X_n}(t)\\) will approach to \\(F_X(t)\\) ")
+                      
+)
+ 
+############
+mainPanel(
+                          helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim \\chi_1^2\\), \\(Xn=\\frac {\\sum Y_i-n}{\\sqrt{2*n}} \\) and \\(X\\sim N(0,1)\\).')),
+                      
+                      helpText(h4("\\(F_{X_n}(t)\\) is the empirical distribution of \\(X_n\\) and \\(F_X(t)\\) is cdf of \\(X\\). We use \\(\\widehat F_{X_n} (t)\\) to approximate \\(F_{X_n}(t)\\). ")),
+   
+                
+####################
+
+ # d_F=renderPlot({
+    renderPlot({
+      set.seed(1)
+      #d_n=input$d_n
+  d_n=1000
+      d_ns=input$d_ns
+        
+      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
+        d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
+        law.plot3d(d_data_3D,pnorm)
+    })
+)
+```
+
+
+
+<div class = "clearfix"> </div>
+
+
+```{r  echo=FALSE}
+#split the 3d plot and sample path
+#same slider panel
+ sidebarPanel(
+                    
+d_n=1000,
+#########
+                      
+                    
+                        sliderInput("d_ns",
+                                    "M: the number of simulations of the sequence",
+                                    min = 1,
+                                    max = 2000,
+                                    step=30,
+                                    value = 50,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")) ,
+                      
+                        
+                        helpText("As \\(M\\) increases,"),
+                        helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
+                        helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
+                        
+      #####
+                    
+                          sliderInput("d_k",
+                                      helpText("\\(K\\)=position of \\(X_n\\) and \\(K\\leq n_{max}\\)"),
+                                      min = 1,
+                                      max = 1000,
+                                      step=1,
+                                      value = 10,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                          helpText("As \\(K\\) increases,"),
+                          helpText("\\(\\star\\) Density plot of \\(X_n\\) values will resemble a standard normal curve"),
+                          helpText("\\(\\star\\) \\(\\widehat F_{X_n}(t)\\) will approach to \\(F_X(t)\\) ")
+                      
+)
+ 
+############
+mainPanel(
+                          helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim \\chi_1^2\\), \\(Xn=\\frac {\\sum Y_i-n}{\\sqrt{2*n}} \\) and \\(X\\sim N(0,1)\\).')),
+                      
+                      helpText(h4("\\(F_{X_n}(t)\\) is the empirical distribution of \\(X_n\\) and \\(F_X(t)\\) is cdf of \\(X\\). We use \\(\\widehat F_{X_n} (t)\\) to approximate \\(F_{X_n}(t)\\). ")),
+   
+                
+####################
+
    #d_F
     ####
     #d_sp=renderPlot({
       renderPlot({
       set.seed(1)
-      d_n=input$d_n
+      #d_n=input$d_n
+        d_n=1000
       d_ns=input$d_ns
         #eps2=input$ep2
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
@@ -363,22 +444,12 @@ splitLayout(
 #d_sp
 
 
+
+
 )
-
-)
-
-
 ```
 
-
-
-
-
-
-
-
-
-
+<div class = "clearfix"> </div>
 ## Your Turn
 
 ```{r  echo=FALSE}
@@ -495,32 +566,7 @@ splitLayout(
         
         
         }),
-    
-                      #clt_hist
-    
-    #clt_3D <- renderPlot({
-       renderPlot({
-      set.seed(1)
-      clt_n=input$clt_n
-      clt_ns=input$clt_ns
-      clt_alpha=input$clt_alpha
-      clt_beta=input$clt_beta
-      clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
-      
-      clt_data_3D=data.frame()
-      for (t in 1:clt_ns){
-        clt_data_3D=rbind(clt_data_3D,clt_f(clt_n))
-      }
-      law.plot3d(data.matrix(clt_data_3D),pnorm)
-    })
-#clt_3D
-  
-),
-
-splitLayout(
-  ###
-#clt_F <- renderPlot({ 
-  renderPlot({ 
+      renderPlot({ 
       set.seed(1)
       clt_n=input$clt_n
       clt_ns=input$clt_ns
@@ -544,11 +590,221 @@ splitLayout(
             # fill =c("green", "darkblue"))
       
       text(x=4,y=0.1,bquote(bold(F[X[n]](t)~"will resemble"~F[X](t))),col="red",adj=1)
-    }),
-#clt_F
+    })
+                      #clt_hist
+   
+#clt_3D
   
+)
+
+)
+```
+
+
+
+
+<div class = "clearfix"> </div>
+```{r echo=FALSE}
+sidebarPanel(
+sliderInput("clt_n",
+                                  "n: the nth element in the sequence",
+                                  min = 10,
+                                  max = 1000,
+                                  step=5,
+                                  value = 100,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                      
+                      
+                      
+                      helpText("As \\(n\\) increases,"),
+                      helpText("\\(\\star\\) More points will be created in each sample path and the density plot will vary"),
+                      
+####
+sliderInput("clt_ns",
+                                    "M: the number of simulations of the sequence",
+                                    min = 1,
+                                    max = 2000,
+                                    step=5,
+                                    value = 50,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                      
+                      helpText("As \\(M\\) increases,"),
+                      helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
+                      helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
+############
+sliderInput("clt_k",
+                                      helpText("\\(K\\)=position of \\(X_n\\) and \\(K\\leq n_{max}\\)"),
+                                      min = 1,
+                                      max = 1000,
+                                      step=1,
+                                      value = 10,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                          helpText("As \\(K\\) increases,"),
+                          helpText("\\(\\star\\) Density plot of \\(X_n\\) values will resemble a standard normal curve"),
+                          helpText("\\(\\star\\) \\(\\widehat F_{Xn}(t)\\) will approach to \\(F_X(t)\\)"),
 #####
-#clt_sp <- renderPlot({
+sliderInput("clt_alpha",
+                                    helpText("\\(\\alpha\\)=shape parameter"),
+                                    min = 0.0001,
+                                    max = 10,
+                                    step=0.1,
+                                    value = 2,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                    
+                      
+                      helpText("\\(\\star\\) As \\(\\alpha\\) increases, the histogram will be more symmetric "),
+#######
+sliderInput("clt_beta",
+                                    helpText("\\(\\beta\\)=scale parameter"),
+                                    min = 0.0001,
+                                    max = 10,
+                                    step=0.1,
+                                    value = 1,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                        
+                        helpText("\\(\\star\\) As \\(\\beta\\) increases, the histogram will spread out more  ")
+)
+#######
+mainPanel(
+helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overline Y_i-\\mu)  )}{\\sigma} \\overset {d}{\\to} X\\sim N(0,1) \\; or\\; X_n=\\frac{\\sqrt{n} ( \\overline Y_i-\\mu)  )}{\\sigma} \\overset {L}{\\to} X\\sim N(0,1) \\).")),
+                      helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim Gamma(\\alpha,\\beta)\\) and \\(Xn=\\frac{\\sqrt{n}*(\\overline Y_i-\\alpha*\\beta)}{\\sqrt{\\alpha*\\beta^2}}\\).')),
+                      helpText(h4("\\(F_{X_n}(t)\\) is the empirical distribution of \\(X_n\\) and \\(F_X(t)\\) is cdf of \\(X\\). We use \\(\\widehat F_{X_n} (t)\\) to approximate \\(F_{X_n}(t)\\).  ")),
+
+
+
+    
+                      #clt_hist
+    
+    #clt_3D <- renderPlot({
+       renderPlot({
+      set.seed(1)
+      clt_n=input$clt_n
+      clt_ns=input$clt_ns
+      clt_alpha=input$clt_alpha
+      clt_beta=input$clt_beta
+      clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
+      
+      clt_data_3D=data.frame()
+      for (t in 1:clt_ns){
+        clt_data_3D=rbind(clt_data_3D,clt_f(clt_n))
+      }
+      law.plot3d(data.matrix(clt_data_3D),pnorm)
+    })
+#clt_3D
+  
+
+)
+```
+
+<div class = "clearfix"> </div>
+
+```{r echo=FALSE}
+sidebarPanel(
+sliderInput("clt_n",
+                                  "n: the nth element in the sequence",
+                                  min = 10,
+                                  max = 1000,
+                                  step=5,
+                                  value = 100,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                      
+                      
+                      
+                      helpText("As \\(n\\) increases,"),
+                      helpText("\\(\\star\\) More points will be created in each sample path and the density plot will vary"),
+                      
+####
+sliderInput("clt_ns",
+                                    "M: the number of simulations of the sequence",
+                                    min = 1,
+                                    max = 2000,
+                                    step=5,
+                                    value = 50,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                      
+                      helpText("As \\(M\\) increases,"),
+                      helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
+                      helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
+############
+sliderInput("clt_k",
+                                      helpText("\\(K\\)=position of \\(X_n\\) and \\(K\\leq n_{max}\\)"),
+                                      min = 1,
+                                      max = 1000,
+                                      step=1,
+                                      value = 10,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                          helpText("As \\(K\\) increases,"),
+                          helpText("\\(\\star\\) Density plot of \\(X_n\\) values will resemble a standard normal curve"),
+                          helpText("\\(\\star\\) \\(\\widehat F_{Xn}(t)\\) will approach to \\(F_X(t)\\)"),
+#####
+sliderInput("clt_alpha",
+                                    helpText("\\(\\alpha\\)=shape parameter"),
+                                    min = 0.0001,
+                                    max = 10,
+                                    step=0.1,
+                                    value = 2,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                    
+                      
+                      helpText("\\(\\star\\) As \\(\\alpha\\) increases, the histogram will be more symmetric "),
+#######
+sliderInput("clt_beta",
+                                    helpText("\\(\\beta\\)=scale parameter"),
+                                    min = 0.0001,
+                                    max = 10,
+                                    step=0.1,
+                                    value = 1,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")),
+                        
+                        helpText("\\(\\star\\) As \\(\\beta\\) increases, the histogram will spread out more  ")
+)
+#######
+mainPanel(
+helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overline Y_i-\\mu)  )}{\\sigma} \\overset {d}{\\to} X\\sim N(0,1) \\; or\\; X_n=\\frac{\\sqrt{n} ( \\overline Y_i-\\mu)  )}{\\sigma} \\overset {L}{\\to} X\\sim N(0,1) \\).")),
+                      helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim Gamma(\\alpha,\\beta)\\) and \\(Xn=\\frac{\\sqrt{n}*(\\overline Y_i-\\alpha*\\beta)}{\\sqrt{\\alpha*\\beta^2}}\\).')),
+                      helpText(h4("\\(F_{X_n}(t)\\) is the empirical distribution of \\(X_n\\) and \\(F_X(t)\\) is cdf of \\(X\\). We use \\(\\widehat F_{X_n} (t)\\) to approximate \\(F_{X_n}(t)\\).  ")),
+
+
 renderPlot({
       set.seed(1)
       clt_n=input$clt_n
@@ -564,15 +820,9 @@ renderPlot({
         visualize.sp(data.matrix(clt_data_3D),nb.sp=clt_ns,epsilon=3,main=mtext(bquote(bold(.(clt_ns)~"sample paths of"~X[n])),col="darkblue"), col="grey")
         
     })
-#clt_sp
+
 
 )
-
-)
-
-
-
-
 ```
 
 
@@ -580,6 +830,7 @@ renderPlot({
 <div class = "clearfix"> </div>
 
 ### Homework practice
+reference: https://www.probabilitycourse.com/chapter7/7_2_4_convergence_in_distribution.php \
 Let $X_2, X_3,  X_4, \cdots $ be a sequence of random variable such that
 $$F_{X_n}(x)=\begin{cases}
       1-(1-\frac{1}{n})^{nx} \ , \  x>0
@@ -597,13 +848,6 @@ $$ \begin{aligned} lim_{n \rightarrow \infty} F_{X_n}(x)&=lim_{n \rightarrow \in
 &=1-e^{-x}\\
 &=F_X(x)\end{aligned}$$, for all $x$.
 Thus, we conclude that $X_n \stackrel {d}{\rightarrow}X$.
-
-
-
-
-
-
-
 
 ## Embedded Application
 
@@ -624,6 +868,7 @@ Note the use of the `height` parameter to determine how much vertical space the 
 You can also use the `shinyApp` function to define an application inline rather then in an external directory.
 
 In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
+
 
 
 
