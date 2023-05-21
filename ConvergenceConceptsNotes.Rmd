@@ -23,7 +23,6 @@ for (i = 0; i < coll.length; i++) {
     }
   });
 }
-
 ```
 
 ```{r setup, include=FALSE,warning=FALSE}
@@ -92,11 +91,8 @@ We are all statisticians, and we tend to describe anything related with numbers 
 
 
 ```{r echo=FALSE, figures-side, fig.show="hold", out.width="50%"}
-<<<<<<< HEAD
 #https://data.bls.gov/cew/apps/data_views/data_views.htm#tab=Tables
 #https://www.bls.gov/oes/current/oes152051.htm#(2)
-=======
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 par(mar = c(4, 4, .1, .1))
 knitr::include_graphics("./meansalary.png")
 knitr::include_graphics("./meanincrease.png")
@@ -107,7 +103,7 @@ knitr::include_graphics("./meanincrease.png")
 <div class = "clearfix"> </div>
 
 
-Hopefully, the information from these figures make the point. We consider the mean because it's reliable with proven theories. Let's explore the properties of the average together so students know those numbers are trsutworthy to make their choice. 
+Hopefully, the information from these figures make the point. We consider the mean because it's reliable with proven theories. Let's explore the properties of the average together so students know those numbers are trustworthy to make their choice. 
 
 - Suppose that $Y_i\stackrel{iid}\sim Gamma(\alpha = 5, \lambda = 1)$. (That is, assume we have a random sample from a Gamma distribution.) 
 - Consider the *statistic* $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$. 
@@ -131,28 +127,19 @@ library(gganimate)
 
 alpha=5
 lambda=1
-<<<<<<< HEAD
 M=1000 #number of repetations
 n20=c(0)
 for (i in 1:M){
   n20[i]=mean(rgamma(n = 20, shape = alpha, scale = lambda) )
 }
 n50=c(0)
+
 for (i in 1:M){
-=======
-N=1000
-n20=c(0)
-for (i in 1:N){
-  n20[i]=mean(rgamma(n = 20, shape = alpha, scale = lambda) )
-}
-n50=c(0)
-for (i in 1:N){
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
   n50[i]=mean(rgamma(n = 50, shape = alpha, scale = lambda) )
 }
 
 n100=c(0)
-<<<<<<< HEAD
+
 for (i in 1:M){
   n100[i]=mean(rgamma(n = 100, shape = alpha, scale = lambda) )
 }
@@ -161,16 +148,6 @@ for (i in 1:M){
   n500[i]=mean(rgamma(n = 500, shape = alpha, scale = lambda) )
 }
 datamat=data.frame(cbind(c(rep(c(20,50,100,500),each=M)),c(n20,n50,n100,n500)))
-=======
-for (i in 1:N){
-  n100[i]=mean(rgamma(n = 100, shape = alpha, scale = lambda) )
-}
-n500=c(0)
-for (i in 1:N){
-  n500[i]=mean(rgamma(n = 500, shape = alpha, scale = lambda) )
-}
-datamat=data.frame(cbind(c(rep(c(20,50,100,500),each=N)),c(n20,n50,n100,n500)))
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 colnames(datamat)=c("samplesize","mean")
 
 # create ggplot2 plot
@@ -184,34 +161,109 @@ ggplot(datamat) +
 #anim_save("gammean.gif")
 ```
 
+
 A few questions for you:
 
 
 - What shape does it look like? 
 - What do we notice when the sample size increases? 
 - What factor do you think will affect the the spread?
-<<<<<<< HEAD
 
-=======
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 
 The theory behind this will be introduced below.
 
-<<<<<<< HEAD
-=======
-The theory behind this will be introduced below.
 
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 **Then we put the app here and have them consider different values of $\alpha$, $\lambda$, and $n$ with guidance for trying to find some 'rule' for when the normal distribution might be appropriate.**
+
+```{r eruptions, echo=FALSE}
+sidebarPanel( sliderInput("d_ngam",
+                                    "n: sample size",
+                                    min = 1,
+                                    max = 2000,
+                                    step=30,
+                                    value = 50,
+                                  animate=animationOptions(
+                                  interval = 1000,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")) ,
+                                     helpText("As \\(n\\) increases,"),
+                        helpText("\\(\\star\\) The mean of gamma distribution approaches to normal"),
+                       
+                    
+                        sliderInput("alpha",
+                                    "alpha: shape parameter",
+                                    min = 0.1,
+                                    max = 50,
+                                    step=5,
+                                    value = 0.1,
+                                  animate=animationOptions(
+                                  interval = 5,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")) ,
+                                                   helpText("As \\(alpha\\) increases,"),
+                        helpText("\\(\\star\\) The mean of the gamma distribution increases"),
+                sliderInput("lambda",
+                                    "lambda: scale parameter",
+                                    min = 0.1,
+                                    max = 50,
+                                    step=5,
+                                    value = 0.1,
+                                  animate=animationOptions(
+                                  interval = 5,
+                                  loop = TRUE,
+                                  playButton = "Play",
+                                  pauseButton = "Stop")) ,
+               helpText("As \\(lambda\\) increases,"),
+                        helpText("\\(\\star\\) The distribution of the mean is more spread out"))
+                      
+                        
+                 
+
+############
+
+mainPanel(
+                          helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim \\gam(alpha,lambda)\\), \\(\\bar (Y)=\\sim N(alpha*lambda,\\frac{alpha*lambda^2}{n})\\).')),
+                      
+                      
+   renderPlot({
+      set.seed(1)
+
+  d_ngam=input$d_ngam
+      d_alpha=input$alpha
+       d_lamda=input$lambda
+       
+       M=2000 #number of repetitions
+        gamsample=c(0)
+      for (i in 1:M){
+      gamsample[i]=mean(rgamma(n = d_ngam, shape = alpha, scale = lambda) )}
+      
+        datamatgam=data.frame(cbind(rep(d_ngam,M),c(gamsample)))
+        colnames(datamatgam)=c("samplesize","mean")
+
+# create ggplot2 plot
+ggplot(datamatgam) + 
+  geom_histogram(mapping=aes(x=mean,group=samplesize),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
+  ggtitle("Distribution of Observed Mean values") +
+  labs(subtitle=(paste0("Sample Size :",d_ngam))) +
+  ylab("Absolute Frequency out of 1000") + 
+  xlab("Observed Mean Value ") 
+      
+    })
+  )             
+```
+
+
+<div class = "clearfix"> </div>
 
 <button type="button" class="collapsible">Key for a reliable Mean Estimate</button>
 <div class="content">
-<<<<<<< HEAD
+
 **Large sample size
-=======
-**Sample size is greater than 30
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
+
 </div>
+<div class = "clearfix"> </div>
 ### Definitions
 
 We can see that there may be a distinction between the *actual* distribution and an approximating distribution. We call these by different names.
@@ -245,7 +297,7 @@ where $Z\sim N(0,1)$.
 
 ## Why do we care about limit theory? 
 
-Ideally as our sample size grows the statistics we are using will **converge** to their *true* values, often a parameter they are estimating, in some sense. For instance, we hope that the sample mean gets closer and closer to the population mean we are interested in. Also, the distr
+Ideally as our sample size grows the statistics we are using will **converge** to their *true* values, often a parameter they are estimating, in some sense. For instance, we hope that the sample mean gets closer and closer to the population mean we are interested in. 
 
 The convergence of random variables is important for asymptotic inference. As we can never collect infinity number of data, asymptotic result is critical to approximate the distribution of statistics of interest with finite sample size. We will discuss the most common three types of convergence.
 
@@ -259,49 +311,27 @@ Just for proof of concept. Notation:
 </div>
 
 
-<<<<<<< HEAD
 ## Convergence in Distribution
 * Definition $lim_{n \rightarrow \infty} F_{X_n}(x)=F_{X}(x)$, or
             $lim_{n \rightarrow \infty} |F_{X_n}(x)-F_{X}(x)|=0$
   * $F_X(x)$ is continuous
   * Cumulative Density Function (CDF)
+
+Below is the empirical cumulative distribution for binomial distribution and the appropriate normal distribution. We investigate the distribution of the sample means from the binomial distribution out of 1000 repetitions.
 
 <div class = "clearfix"> </div>
   
 :::: {style="display: flex;"}
 
 ::: {}
-Let's check out the empirical cumulative distribution for binomial distribution and appropriate normal distribution.
-```{r, echo=FALSE,message=FALSE}
-#ggplot(datamat[datamat$samplesize==500,], aes(mean)) +                      # Draw cumulative ggplot2 histogram
-  #stat_ecdf(geom = "step", pad = FALSE)
-library(cowplot)
-p=0.6
-n=100
-NN=1000
-=======
-:::: {style="display: flex;"}
-
-::: {}
-
-## Convergence in Distribution
-* Definition $lim_{n \rightarrow \infty} F_{X_n}(x)=F_{X}(x)$, or
-            $lim_{n \rightarrow \infty} |F_{X_n}(x)-F_{X}(x)|=0$
-  * $F_X(x)$ is continuous
-  * Cumulative Density Function (CDF)
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 
 
 ```{r, echo=FALSE,message=FALSE}
 #ggplot(datamat[datamat$samplesize==500,], aes(mean)) +                      # Draw cumulative ggplot2 histogram
   #stat_ecdf(geom = "step", pad = FALSE)
-
-<<<<<<< HEAD
-=======
 p=0.6
 n=100
 NN=1000
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 n500cdf=rbinom(NN,n,p)
 
 ecdf <- data.frame(
@@ -313,20 +343,17 @@ ggplot(ecdf, aes(x,color=CDF)) +stat_ecdf()+
   ggtitle("Emprical Cumulative Distribution Function") +
   ylab("Cumulative Distribution Function") + 
   xlab("Observed Mean Value ")
-<<<<<<< HEAD
-=======
-#![](/Users/xzhao17/Desktop/empirical1.png) 
-```
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 
 #![](/Users/xzhao17/Desktop/empirical1.png) 
 ```
 
-<<<<<<< HEAD
+
+
+
 :::
 
 ::: {}
-This is the distribution of the means out of 1000 repetitions.
+
 
 ```{r, echo=FALSE,message=FALSE}
 MM=1000 #number of simulation
@@ -342,7 +369,7 @@ ggplot(n500df,aes(x=n500cdfmean)) +
      xlab("Observed Mean Value ") 
 ```
 :::
-=======
+
 
 
 
@@ -375,58 +402,24 @@ lines(seq(from = -3, to = 3, by = 0.01), dnorm(seq(from = -3, to = 3, by = 0.01)
  #Repeat this part for n = 30, n = 300
 ```
 
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 
 ::::
 
 
-```{r, include=FALSE}
-#From 501 notes
-#Simulate N data sets, each of size n, from an exp(1) distribution
-n <- c(3, 30, 300)
-N <- 50000
-
-#list to save data values in (this is not an efficient way to create this data!)
-data <- list()
-for(i in 1:length(n)){ 	
-    data[[i]] <- matrix(0, nrow = N, ncol = n[i])  #each row of a matrix will represent a data set
-}
-
-#Create the data - loop over sample sizes
-for (j in 1:length(n)){	#loop over sample sizes
-     for (i in 1:N){  #loop to create many data sets of a given sample size
-           data[[j]][i,] <- rexp(n = n[j])	#store the data set in a row of the appropriate matrix
-     }
-}
-#mean and variance for exp(1)
-mu<-sigma<-1
-
-#calculate the z statistic for each set of samples.  Apply the z-score transform to each row of values.
-means1 <- apply(X = data[[1]], FUN = function(data){(mean(data)-mu)/(sigma/sqrt(n[1]))}, MARGIN = 1)
-hist(means1, main = paste("Histogram of z's with n=", n[1], " from exp(1)", sep = ""), 
-      xlab = "Means", prob = T)
-lines(seq(from = -3, to = 3, by = 0.01), dnorm(seq(from = -3, to = 3, by = 0.01)))
- #Repeat this part for n = 30, n = 300
-```
-
-<<<<<<< HEAD
-=======
 :::
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
 
 
+<div class = "clearfix"> </div>
 
 ## Central Limit Theorem
 Define $\overline{X}=\frac{1}{n} \sum_{i=1}^{n} X_i$ such that $E(X_i)=\mu, Var(X_i)=\sigma^2 < \infty, \forall i$ and $X \sim N (0, 1)$
 
 * $\frac{\sqrt{n} (\overline{X_n}-\mu)}{\sigma} \stackrel {d} {\rightarrow} X$
 
-<<<<<<< HEAD
+
 ```{r, echo=FALSE,message=FALSE,include=FALSE}
-#this is using gamma example-discussed to just use binomial to be consistent, hisgogram of mean and density plot
-=======
-```{r, echo=FALSE,message=FALSE}
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
+#this is using gamma example-discussed to just use binomial to be consistent, histogram of mean and density plot
+
 ggplot(datamat[datamat$samplesize==500,],aes(x=mean)) +
      geom_histogram(aes(y = ..density..),col="red",fill="green") + geom_density()+ theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
      ggtitle("Distribution of Observed Mean values") +
@@ -435,7 +428,7 @@ ggplot(datamat[datamat$samplesize==500,],aes(x=mean)) +
 ```
 
 
-<<<<<<< HEAD
+
 <div class = "clearfix"> </div>
 
 ##CLT Applied to a Sum 
@@ -463,12 +456,11 @@ Practically, why is the CLT so important?
 	contains $\mu$.
 	- Note: No assumption about $Y$'s distribution made other than finite 
 	variance!
-=======
 :::
 
 ::::
 <div class = "clearfix"> </div>
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
+
 
 ##CLT Applied to a Sum 
 
@@ -500,7 +492,7 @@ Practically, why is the CLT so important?
 
 <div class = "clearfix"> </div>
 
-<div class = "clearfix"> </div>
+
 
 
 ## R shiny demonstration by the instructor
@@ -517,7 +509,7 @@ Practically, why is the CLT so important?
 #hist(rbeta(1000 , 10000, 10000)) #beta (bigalpha,bigalpha) normal (1/2,sqrt(1/4(2bigalpha+1)))
 ```
 
-<<<<<<< HEAD
+
 
 
 ```{r, include=FALSE}
@@ -527,12 +519,11 @@ Practically, why is the CLT so important?
 
 We want to explore the distribution convergence in distribution and central limit theorem through the interactive app. Before we jump into shiny, let's introduce some parameters which can be varied. We will still use the binomial distribution example we visualized earlier.
 
-*n: The number of the sample size. 
-  With everything else fixed, as $n\rightarrow \infty$
- -Histogram: it becomes a symmetric bell-shape
- -CDF:
- -3D distance between ECDF and Normal CDF:
- -Sample path
+*n: The number of the sample size. With everything else fixed, as $n\rightarrow \infty$:
+    *Histogram: it becomes a symmetric bell-shape
+    *CDF:
+    *3D distance between ECDF and Normal CDF:
+    *Sample path
 ```{r,echo=FALSE,message=FALSE}
 #histogram by sample size
 n20b=c(0)
@@ -571,92 +562,130 @@ ggplot(datamatb) +
 #CDF by sample size
 library(EnvStats)
 library(transformr)
-n500cdf20=rbinom(NN,20,p)
+NN=1000
+p=0.6
+##n=20
+ n20=rbinom(NN,20,p)
+ n20norm=rnorm(NN, 20*p, sqrt(20*p*(1-p)))
+ # xx20 <- qemp(p = seq(0, 1, len = 100), obs = n20) 
+ # y20 <- cumsum(demp(xx20, n20) )
+ y20 <- ecdf( n20)
+ # 
+ # xx20n <- qemp(p = seq(0, 1, len = 100), obs = n20norm) 
+ y20n <- ecdf( n20norm)
 ecdf20 <- data.frame(
-  x = c(n500cdf20, rnorm(NN, 20*p, sqrt(20*p*(1-p)))),
+   x=c(n20,n20norm),
+   y = c(y20, y20n),
+  
    CDF= c(rep("Binormial (20,0.6)",NN), rep("Normal (12, 4.8)",NN))
 )
 
- ecdf20$xx <- qemp(p = seq(0, 1, len = 100), obs = ecdf20$x[1:NN]) 
-  ecdf20$y <- cumsum(demp(ecdf20$xx, ecdf20$x[1:NN]) )
-
-
-n500cdf50=rbinom(NN,50,p)
+##n=50
+ n50=rbinom(NN,50,p)
+ n50norm=rnorm(NN, 50*p, sqrt(50*p*(1-p)))
+ #xx50 <- qemp(p = seq(0, 1, len = 100), obs = n50) 
+ y50 <- ecdf(n50 )
+ 
+ #xx50n <- qemp(p = seq(0, 1, len = 100), obs = n50norm) 
+ y50n <- ecdf(n50norm)
 ecdf50 <- data.frame(
-  x = c(n500cdf50, rnorm(NN, 50*p, sqrt(50*p*(1-p)))),
+   x=c(n50,n50norm),
+   y = c(y50, y50n),
+  
    CDF= c(rep("Binormial (50,0.6)",NN), rep("Normal (30, 12)",NN))
 )
 
-ecdf50$xx <- qemp(p = seq(0, 1, len = 100), obs = ecdf50$x) 
-  ecdf50$y <- demp(ecdf50$xx, ecdf50$x) 
-
-n500cdf100=rbinom(NN,100,p)
+##n=100
+ n100=rbinom(NN,100,p)
+ n100norm=rnorm(NN, 100*p, sqrt(100*p*(1-p)))
+ #xx100 <- qemp(p = seq(0, 1, len = 100), obs = n100) 
+ y100 <- ecdf(n100 )
+ 
+ #xx100n <- qemp(p = seq(0, 1, len = 100), obs = n100norm) 
+ y100n <- ecdf(n100norm)
 ecdf100 <- data.frame(
-  x = c(n500cdf100, rnorm(NN, 100*p, sqrt(100*p*(1-p)))),
-   CDF= c(rep("Binormial (50,0.6)",NN), rep("Normal (30, 12)",NN))
+   x=c(n100,n100norm),
+   y = c(y100, y100n),
+  
+   CDF= c(rep("Binormial (100,0.6)",NN), rep("Normal (60, 24)",NN))
 )
 
-ecdf100$xx <- qemp(p = seq(0, 1, len = 100), obs = ecdf100$x) 
-  ecdf100$y <- demp(ecdf100$xx, ecdf100$x) 
-
-
-n500cdf500=rbinom(NN,500,p)
+##n=500
+ n500=rbinom(NN,500,p)
+ n500norm=rnorm(NN, 500*p, sqrt(500*p*(1-p)))
+ #xx500 <- qemp(p = seq(0, 1, len = 100), obs = n500) 
+ y500 <- ecdf( n500) 
+ 
+ #xx500n <- qemp(p = seq(0, 1, len = 100), obs = n500norm) 
+ y500n <- ecdf( n500norm)
 ecdf500 <- data.frame(
-  x = c(n500cdf500, rnorm(NN, 500*p, sqrt(500*p*(1-p)))),
+   x=c(n500,n500norm),
+   y = c(y500, y500n),
+  
    CDF= c(rep("Binormial (500,0.6)",NN), rep("Normal (300, 120)",NN))
 )
 
-ecdf500$xx <- qemp(p = seq(0, 1, len = 100), obs = ecdf500$x) 
-  ecdf500$y <- demp(ecdf500$xx, ecdf500$x) 
 
 ecdfall=rbind(ecdf20,ecdf50,ecdf100,ecdf500)
 ecdfall$samplesize=rep(c(20,50,100,500),each=2*NN)
-=======
-```{r, include=FALSE}
-#hist(rpois(1000, lambda=1000)). #poisson (biglamda) normal(biglamda, biglamda)
-```
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
-
 
 #+stat_ecdf()
 #color=CDF,
-ggplot(ecdfall, aes(xx,y,color=CDF,group=samplesize)) +
+ggplot(ecdfall, aes(x,color=CDF,group=samplesize)) ++stat_ecdf()
   theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.8, 0.1))+
   ggtitle("Emprical Cumulative Distribution Function") + labs(subtitle=("Sample Size : {closest_state}"))+
   ylab("Cumulative Distribution Function") + 
   xlab("Observed Value ")+transition_states(samplesize)
 
+
 ```
 
 
- 
-*M: the number of simulations/repetitions.
- With everything else fixed, as $M\rightarrow \infty$
- -Histogram:
- -CDF:
- -3D distance between ECDF and Normal CDF:
- -Sample path
+```{r}
+ggplot(ecdfall, aes(x,color=CDF)) +
+  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.8, 0.1))+
+  ggtitle("Emprical Cumulative Distribution Function") + 
+  ylab("Cumulative Distribution Function") + 
+  xlab("Observed Value ")
+```
+
+
+```{r}
+ggplot(ecdfall, aes(x,color=CDF,group=samplesize)) +stat_ecdf()+
+  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.8, 0.1))+
+  ggtitle("Emprical Cumulative Distribution Function") + 
+  ylab("Cumulative Distribution Function") + 
+  xlab("Observed Value ")
+```
+
+
+
+*M: the number of simulations/repetitions. With everything else fixed, as $M\rightarrow \infty$
+ *Histogram:
+ *CDF:
+ *3D distance between ECDF and Normal CDF:
+ *Sample path
 
 *Other distribution specific parameters
- -$\alpha$: shape parameter for gamma distribution. 
+ *$\alpha$: shape parameter for gamma distribution. 
   As $\alpha\rightarrow \infty$, gamma distribution converges to normal distribution.
- -$\lambda$: rate parameter for poisson distribution. 
+ *$\lambda$: rate parameter for poisson distribution. 
   As $\lambda\rightarrow \infty$, poisson distribution converges to normal distribution
- -$\alpha,\beta$: rate parameters for beta distribution. 
+ *$\alpha,\beta$: rate parameters for beta distribution. 
   As $\alpha=\beta\rightarrow \infty$, beta distribution converges to normal distribution
 
-```{r eruptions, echo=FALSE}
+```{r  echo=FALSE}
 sidebarPanel(d_n=1000,
 #########
-<<<<<<< HEAD
+
                       #selectInput("tabs",
                                   #"Distribution",
                                   #list('Binormial','Beta','Poisson'),multiple = FALSE),
-=======
-                      selectInput("tabs",
-                                  "Distribution",
-                                  list('Binormial','Beta','Poisson'),multiple = FALSE
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
+
+                     # selectInput("tabs",
+                                 # "Distribution",
+                                 # list('Binormial','Beta','Poisson'),multiple = FALSE
+
   # inputId,
   # label,
   # choices,
@@ -665,11 +694,9 @@ sidebarPanel(d_n=1000,
   # selectize = TRUE,
   # width = NULL,
   # size = NULL
-<<<<<<< HEAD
 
-=======
-),
->>>>>>> 6597e5c772367423df93672c894c8e4bc8b29967
+#),
+
                     
                         sliderInput("d_ns",
                                     "M: the number of simulations of the sequence",
@@ -1026,7 +1053,7 @@ Thus, we conclude that $X_n \stackrel {d}{\rightarrow}X$.
 <div class = "clearfix"> </div>
 
 ## Convergence in Probability Definition 
-<<<<<<< HEAD
+
 
 A sequence of RVs $Y_1,...,Y_n,...$ converges in probability to a RV $Y$ if for every $\epsilon>0$
 $$lim_{n\rightarrow\infty}P(|Y_n-Y|\geq \epsilon)=0 \iff 
@@ -1036,7 +1063,7 @@ Denoted by $Y_n\stackrel{p}{\rightarrow}Y$.  \\
 We'll mostly care about convergence in probability to a constant, call it $c$.
 $$lim_{n\rightarrow\infty}P(|Y_n-c|< \epsilon)=\lim_{n\rightarrow\infty}P(-\epsilon < Y_n-c<\epsilon) =  \lim_{n\rightarrow\infty}P(c-\epsilon < Y_n<c+\epsilon)=1$$
 
-\textbf{Convergence in probability idea} - We will show that for a RS where the 
+Convergence in probability idea - We will show that for a RS where the 
 mean and variance exist the sequence 
 $$\bar{Y}=\bar{Y}_{n}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}\rightarrow 
 E(Y)=\mu$$
@@ -1070,7 +1097,7 @@ We will investigate the process of $X_n\stackrel{p}{\rightarrow}0$, where $X_1, 
 - $\epsilon=0.05$
 - Probability=$\frac{number \lvert X_n-0\rvert \geq \epsilon}{M}$ for each column
 
-```{r, echo=FALSE, message=FALSE,warnings=FALSE}
+```{r, echo=FALSE, message=FALSE,warnings=FALSE, include=FALSE}
 #Load library and set seed
 #"formattable"
 
@@ -1103,7 +1130,7 @@ data %>%
 
 
 
-\text{Convergence in probability is looking for the probability that the $|X_n-0|\geq\epsilon$ in each column.}\\
+Convergence in probability is looking for the probability that the $|X_n-0|\geq\epsilon$ in each column.
 
 
 ```{r, echo=FALSE,message=FALSE}
@@ -1208,7 +1235,6 @@ $g(Y_1),g(Y_2),g(Y_3)...$ converge to $g(Y)$.
 Example: Suppose $Y_i$ are independent each with mean $\mu$, we have interest 
 in $\mu^2$.
 
-=======
 
 A sequence of RVs $Y_1,...,Y_n,...$ converges in probability to a RV $Y$ if for every $\epsilon>0$
 $$lim_{n\rightarrow\infty}P(|Y_n-Y|\geq \epsilon)=0 \iff 
@@ -1217,179 +1243,6 @@ Denoted by $Y_n\stackrel{p}{\rightarrow}Y$.  \\
 
 We'll mostly care about convergence in probability to a constant, call it $c$.
 $$lim_{n\rightarrow\infty}P(|Y_n-c|< \epsilon)=\lim_{n\rightarrow\infty}P(-\epsilon < Y_n-c<\epsilon) =  \lim_{n\rightarrow\infty}P(c-\epsilon < Y_n<c+\epsilon)=1$$
-
-\textbf{Convergence in probability idea} - We will show that for a RS where the 
-mean and variance exist the sequence 
-$$\bar{Y}=\bar{Y}_{n}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}\rightarrow 
-E(Y)=\mu$$
-
-<div class = "clearfix"> </div>
-
-
-```{r, echo=FALSE,message=FALSE}
-#Generate this many datasets
-N <- 10000
-#dummy vectors to store things
-means <- rep(0, N)
-#create data set of size i from normal, save sample mean of each sample.  True mean is 0.
-for (i in 1:N){    
-    means[i]<-mean(rnorm(n=i))
-}
-plot(x = 1:N, y = means, main = "Plot of Sample Mean Observations", xlab = "Number of data 
-            values", ylab = "Value of Mean", cex = 0.1)
-abline(h=0)
-```
-
-
-<div class = "clearfix"> </div>
-
-##Convergence in probability idea
-
-We will investigate the process of $X_n\stackrel{p}{\rightarrow}0$, where $X_1, X_2, X_3,..., X_n$ are a sequence of $iid$ random variables that $X_n=\frac{\sum_{i=1}^{n}Y_i}{n^2}$ and $Y_i\sim N(0,1)$.\\
-
-- $n$ is the number of points in each sample path
-- $M$ is the number of sample paths
-- $\epsilon=0.05$
-- Probability=$\frac{number \lvert X_n-0\rvert \geq \epsilon}{M}$ for each column
-
-```{r, echo=FALSE, message=FALSE,warnings=FALSE}
-#Load library and set seed
-#"formattable"
-
-Packages <- c("ConvergenceConcepts","kableExtra","dplyr", "knitr","textshape","radiant.data", "magrittr","reshape2","ggplot2")
-
-lapply(Packages, library, character.only = TRUE)
-set.seed(1)
-
-#Generate this many columns
-n=10
-#Simulate the sequence this many times
-M=5
-#Set up epsilon value
-epsilon=0.05
-#Define the function to generate the sequence
-f=function(n){cumsum(rnorm(n))/((1:n)**2)}
-#Generate dataset with n columns and M rows
-data <- abs(round(generate(nmax=n,M=M,f)$data,digits=2))
-#Extract the probability for each column that the distance between X and 0 is greater than epsilon
-Pn_critr <- criterion(data,epsilon=epsilon,mode="p")$crit
-
-#Rename the row name and column names of dateframe
-data=data.frame(data)
-rownames(data)=c("Sample path 1", "Sample path 2","Sample path 3","Sample path 4","Sample path 5")
-colnames(data)=c("X1","X2","X3","X4","X5","X6","X7","X8","X9","X10")
-data %>%
-  kable(caption = "data") %>%
-  kable_styling()
-```
-
-
-
-\text{Convergence in probability is looking for the probability that the $|X_n-0|\geq\epsilon$ in each column.}\\
-
-
-```{r, echo=FALSE,message=FALSE}
-#Add rownames to a column in order to melt
-sample_path <- rownames(data)
-datanew <- cbind(sample_path,data)
-data_melted = melt(datanew, id.vars = 'sample_path')
-ggplot(data_melted, aes(x = variable, y = value)) + geom_line(aes(color = sample_path, group =sample_path))+
-  geom_hline(yintercept = epsilon,size=1,col="purple")+geom_hline(yintercept = -epsilon,size=1,col="purple")+
-  annotate("rect", xmin = 3.75, xmax = 4.25, ymin = -0.75, ymax = 0.75,
-  alpha = .2)+
-  annotate("text",x = 4, y = 0.8, label = "hat(p[3])==0.8",parse = TRUE,col="darkblue")+
-  theme_classic()+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-     ggtitle("Probability of 5 Sample Paths as Sample Size Increases")+
-     ylab("Probability") + 
-     xlab("Sequence ") 
-```
-
-
-
-```{r,echo=FALSE,message=FALSE}
-#Transpose column dataset probability and rename the column names
-#caption = "<center> Probability for 5 Simuations <br>
-                 # when sample size in 10 </center>"
-probability=t(Pn_critr)
-rownames(probability)="Probability"
-colnames(probability)=c("X1","X2","X3","X4","X5","X6","X7","X8","X9","X10")
-#produce data table and combind probability dataset
-rbind(data,probability)%>%radiant.data::rownames_to_column()%>% 
-mutate_if(is.numeric,function(x){
-x=cell_spec(x,color = ifelse(x>=0.05,"red","black"))})%>%
-textshape::column_to_rownames()%>%
-kable(escape = F,row.names =T,caption = "<center> Probability for 5 Simuations 
-                  with sample size 10 </center>", 
-        align = "l" )%>%
-kable_styling(bootstrap_options = c("striped", "hover"), full_width = T)%>%
-row_spec(6, bold = T, color = "black", background = "lightblue")
-```
-
-
-- $lim_{n\rightarrow\infty}P(|X_n-0|\geq \epsilon)=0$
-- $X_n\stackrel{p}{\rightarrow}0$
-
-Let's graph the $p_n$ curve.
-```{r,echo=FALSE,message=FALSE}
-#Plot the probability curve
-plot(Pn_critr,xlab="n",ylab=bquote(hat(p[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(p[n])~"Curve")),col="darkblue"),col="red",type="l")
-text(x =n, y = max(Pn_critr),bquote(bold(hat(p[k])~"will tend to and stay at 0")),col="red",adj=1)
-```
-
-
-<div class = "clearfix"> </div>
-
-##Details:  How do we prove convergence in probability?
-
--Markov's Inequality 
- * If $X$ is a nonnegative RV (support has no negative values) for which $E(X)$ exists, then for $t>0$
-$$P(X\geq t)\leq \frac{E(X)}{t}$$
-
-Example: If $X\sim exp(1)$ then $P(X\geq t)=e^{-t}$ and $E(X)/t=1/t$.
-
-Chebychev's Inequality 
-
- Let $X$ be a RV with mean = $\mu$ and variance = $\sigma^2$, then for $t>0$ 
-$$P(|X-\mu|\geq t)\leq \frac{\sigma^2}{t^2}$$
-
-Example:  If $t=\sigma k$ for $k>0$, we can apply Chebychev's to get
-$$P\left(|X-\mu|\geq k\sigma\right)\leq \frac{\sigma^2}{k^2\sigma^2}=\frac{1}{k^2}$$
-For $k=2$ we have $P\left(|X-\mu|\geq 2\sigma\right)\leq 1/4$.
-
-
-- At least 75\% of a RVs distribution lies within 2 standard deviations of the mean (if these moments exist)
-- Regardless of distribution! (if moments exist)
-- If $X\sim N(\mu,\sigma^2)$ we know $P(|X-\mu|\geq 2\sigma)\approx 0.05$. The bound isn't always very tight!
-
-
-
-
-## Relating the inequalities to convergence in probability
-
-Weak Law of Large Numbers (WLLN) 
-
-- If $Y_1,Y_2,...$ is a sequence of independent RVs with $E(Y_i)=\mu$, $Var(Y_i)=\sigma^2$ then $\bar{Y}_{n}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}{\rightarrow}\mu$
-
-
-#Very powerful result!
-
-
-- Big picture goal is to estimate parameters such as $\mu$.
-- If we get a RS we know that $\bar{Y}$ will be a `close' to $\mu$ for `large' samples.
-
-
-Example: $Y_i\stackrel{iid}{\sim}f_Y(y)$ where $E(Y_i^2)$ exists ($E\left(|Y_i^2|\right)<\infty$) then $Y_i^2$ are independent and all have the same expectation!
-
-Example: If $Y_i\stackrel{iid}\sim f_Y(y)$ with $E(Y)=\mu$ and 
-$Var(Y)=\sigma^2$ then 
-
-##Continuity Theorem (works for all three types of convergence) 
-- If $Y_1,Y_2,Y_3,...$ converge to $Y$ and $g$ is a continuous function then 
-$g(Y_1),g(Y_2),g(Y_3)...$ converge to $g(Y)$. 
-
-Example: Suppose $Y_i$ are independent each with mean $\mu$, we have interest 
-in $\mu^2$.
-
 
 
 Other standard limit results exist such as
