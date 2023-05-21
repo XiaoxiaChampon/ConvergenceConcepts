@@ -224,7 +224,7 @@ sidebarPanel( sliderInput("d_ngam",
 ############
 
 mainPanel(
-                          helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim \\gam(alpha,lambda)\\), \\(\\bar (Y)=\\sim N(alpha*lambda,\\frac{alpha*lambda^2}{n})\\).')),
+                          helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim gam(alpha,lambda)\\), \\( (\\bar Y)=\\sim N(alpha*lambda,\\frac{alpha*lambda^2}{n})\\).')),
                       
                       
    renderPlot({
@@ -562,21 +562,28 @@ ggplot(datamatb) +
 #CDF by sample size
 library(EnvStats)
 library(transformr)
-NN=1000
-p=0.6
+
 ##n=20
  n20=rbinom(NN,20,p)
  n20norm=rnorm(NN, 20*p, sqrt(20*p*(1-p)))
  # xx20 <- qemp(p = seq(0, 1, len = 100), obs = n20) 
  # y20 <- cumsum(demp(xx20, n20) )
- y20 <- ecdf( n20)
+ #y20 <- ecdf( n20)
+ 
+ y20=cumsum(density(n20,n=NN)$y)
+ #repn=length(density(n20)$y)
  # 
  # xx20n <- qemp(p = seq(0, 1, len = 100), obs = n20norm) 
- y20n <- ecdf( n20norm)
+ #y20n <- ecdf( n20norm)
+ 
+ 
+ ##CDF= c(rep("Binormial (20,0.6)",NN), rep("Normal (12, 4.8)",NN)). x=c(n20,n20norm)
+ y20n <- cumsum(density(n20norm,n=NN)$y)
 ecdf20 <- data.frame(
    x=c(n20,n20norm),
    y = c(y20, y20n),
   
+   
    CDF= c(rep("Binormial (20,0.6)",NN), rep("Normal (12, 4.8)",NN))
 )
 
@@ -584,10 +591,13 @@ ecdf20 <- data.frame(
  n50=rbinom(NN,50,p)
  n50norm=rnorm(NN, 50*p, sqrt(50*p*(1-p)))
  #xx50 <- qemp(p = seq(0, 1, len = 100), obs = n50) 
- y50 <- ecdf(n50 )
+ #y50 <- ecdf(n50 )
+ y50=cumsum(density(n50,n=NN)$y)
  
  #xx50n <- qemp(p = seq(0, 1, len = 100), obs = n50norm) 
- y50n <- ecdf(n50norm)
+ #y50n <- ecdf(n50norm)
+ 
+ y50n <- cumsum(density(n50norm,n=NN)$y)
 ecdf50 <- data.frame(
    x=c(n50,n50norm),
    y = c(y50, y50n),
@@ -599,10 +609,12 @@ ecdf50 <- data.frame(
  n100=rbinom(NN,100,p)
  n100norm=rnorm(NN, 100*p, sqrt(100*p*(1-p)))
  #xx100 <- qemp(p = seq(0, 1, len = 100), obs = n100) 
- y100 <- ecdf(n100 )
+ #y100 <- ecdf(n100 )
+ y100=cumsum(density(n100,n=NN)$y)
  
  #xx100n <- qemp(p = seq(0, 1, len = 100), obs = n100norm) 
- y100n <- ecdf(n100norm)
+# y100n <- ecdf(n100norm)
+ y100n <- cumsum(density(n100norm,n=NN)$y)
 ecdf100 <- data.frame(
    x=c(n100,n100norm),
    y = c(y100, y100n),
@@ -614,10 +626,12 @@ ecdf100 <- data.frame(
  n500=rbinom(NN,500,p)
  n500norm=rnorm(NN, 500*p, sqrt(500*p*(1-p)))
  #xx500 <- qemp(p = seq(0, 1, len = 100), obs = n500) 
- y500 <- ecdf( n500) 
+ #y500 <- ecdf( n500) 
+  y500=cumsum(density(n500,n=NN)$y)
  
  #xx500n <- qemp(p = seq(0, 1, len = 100), obs = n500norm) 
- y500n <- ecdf( n500norm)
+ #y500n <- ecdf( n500norm)
+ y500n <- cumsum(density(n500norm,n=NN)$y)
 ecdf500 <- data.frame(
    x=c(n500,n500norm),
    y = c(y500, y500n),
@@ -629,9 +643,9 @@ ecdf500 <- data.frame(
 ecdfall=rbind(ecdf20,ecdf50,ecdf100,ecdf500)
 ecdfall$samplesize=rep(c(20,50,100,500),each=2*NN)
 
-#+stat_ecdf()
+#+stat_ecdf() +stat_ecdf(aes(color=CDF))+
 #color=CDF,
-ggplot(ecdfall, aes(x,color=CDF,group=samplesize)) ++stat_ecdf()
+ggplot(ecdfall, aes(x,group=samplesize,color=CDF)) +stat_ecdf()+
   theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.8, 0.1))+
   ggtitle("Emprical Cumulative Distribution Function") + labs(subtitle=("Sample Size : {closest_state}"))+
   ylab("Cumulative Distribution Function") + 
@@ -643,11 +657,72 @@ ggplot(ecdfall, aes(x,color=CDF,group=samplesize)) ++stat_ecdf()
 
 
 
-*M: the number of simulations/repetitions. With everything else fixed, as $M\rightarrow \infty$
- *Histogram:
- *CDF:
- *3D distance between ECDF and Normal CDF:
- *Sample path
+```{r,echo=FALSE,message=FALSE}
+#3D plot by sample size
+library(EnvStats)
+library(transformr)
+library(viridis)
+library(ggridges)
+
+# ggplot(lincoln_weather, aes(x = `Mean Temperature [F]`, y = Month, fill = stat(x))) +
+#   geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+#   scale_fill_viridis_c(name = "Temp. [F]", option = "C") +
+#   labs(title = 'Temperatures in Lincoln NE in 2016')
+
+#+stat_ecdf()
+#color=CDF,
+
+yall=c(y20,y50,y100,y500)
+yalln=c(y20n,y50n,y100n,y500n)
+yd=data.frame(cbind(yall,yalln))
+colnames(yd)=c("yall","yalln")
+yd$samplesize=rep(c(20,50,100,500),each=NN)
+
+#ggplot(iris, aes(x = Sepal.Length, y = Species)) + geom_density_ridges(scale = 0.9)
+
+
+ggplot(yd, aes(x=yalln-yall,y=samplesize,fill=stat(x),group=samplesize)) +geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01)+
+  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.9, 0.8))+scale_fill_viridis_c(name = "Differences", option = "C")+
+  ggtitle("Distance Between binormial ECDF and normal CDF ") + 
+  ylab("Sample Size") + 
+  xlab("Observed Differences ")
+
+```
+
+
+
+```{r ,echo=FALSE,message=FALSE}
+library(tidyverse)
+library(plotly)
+
+#https://stackoverflow.com/questions/72590265/3d-plot-of-monthly-temperature-in-r
+# temp %>% 
+#   pivot_longer(starts_with('Hour'), 
+#                names_to = 'Hour',
+#                values_to = 'Temperature') %>%
+#   group_by(Year, Month) %>%
+#   summarise(Temperature = mean(Temperature, na.rm = TRUE)) %>%
+#   pivot_wider(names_from = Month, values_from = Temperature) %>%
+#   ungroup() %>%
+#   select(-1) %>%
+#   as.matrix() %>%
+#   plot_ly(x = month.name, y = unique(temp$Year), z = .) %>%
+#   add_surface()
+yd$obs=rep(c(1:1000),4)
+yd$ydiff=yd$yall-yd$yalln
+ydsub=yd[,c(3,4,5)]
+ ydsub%>% 
+  group_by(ydsub$samplesize, ydsub$obs) %>%
+  ungroup() %>%
+  #select(-1) %>%
+  as.matrix() %>%
+  plot_ly(x = ydsub$obs, y = unique(ydsub$samplesize), z = .) %>%
+  add_surface()
+```
+
+
+
+
 
 *Other distribution specific parameters
  *$\alpha$: shape parameter for gamma distribution. 
@@ -681,23 +756,23 @@ sidebarPanel(d_n=1000,
 #),
 
                     
-                        sliderInput("d_ns",
-                                    "M: the number of simulations of the sequence",
-                                    min = 1,
-                                    max = 2000,
-                                    step=30,
-                                    value = 50,
-                                  animate=animationOptions(
-                                  interval = 1000,
-                                  loop = TRUE,
-                                  playButton = "Play",
-                                  pauseButton = "Stop")) ,
-                      
-                        
-                        helpText("As \\(M\\) increases,"),
-                        helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
-                        helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
-                        
+                        # sliderInput("d_ns",
+                        #             "M: the number of simulations of the sequence",
+                        #             min = 1,
+                        #             max = 2000,
+                        #             step=30,
+                        #             value = 50,
+                        #           animate=animationOptions(
+                        #           interval = 1000,
+                        #           loop = TRUE,
+                        #           playButton = "Play",
+                        #           pauseButton = "Stop")) ,
+                        # 
+                        # 
+                        # helpText("As \\(M\\) increases,"),
+                        # helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
+                        # helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
+             d_ns=2000,           
       #####
                     
                           sliderInput("d_k",
@@ -732,7 +807,8 @@ renderPlot({
       set.seed(1)
       #d_n=input$d_n
      d_n=1000
-      d_ns=input$d_ns
+      #d_ns=input$d_ns
+       d_ns=2000
       d_k=input$d_k
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
       d_data=data.frame()
@@ -755,7 +831,8 @@ renderPlot({
 
       #d_n=input$d_n
        d_n=1000
-      d_ns=input$d_ns
+      #d_ns=input$d_ns
+      d_ns=2000
       d_k=input$d_k
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
       d_data=data.frame()
@@ -780,8 +857,8 @@ renderPlot({
       set.seed(1)
       #d_n=input$d_n
   d_n=1000
-      d_ns=input$d_ns
-        
+      #d_ns=input$d_ns
+        d_ns=2000
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
         d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
         law.plot3d(d_data_3D,pnorm)
@@ -790,7 +867,8 @@ renderPlot({
       set.seed(1)
       #d_n=input$d_n
         d_n=1000
-      d_ns=input$d_ns
+      #d_ns=input$d_ns
+      d_ns=2000
         #eps2=input$ep2
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
       d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
@@ -813,7 +891,12 @@ renderPlot({
 
 ```{r  echo=FALSE}
 #gamma(r,lambda), mu=rlambda,var=rlambda^2, as r goes to infinity, it goesto normal
-sidebarPanel(clt_n=1000,
+sidebarPanel(
+   selectInput("tabs",
+                                  "Distribution",
+                                  list('Binormial','Beta','Poisson'),multiple = FALSE),
+  
+  clt_n=1000,
 # sliderInput("clt_n",
                                   # "n: the nth element in the sequence",
                                   # min = 10,
@@ -832,21 +915,21 @@ sidebarPanel(clt_n=1000,
                       # helpText("\\(\\star\\) More points will be created in each sample path and the density plot will vary"),
                       # 
 ####
-sliderInput("clt_ns",
-                                    "M: the number of simulations of the sequence",
-                                    min = 1,
-                                    max = 2000,
-                                    step=5,
-                                    value = 50,
-                                  animate=animationOptions(
-                                  interval = 1000,
-                                  loop = TRUE,
-                                  playButton = "Play",
-                                  pauseButton = "Stop")),
-                      
-                      helpText("As \\(M\\) increases,"),
-                      helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
-                      helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
+# sliderInput("clt_ns",
+#                                     "M: the number of simulations of the sequence",
+#                                     min = 1,
+#                                     max = 2000,
+#                                     step=5,
+#                                     value = 50,
+#                                   animate=animationOptions(
+#                                   interval = 1000,
+#                                   loop = TRUE,
+#                                   playButton = "Play",
+#                                   pauseButton = "Stop")),
+                      clt_ns=2000,
+                      # helpText("As \\(M\\) increases,"),
+                      # helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
+                      # helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
 ############
 sliderInput("clt_k",
                                      # helpText("\\(K\\)=position of \\(X_n\\) and \\(K\\leq n_{max}\\)"),
@@ -879,21 +962,20 @@ sliderInput("clt_alpha",
                       
                       helpText("\\(\\star\\) As \\(\\alpha\\) increases, the histogram will be more symmetric "),
 #######
-clt_beta=1,
-# sliderInput("clt_beta",
-#                                     helpText("\\(\\beta\\)=scale parameter"),
-#                                     min = 0.0001,
-#                                     max = 10,
-#                                     step=0.1,
-#                                     value = 1,
-#                                   animate=animationOptions(
-#                                   interval = 1000,
-#                                   loop = TRUE,
-#                                   playButton = "Play",
-#                                   pauseButton = "Stop")),
-                        
+#clt_beta=1,
+ sliderInput("clt_beta",
+                                    helpText("\\(\\beta\\)=scale parameter"),
+                                    min = 0.0001,
+                                    max = 10,
+                                     step=0.1,
+                                     value = 1,
+                                   animate=animationOptions(
+                                  interval = 1000,
+                                   loop = TRUE,
+                                   playButton = "Play",
+                                  pauseButton = "Stop")),
                         #helpText("\\(\\star\\) As \\(\\beta\\) increases, the histogram will spread out more  ")
-)
+ )
 #######
 mainPanel(
 helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overline Y_i-\\mu)  )}{\\sigma} \\overset {d}{\\to} X\\sim N(0,1) \\; or\\; X_n=\\frac{\\sqrt{n} ( \\overline Y_i-\\mu)  )}{\\sigma} \\overset {L}{\\to} X\\sim N(0,1) \\).")),
@@ -909,10 +991,11 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
       set.seed(1)
         #clt_n=input$clt_n
         clt_n=1000
-        clt_ns=input$clt_ns
+        #clt_ns=input$clt_ns
+        clt_ns=2000
         clt_alpha=input$clt_alpha
-        clt_beta=1
-        #clt_beta=input$clt_beta
+        #clt_beta=1
+        clt_beta=input$clt_beta
         clt_k=input$clt_k
         clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
         
@@ -936,10 +1019,11 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
       set.seed(1)
       #clt_n=input$clt_n
       clt_n=1000
-      clt_ns=input$clt_ns
+      #clt_ns=input$clt_ns
+      clt_ns=2000
       clt_alpha=input$clt_alpha
-      clt_beta=1
-      #clt_beta=input$clt_beta
+      #clt_beta=1
+      clt_beta=input$clt_beta
       clt_k=input$clt_k
       clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
       
@@ -969,10 +1053,11 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
       set.seed(1)
       clt_n=1000
       #clt_n=input$clt_n
-      clt_ns=input$clt_ns
+      #clt_ns=input$clt_ns
+      clt_ns=2000
       clt_alpha=input$clt_alpha
-      #clt_beta=input$clt_beta
-      clt_beta=1
+      clt_beta=input$clt_beta
+      #clt_beta=1
       clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
       
       clt_data_3D=data.frame()
@@ -985,10 +1070,11 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
       set.seed(1)
       clt_n=1000
       #clt_n=input$clt_n
-      clt_ns=input$clt_ns
+      #clt_ns=input$clt_ns
+      clt_ns=2000
       clt_alpha=input$clt_alpha
-      #clt_beta=input$clt_beta
-      clt_beta=1
+      clt_beta=input$clt_beta
+      #clt_beta=1
         #eps3=input$ep3
       clt_f=function(clt_n){sqrt(1:clt_n)*(cumsum(rgamma(clt_n,shape=clt_alpha,scale=clt_beta))/(1:clt_n)-clt_alpha*clt_beta)/sqrt(clt_alpha*(clt_beta**2))}
         clt_data_3D=data.frame()
@@ -1232,6 +1318,10 @@ Other standard limit results exist such as
 $$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, 
 X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm 
 X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
+
+
+
+
 
 
 
