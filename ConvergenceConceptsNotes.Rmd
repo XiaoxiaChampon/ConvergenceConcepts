@@ -651,7 +651,6 @@ ggplot(ecdfall, aes(x,group=samplesize,color=CDF)) +stat_ecdf()+
   ylab("Cumulative Distribution Function") + 
   xlab("Observed Value ")+transition_states(samplesize)
 
-
 ```
 
 
@@ -724,7 +723,7 @@ ydsub=yd[,c(3,4,5)]
 
 
 
-*Other distribution specific parameters
+*Other distribution specific parameters:
  *$\alpha$: shape parameter for gamma distribution. 
   As $\alpha\rightarrow \infty$, gamma distribution converges to normal distribution.
  *$\lambda$: rate parameter for poisson distribution. 
@@ -733,7 +732,25 @@ ydsub=yd[,c(3,4,5)]
   As $\alpha=\beta\rightarrow \infty$, beta distribution converges to normal distribution
 
 ```{r  echo=FALSE}
-sidebarPanel(d_n=1000,
+law.plot3dnew=function (data, probfunc, tinf = -5, tsup = 5) 
+{
+    nmax <- ncol(data)
+    Fhat <- function(x) {
+        n <- x[1]
+        t <- x[2]
+        Fn <- ecdf(data[, n])
+        Fn(t)
+    }
+    g <- expand.grid(t = seq(from = tinf, to = tsup, length = 10), 
+        n = 1:nmax)
+    Mymat <- g[, 2:1]
+    g$z <- abs(apply(Mymat, FUN = Fhat, MARGIN = 1) - probfunc(g$t))
+    print(wireframe(z ~ t + n, data = g, scales = list(arrows = FALSE), 
+        drape = TRUE, colorkey = TRUE, screen = list(z = -50, 
+            x = -70), zlab = list(expression(hat(l)[n] ~ "(x)=|" ~ 
+            hat(F)[n] ~ "(x)-" ~ F ~ "(x)|"), rot = 90), main = "Convergence in Distribution?", xlab="x"))
+}
+sidebarPanel(#d_n=1000,
 #########
 
                       #selectInput("tabs",
@@ -772,7 +789,7 @@ sidebarPanel(d_n=1000,
                         # helpText("As \\(M\\) increases,"),
                         # helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
                         # helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
-             d_ns=2000,           
+             #d_ns=1000,           
       #####
                     
                           sliderInput("d_k",
@@ -806,10 +823,11 @@ mainPanel(
 renderPlot({
       set.seed(1)
       #d_n=input$d_n
-     d_n=1000
+     #d_n=1000
       #d_ns=input$d_ns
-       d_ns=2000
+       d_ns=1000
       d_k=input$d_k
+      d_n=input$d_k
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
       d_data=data.frame()
       for (s in 1:d_ns){
@@ -830,9 +848,9 @@ renderPlot({
       set.seed(1)
 
       #d_n=input$d_n
-       d_n=1000
+       d_n=input$d_k
       #d_ns=input$d_ns
-      d_ns=2000
+      d_ns=1000
       d_k=input$d_k
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
       d_data=data.frame()
@@ -856,19 +874,19 @@ renderPlot({
         tabPanel("3D Distance",  renderPlot({
       set.seed(1)
       #d_n=input$d_n
-  d_n=1000
+  d_n=input$d_k
       #d_ns=input$d_ns
-        d_ns=2000
+        d_ns=1000
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
         d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
-        law.plot3d(d_data_3D,pnorm)
+        law.plot3dnew(d_data_3D,pnorm)
     })),
         tabPanel("Sample Path", renderPlot({
       set.seed(1)
       #d_n=input$d_n
-        d_n=1000
+        d_n=input$d_k
       #d_ns=input$d_ns
-      d_ns=2000
+      d_ns=1000
         #eps2=input$ep2
       d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
       d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
@@ -890,13 +908,14 @@ renderPlot({
 ## Your Turn
 
 ```{r  echo=FALSE}
+
 #gamma(r,lambda), mu=rlambda,var=rlambda^2, as r goes to infinity, it goesto normal
 sidebarPanel(
    selectInput("tabs",
                                   "Distribution",
                                   list('Binormial','Beta','Poisson'),multiple = FALSE),
   
-  clt_n=1000,
+  #clt_n=1000,
 # sliderInput("clt_n",
                                   # "n: the nth element in the sequence",
                                   # min = 10,
@@ -926,7 +945,7 @@ sidebarPanel(
 #                                   loop = TRUE,
 #                                   playButton = "Play",
 #                                   pauseButton = "Stop")),
-                      clt_ns=2000,
+                      #clt_ns=1000,
                       # helpText("As \\(M\\) increases,"),
                       # helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
                       # helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
@@ -990,9 +1009,9 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
     renderPlot({
       set.seed(1)
         #clt_n=input$clt_n
-        clt_n=1000
+        clt_n=input$clt_k
         #clt_ns=input$clt_ns
-        clt_ns=2000
+        clt_ns=1000
         clt_alpha=input$clt_alpha
         #clt_beta=1
         clt_beta=input$clt_beta
@@ -1018,9 +1037,9 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
       renderPlot({ 
       set.seed(1)
       #clt_n=input$clt_n
-      clt_n=1000
+      clt_n=input$clt_k
       #clt_ns=input$clt_ns
-      clt_ns=2000
+      clt_ns=1000
       clt_alpha=input$clt_alpha
       #clt_beta=1
       clt_beta=input$clt_beta
@@ -1051,10 +1070,10 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
         tabPanel("3D Distance",   #clt_3D <- renderPlot({
        renderPlot({
       set.seed(1)
-      clt_n=1000
+      clt_n=input$clt_k
       #clt_n=input$clt_n
       #clt_ns=input$clt_ns
-      clt_ns=2000
+      clt_ns=1000
       clt_alpha=input$clt_alpha
       clt_beta=input$clt_beta
       #clt_beta=1
@@ -1064,14 +1083,14 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
       for (t in 1:clt_ns){
         clt_data_3D=rbind(clt_data_3D,clt_f(clt_n))
       }
-      law.plot3d(data.matrix(clt_data_3D),pnorm)
+      law.plot3dnew(data.matrix(clt_data_3D),pnorm)
     })),
         tabPanel("Sample Path", renderPlot({
       set.seed(1)
-      clt_n=1000
+      clt_n=input$clt_k
       #clt_n=input$clt_n
       #clt_ns=input$clt_ns
-      clt_ns=2000
+      clt_ns=1000
       clt_alpha=input$clt_alpha
       clt_beta=input$clt_beta
       #clt_beta=1
@@ -1085,11 +1104,6 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
         
     }))
       )
-    
-
-
-
-
 
 )
 ```
@@ -1239,11 +1253,12 @@ kable_styling(bootstrap_options = c("striped", "hover"), full_width = T)%>%
 row_spec(6, bold = T, color = "black", background = "lightblue")
 ```
 
-
+<div class = "clearfix"> </div>
 - $lim_{n\rightarrow\infty}P(|X_n-0|\geq \epsilon)=0$
 - $X_n\stackrel{p}{\rightarrow}0$
-
+<div class = "clearfix"> </div>
 Let's graph the $p_n$ curve.
+<div class = "clearfix"> </div>
 ```{r,echo=FALSE,message=FALSE}
 #Plot the probability curve
 plot(Pn_critr,xlab="n",ylab=bquote(hat(p[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(p[n])~"Curve")),col="darkblue"),col="red",type="l")
@@ -1318,10 +1333,6 @@ Other standard limit results exist such as
 $$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, 
 X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm 
 X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
-
-
-
-
 
 
 
