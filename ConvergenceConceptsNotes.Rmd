@@ -254,10 +254,11 @@ Random Sample
 We'll often say 'assume we have a random sample' from some distribution or that 'our random variables are iid' from some distribution. These are equivalent ways of stating this assumption.
 
 For the proportion example above we might formally state our assumption as follows:
-- Define $X_i$ as 1 if the $i^{th}$ individual says the benefits of childhood vaccines for measles, mumps and rubella (MMR) outweigh the risks and $X_i$ = 0 if not
+
+- Define $X_i = \begin{cases} 1 & \mbox{if the }i^{th}\mbox{ individual says the benefits of childhood vaccines for MMR outweigh the risks}\\ 0 & \mbox{if not}\end{cases}$
 - Then $X_i\stackrel{iid}\sim Ber(p)$ where $p$ represents the true proportion of people in the U.S. that believe the benefits outweight the risks
 - The random variable $Y = \sum_{i=1}^{n}X_i \sim Bin(n,p)$
-- We then often try to use $Y$ or $\hat{p}=Y/n$ to make inference on $p$. $Y$ and $\hat{p}$ are referred to as **statistics**.
+- We then often try to use $Y$ or $\hat{p}=Y/n$ to make inference on $p$. $Y$ and $\hat{p}$ are referred to as **statistics**. Note: $\hat{p}$ is also $\bar{X}$!
 
 Statistic
 : A function of $Y_1,Y_2,...,Y_n$ from a random sample that does not involve any unknown parameters is called a statistic.
@@ -265,7 +266,6 @@ Statistic
 Commonly studied statistics:  
 
 - $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$
-    + Note: The sample proportion above is really the mean of the $X_i$ variables!
 - $S^2 = \frac{1}{n-1}\sum_{i=1}^{n}(Y_i-\bar{Y})^2$
 - $Y_{(n)} = \mbox{the maximum value from the sample}$
 
@@ -281,11 +281,52 @@ Recall that a distribution is just the pattern and frequency with which we obser
 Sampling Distribution
 : The distribution of a statistic is called a sampling distribution.
 
+**Put a gif of a sampling distribution being built by adding values using the binomial p-hat example. Sample size of n = 40 with p = 0.25 or something like that. Very skinny bars so they can see the discrete nature with a normal distribution overlay. The gif should add say 500 values of p-hat over 5 seconds or so.**
+
+**I've put the code you used for a gif here below. I would not have the code evaluate at run time but produce an output .gif with the anim_save() you had. Then just load that gif in. I've streamlined your code for the gamma example below. This code won't work for what goes here but perhaps can be used later!**
+
+```{r, echo=FALSE, message=FALSE, eval = FALSE}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(gganimate)
+
+alpha=5
+lambda=1
+M <- 100 
+
+#quicker way than for loop for this
+n20 <- replicate(M, mean(rgamma(n = 20, shape = alpha, scale = lambda)))
+n50 <- replicate(M, mean(rgamma(n = 50, shape = alpha, scale = lambda)))
+n100 <- replicate(M, mean(rgamma(n = 100, shape = alpha, scale = lambda)))
+n500 <- replicate(M, mean(rgamma(n = 500, shape = alpha, scale = lambda)))
+
+#even better way to do this for many n values 
+ns <- 2:10
+means <- as.data.frame(
+  lapply(ns, 
+         FUN = function(x, M, alpha, lambda){replicate(M, mean(rgamma(n = x, shape = alpha, scale = lambda)))}, 
+         M = M, alpha = alpha, lambda = lambda), 
+  col.names = paste0("n",ns))
+
+means_long <- pivot_longer(means, cols = everything(), names_to = "n", values_to = "means")
+# create ggplot2 plot
+ggplot(means_long) + 
+  geom_histogram(aes(x = means, group=n),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
+  ggtitle("Distribution of Observed Mean values") +
+  labs(subtitle=("Sample Size : {closest_state}")) +
+  ylab("Absolute Frequency out of 1000") + 
+  xlab("Observed Mean Value ") + 
+  transition_states(n)
+#anim_save("gammean.gif")
+```
+
+
 # Convergence in Distribution 
 
-We saw with the simulation earlier that the distribution of $\hat{p}$ seemed to look like a bell curve for some combinations of $n$ and $p$. If we fix a $p$ and increase $n$, we will start to see a bell shape for large enough $n$! Later we'll see that a good **large-sample** distribution for $\hat{p}$ is the normal distribution with mean $p$ and variance $p(1-p)/n$.  
+We saw that the distribution of $\hat{p}$ seemed to look like a bell curve for some combinations of $n$ and $p$. If we fix a $p$ and increase $n$, we will start to see a bell shape for large enough $n$! Later we'll see that a good **large-sample** distribution for $\hat{p}$ is the Normal distribution with mean $p$ and variance $p(1-p)/n$.  
 
-We can see that there may be a distinction between the *actual* distribution and an approximating distribution. We call these by different names.
+We can see that there may be a distinction between the *actual* distribution, which is a discrete distribution for $\hat{p}$, and an approximating distribution, the Normal distribution for $\hat{p}$. We call these by different names.
 
 Exact Distribution
 : The (sampling) distribution of a quantity that is valid for any sample size (or, occasionally, values of the parameters of the population distribution).
@@ -307,7 +348,7 @@ Let's formally define convergence in distribution! Recall the Cumulative Distrib
 
 $$F_Y(y) = P(Y\leq y)$$
 
-**Put the Binomial/normal CDF here**
+**Put the Binomial/normal CDF graph here. I'd put two of them, one where the binomail is well approximated and one where it is not.**
 
 Convergence in Distribution
 : The quantity $Y_n$ converges in distribution to $Y$ if
@@ -324,140 +365,70 @@ where $Z\sim N(0,1)$.
 
 Note: Here the subscript $n$ is just to explicitly note the dependence of the quantity on the sample size. We could leave that off if we'd like.
 
+## Convergence in Distribution Example
 
+- **Put basic example where we show the CDF converges to something here. Perhaps the $Y_i\stackrel{iid}\sim U(0,1)$ look at the max value.**
+- **Put graphs of histogram for 'large sample', CDF comparison plot - need to introduce the ECDF idea**
+- **Introduce the difference in CDF plot**
+- **Introduce the 3D plot**
 
+**Now do the same thing but with $n(1-max)$, describing a rule of thumb perhaps**
 
+## Convergence Exploration
 
+- Suppose that $Y_i\stackrel{iid}\sim Gamma(\alpha, \lambda)$. That is, assume we have a random sample from a Gamma distribution with PDF
+$$f_Y(y) = \frac{\lambda^\alpha}{\Gamma(\alpha)}y^{\alpha -1}e^{-\lambda y}$$
+with mean $E(Y) = \alpha/\lambda$ and variance $Var(Y) = \alpha/\lambda^2$.
+- Consider the statistic $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$. 
+- The sampling distribution of this statistic can often be well approximated using a Normal distribution. Consider changes to $\alpha$, $\lambda$, and $n$ using the app below. 
+- Can you develop a rule of thumb around $\alpha$, $\lambda$, and $n$ for when a Normal distribution may be a reasonable approximation?
 
-
-- Suppose that $Y_i\stackrel{iid}\sim Gamma(\alpha = 5, \lambda = 1)$. (That is, assume we have a random sample from a Gamma distribution.) 
-- Consider the *statistic* $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$. 
-- We often want to understand the *sampling distribution* of our statistic so that we can make (at least approximate) probabilistic statements about $\bar{Y}$. These will allow us to create **confidence intervals** or **hypothesis tests**, which will be studied later. Given the above example, we can calculate the confidence intervals for the average annual wage for data scientist in Boston, MA or if we can test whether or not the mean yearly income for data scientist is the same between Los Angeles, LA and Washington DC.
-
-How to learn about the sampling distribution? 
-
-A distribution is just the pattern and frequency with which we observe the quantity. With an assumption about how our data is generated (random sample from a gamma distribution with the given parameters), we can easily use software to generate many values of our statistic. We can then plot these values on a histogram to get an idea about the distribution!
-
-**Here we would put stills from the app, but just hard coded, for different sample sizes so we can see the behavior. We note that as $n$ grows we start to see a roughly normally distributed curve.**
-
-Below is the sample mean for different sample sizes 20, 50, 100 and 500 with the gamma distribution such that $Y_i\stackrel{iid}\sim Gamma(\alpha = 5, \lambda = 1)$. We randomly generate the data from known gamma distribution with a fixed sample size and find the mean. We repeat this process for that sample size 1000 times and plot the histogram below for that 1000 means under each sample size.
-
-```{r, echo=FALSE, message=FALSE, eval = FALSE}
-options(warn = -1)
-library(magick)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(gganimate)
-
-alpha=5
-lambda=1
-M=1000 #number of repetations
-n20=c(0)
-for (i in 1:M){
-  n20[i]=mean(rgamma(n = 20, shape = alpha, scale = lambda) )
-}
-n50=c(0)
-
-for (i in 1:M){
-  n50[i]=mean(rgamma(n = 50, shape = alpha, scale = lambda) )
-}
-
-n100=c(0)
-
-for (i in 1:M){
-  n100[i]=mean(rgamma(n = 100, shape = alpha, scale = lambda) )
-}
-n500=c(0)
-for (i in 1:M){
-  n500[i]=mean(rgamma(n = 500, shape = alpha, scale = lambda) )
-}
-datamat=data.frame(cbind(c(rep(c(20,50,100,500),each=M)),c(n20,n50,n100,n500)))
-colnames(datamat)=c("samplesize","mean")
-
-# create ggplot2 plot
-ggplot(datamat) + 
-  geom_histogram(mapping=aes(x=mean,group=samplesize),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-  ggtitle("Distribution of Observed Mean values") +
-  labs(subtitle=("Sample Size : {closest_state}")) +
-  ylab("Absolute Frequency out of 1000") + 
-  xlab("Observed Mean Value ") + 
-  transition_states(samplesize)
-#anim_save("gammean.gif")
-```
-
-
-A few questions for you:
-
-
-- What shape does it look like? 
-- What do we notice when the sample size increases? 
-- What factor do you think will affect the the spread?
-
-
-The theory behind this will be introduced below.
-
-
-**Then we put the app here and have them consider different values of $\alpha$, $\lambda$, and $n$ with guidance for trying to find some 'rule' for when the normal distribution might be appropriate.**
-
-```{r, echo=FALSE, eval = FALSE}
-sidebarPanel( sliderInput("d_ngam",
-                                    "n: sample size",
-                                    min = 1,
-                                    max = 2000,
-                                    step=30,
-                                    value = 50,
-                                  animate=animationOptions(
-                                  interval = 1000,
-                                  loop = TRUE,
-                                  playButton = "Play",
-                                  pauseButton = "Stop")) ,
-                                     helpText("As \\(n\\) increases,"),
-                        helpText("\\(\\star\\) The mean of gamma distribution approaches to normal"),
-                       
-                    
-                        sliderInput("alpha",
-                                    "alpha: shape parameter",
-                                    min = 0.1,
-                                    max = 50,
-                                    step=5,
-                                    value = 0.1,
-                                  animate=animationOptions(
-                                  interval = 5,
-                                  loop = TRUE,
-                                  playButton = "Play",
-                                  pauseButton = "Stop")) ,
-                                                   helpText("As \\(alpha\\) increases,"),
-                        helpText("\\(\\star\\) The mean of the gamma distribution increases"),
-                sliderInput("lambda",
-                                    "lambda: scale parameter",
-                                    min = 0.1,
-                                    max = 50,
-                                    step=5,
-                                    value = 0.1,
-                                  animate=animationOptions(
-                                  interval = 5,
-                                  loop = TRUE,
-                                  playButton = "Play",
-                                  pauseButton = "Stop")) ,
-               helpText("As \\(lambda\\) increases,"),
-                        helpText("\\(\\star\\) The distribution of the mean is more spread out"))
-                      
-                        
-                 
-
-############
+```{r, echo=FALSE}
+sidebarPanel( 
+  sliderInput("d_ngam",
+              "n: sample size",
+              min = 1,
+              max = 2000,
+              step=30,
+              value = 20,
+              animate=animationOptions(
+                interval = 1000,
+                loop = TRUE,
+                playButton = "Play",
+                pauseButton = "Stop")
+              ),
+  sliderInput("alpha",
+              "alpha: shape parameter",
+              min = 0.1,
+              max = 50,
+              step=5,
+              value = 0.1,
+              animate=animationOptions(
+                interval = 5,
+                loop = TRUE,
+                playButton = "Play",
+                pauseButton = "Stop")
+              ) ,
+  sliderInput("lambda",
+              "lambda: scale parameter",
+              min = 0.1,
+              max = 50,
+              step=5,
+              value = 0.1,
+              animate=animationOptions(
+                interval = 5,
+                loop = TRUE,
+                playButton = "Play",
+                pauseButton = "Stop")
+              )
+)
 
 mainPanel(
-                          helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim gam(alpha,lambda)\\), \\( (\\bar Y)=\\sim N(alpha*lambda,\\frac{alpha*lambda^2}{n})\\).')),
-                      
-                      
    renderPlot({
-      set.seed(1)
-
-  d_ngam=input$d_ngam
-      d_alpha=input$alpha
-       d_lamda=input$lambda
+     set.seed(1)
+     d_ngam=input$d_ngam
+     d_alpha=input$alpha
+     d_lamda=input$lambda
        
        M=2000 #number of repetitions
         gamsample=c(0)
