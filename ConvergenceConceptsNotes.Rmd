@@ -31,6 +31,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(shiny)
 library(shinydashboard)
 library(ConvergenceConcepts)
+library(ggplot2)
 ```
 
 
@@ -348,7 +349,60 @@ Let's formally define convergence in distribution! Recall the Cumulative Distrib
 
 $$F_Y(y) = P(Y\leq y)$$
 
-**Put the Binomial/normal CDF graph here. I'd put two of them, one where the binomail is well approximated and one where it is not.**
+<div style = "float:left">
+```{r, echo = FALSE, message = FALSE, out.width = "400px"}
+p <- 0.05
+n <- 20
+plot_seq <- seq(from = -0.21, to = 8, by = 0.01)
+NN <- length(plot_seq)
+bin_cdf <- pbinom(plot_seq, size = n, prob = p)
+norm_cdf <- pnorm(plot_seq, mean = n*p, sd = sqrt(n*p*(1-p)))
+
+ecdf <- data.frame(
+  y = c(bin_cdf, norm_cdf),
+  CDF = c(rep(paste0("Bin(", n, ", ", p, ")"), NN), rep(paste0("N(", n*p, ", ", round(n*p*(1-p), 2), ")"), NN)),
+  x = c(plot_seq, plot_seq)
+)
+
+ggplot(ecdf, aes(x = x, y = y, color = CDF)) + 
+  geom_line(stat = "identity") +
+  theme(text = element_text(size = 15), 
+        plot.title = element_text(hjust = 0.5), 
+        legend.text = element_text(size=15), 
+        legend.position = c(0.8, 0.15)) +
+  ggtitle("Emprical CDF vs Normal") +
+  ylab("Cumulative Distribution Function") + 
+  xlab("Observed Value")
+```
+</div>
+<div style = "float:right">
+```{r, echo = FALSE, message = FALSE, out.width = "400px"}
+p <- 0.35
+n <- 30
+plot_seq <- seq(from = -0.21, to = 22, by = 0.01)
+NN <- length(plot_seq)
+bin_cdf <- pbinom(plot_seq, size = n, prob = p)
+norm_cdf <- pnorm(plot_seq, mean = n*p, sd = sqrt(n*p*(1-p)))
+
+ecdf <- data.frame(
+  y = c(bin_cdf, norm_cdf),
+  CDF = c(rep(paste0("Bin(", n, ", ", p, ")"), NN), rep(paste0("N(", n*p, ", ", round(n*p*(1-p), 2), ")"), NN)),
+  x = c(plot_seq, plot_seq)
+)
+
+ggplot(ecdf, aes(x = x, y = y, color = CDF)) + 
+  geom_line(stat = "identity") +
+  theme(text = element_text(size = 15), 
+        plot.title = element_text(hjust = 0.5), 
+        legend.text = element_text(size=15), 
+        legend.position = c(0.8, 0.15)) +
+  ggtitle("Emprical CDF vs Normal") +
+  ylab("Cumulative Distribution Function") + 
+  xlab("Observed Value")
+```
+</div>
+
+<div class = "clearfix"></div>
 
 Convergence in Distribution
 : The quantity $Y_n$ converges in distribution to $Y$ if
@@ -368,11 +422,11 @@ Note: Here the subscript $n$ is just to explicitly note the dependence of the qu
 ## Convergence in Distribution Example
 
 - **Put basic example where we show the CDF converges to something here. Perhaps the $Y_i\stackrel{iid}\sim U(0,1)$ look at the max value.**
-- **Put graphs of histogram for 'large sample', CDF comparison plot - need to introduce the ECDF idea**
+- **Put graphs of histogram for 'large sample', CDF comparison plot - need to introduce the ECDF idea, discussion of CDF for a point mass I think**
 - **Introduce the difference in CDF plot**
 - **Introduce the 3D plot**
 
-**Now do the same thing but with $n(1-max)$, describing a rule of thumb perhaps**
+**Now do the same thing but with $n(1-max)$, describing a rule of thumb perhaps. Discussion of CDF to compare to...**
 
 ## Convergence Exploration
 
@@ -382,261 +436,207 @@ with mean $E(Y) = \alpha/\lambda$ and variance $Var(Y) = \alpha/\lambda^2$.
 - Consider the statistic $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$. 
 - The sampling distribution of this statistic can often be well approximated using a Normal distribution. Consider changes to $\alpha$, $\lambda$, and $n$ using the app below. 
 - Can you develop a rule of thumb around $\alpha$, $\lambda$, and $n$ for when a Normal distribution may be a reasonable approximation?
+    + **What to look for in each graph**
+        *Histogram: it becomes a symmetric bell-shape
+        *CDF:
+        *3D distance between ECDF and Normal CDF:
 
 ```{r, echo=FALSE}
-sidebarPanel( 
-  sliderInput("d_ngam",
-              "n: sample size",
-              min = 1,
-              max = 2000,
-              step=30,
-              value = 20,
-              animate=animationOptions(
-                interval = 1000,
-                loop = TRUE,
-                playButton = "Play",
-                pauseButton = "Stop")
-              ),
-  sliderInput("alpha",
-              "alpha: shape parameter",
-              min = 0.1,
-              max = 50,
-              step=5,
-              value = 0.1,
-              animate=animationOptions(
-                interval = 5,
-                loop = TRUE,
-                playButton = "Play",
-                pauseButton = "Stop")
-              ) ,
-  sliderInput("lambda",
-              "lambda: scale parameter",
-              min = 0.1,
-              max = 50,
-              step=5,
-              value = 0.1,
-              animate=animationOptions(
-                interval = 5,
-                loop = TRUE,
-                playButton = "Play",
-                pauseButton = "Stop")
-              )
-)
+shinyApp(
+  ui <- fluidPage(
+    sidebarLayout(
+      sidebarPanel( 
+        sliderInput("d_ngam",
+                    "n: sample size",
+                    min = 2,
+                    max = 100,
+                    step = 1,
+                    value = 20,
+                    animate=animationOptions(
+                      interval = 100,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    ),
+        sliderInput("alpha",
+                    "alpha: shape parameter",
+                    min = 0.05,
+                    max = 5,
+                    step = 0.05,
+                    value = 1,
+                    animate=animationOptions(
+                      interval = 100,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    ) ,
+        sliderInput("lambda",
+                    "lambda: scale parameter",
+                    min = 0.05,
+                    max = 5,
+                    step= 0.05,
+                    value = 1,
+                    animate=animationOptions(
+                      interval = 100,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    )
+      ),
 
-mainPanel(
-   renderPlot({
-     set.seed(1)
-     d_ngam=input$d_ngam
-     d_alpha=input$alpha
-     d_lamda=input$lambda
-       
-       M=2000 #number of repetitions
-        gamsample=c(0)
-      for (i in 1:M){
-      gamsample[i]=mean(rgamma(n = d_ngam, shape = alpha, scale = lambda) )}
-      
-        datamatgam=data.frame(cbind(rep(d_ngam,M),c(gamsample)))
-        colnames(datamatgam)=c("samplesize","mean")
+      mainPanel(
+        tabsetPanel(id = "gamma_example",
+          tabPanel("Histogram",
+                   plotOutput("hist")
+                   ),
+          tabPanel("CDF Plots",
+                   plotOutput("cdf")
+                   ),
+          tabPanel("Absolute Difference in ECDF with Normal",  
+                   actionButton("three_d_plot", "Create/Update 3D Plot"),
+                   plotOutput("three_d")
+                   )
+        )
+      )
+    )
+  ),
+  server <- function(input, output, session){
+    
+    sampled_values <- reactiveValues(gamma_means = c())
+    observeEvent(c(input$d_ngam, input$alpha, input$lambda),
+                 sampled_values$gamma_means <- replicate(1000, mean(rgamma(n = input$d_ngam, shape = input$alpha, rate = input$lambda)))
+                 )
+    
+    output$hist <- renderPlot({
+      d_ngam <- isolate(input$d_ngam)
+      data_gamma <- sampled_values$gamma_means
+      hist(data_gamma, 
+           main = paste0("Distribution of 1000 Observed Sample Means\nWith Sample Size n = ", d_ngam),
+           xlab = "Observed Sample Mean",
+           freq = FALSE)
+          })
+    
+    output$cdf <- renderPlot({
+      d_ngam <- isolate(input$d_ngam)
+      d_alpha <- isolate(input$alpha)
+      d_lambda <- isolate(input$lambda)
+      data_gamma <- sampled_values$gamma_means
+      #plot the ecdf of the sample means
+      plot(ecdf(data_gamma), 
+           main = paste0("Comparison of Empirical CDF to Best\nApproximating Normal CDF with Sample Size n = ", d_ngam),
+           col = "red", 
+           lwd = 2,
+           xlab = "y-bar",
+           ylab = "CDF")
+      #use theoretical normal here
+      gam_mean <- d_alpha/d_lambda
+      gam_sd <- sqrt(d_alpha/(d_ngam*d_lambda^2))
+      x_plot <- seq(from = gam_mean-3*gam_sd, to = gam_mean+3*gam_sd, length = 500)
+      #add the normal's cdf values
+      lines(x = x_plot, 
+            y = pnorm(x_plot, mean = gam_mean, sd = gam_sd),
+            col = "blue", 
+            lwd = 2)
+      #add legend
+      legend('topleft', 
+             c(expression(hat(F[bar(Y)](y))),expression(F[X](y))),
+             col = c("red", "blue"),
+             lwd= 2)
+      })
 
-# create ggplot2 plot
-ggplot(datamatgam) + 
-  geom_histogram(mapping=aes(x=mean,group=samplesize),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-  ggtitle("Distribution of Observed Mean values") +
-  labs(subtitle=(paste0("Sample Size :",d_ngam))) +
-  ylab("Absolute Frequency out of 1000") + 
-  xlab("Observed Mean Value ") 
-      
+    three_d_plot_values <- reactiveValues(plot_data = c())
+    #create data for 3d plot
+    observeEvent(input$three_d_plot, {
+        d_ngam <- input$d_ngam
+        d_alpha <- input$alpha
+        d_lambda <- input$lambda
+        ns <- 2:d_ngam
+        #find means for each sample size
+        means <- as.data.frame(
+          #to every sample size value 2:n create 100 means of size n
+          lapply(ns, 
+                 FUN = function(x, d_alpha, d_lambda){replicate(100, mean(rgamma(n = x, shape = d_alpha, rate = d_lambda)))}, d_alpha = d_alpha, d_lambda = d_lambda), 
+          col.names = paste0("n",ns))
+        #now find the ecdf for each sample size (each column)
+        ecdfs <- apply(X = means, MARGIN = 2, FUN = ecdf)
+        #gamma mean and sd
+        gam_mean <- d_alpha/d_lambda
+        gam_sd <- sqrt(d_alpha/(d_lambda^2*2))
+        #create a sequence of ybars to evaluate the ecdf at
+        ybars <- seq(from = gam_mean-3*gam_sd, to = gam_mean+3*gam_sd, length = 50)
+        #find the corresponding normal distribution's cdf values
+        zs <- as.data.frame(
+          lapply(ns,
+                 FUN = function(x, ybars, d_alpha, d_lambda){
+                   pnorm(ybars, 
+                         mean = gam_mean, 
+                         sd = sqrt(d_alpha/(d_lambda^2*x)))
+                   }, ybars = ybars, d_alpha = d_alpha, d_lambda = d_lambda),
+          col.names = paste0("n", ns)
+        )
+        diffs <- lapply(X = 1:length(ecdfs), FUN = function(x) abs(ecdfs[[x]](ybars) - zs[,x]))
+        #now we have the ns, ybars, and diffs to plot
+        plot_data <- expand.grid(ybars = ybars, ns = ns)
+        plot_data$diffs <- unlist(diffs) 
+        three_d_plot_values$plot_data <- plot_data
     })
-  )             
+    
+    output$three_d <- renderPlot({
+        plot_data <- three_d_plot_values$plot_data
+        # open3d()
+        # plot3d(x = plot_data$ybars, y = plot_data$ns, z = plot_data$diffs)
+        # scene <- scene3d()
+        # close3d()
+        # rglwidget(scene)
+        if(length(plot_data)>0){
+          print(wireframe(diffs ~ ybars + ns, 
+                          data = plot_data, 
+                          scales = list(arrows = FALSE), 
+                          drape = TRUE, 
+                          colorkey = TRUE, 
+                          screen = list(z = -50, x = -70), 
+                          zlab = list(expression(hat(l)[n] ~ "(x)=|" ~ hat(F)[n] ~ "(x)-" ~ F ~ "(x)|"), rot = 90), 
+                          main = "Convergence in Distribution?", 
+                          xlab="ybar"))
+        } else {
+          NULL
+        }
+    })
+  })
 ```
 
+Here derive the exact distribution of $\bar{Y}$ from a Gamma RV using MGFs. Then discuss limit of MGFs as an alternative to limit of CDFs. Show the convergence via a Taylor series... that's a tough one but I have it in my homework solutions.
 
-<div class = "clearfix"> </div>
-
-<button type="button" class="collapsible">Key for a reliable Mean Estimate</button>
-<div class="content">
-
-**Large sample size
-
-</div>
-<div class = "clearfix"> </div>
-
-
-
-## Why do we care about limit theory? 
-
-Ideally as our sample size grows the statistics we are using will **converge** to their *true* values, often a parameter they are estimating, in some sense. For instance, we hope that the sample mean gets closer and closer to the population mean we are interested in. 
-
-The convergence of random variables is important for asymptotic inference. As we can never collect infinity number of data, asymptotic result is critical to approximate the distribution of statistics of interest with finite sample size. We will discuss the most common three types of convergence.
-
-Just for proof of concept. Notation:
-<button type="button" class="collapsible">Open Collapsible</button>
-<div class="content">
-  * Let $X_1,X_2,\cdots,X_n$ be a sequence of iid random variables and $X$ be a random variable such that $E(X_i)=\mu, Var(X_i)=\sigma^2 < \infty, \forall i$
-  * Convergence in distirbution $X_n\stackrel{d}{\rightarrow} X$
-  * Convergence in probability $X_n\stackrel{p}{\rightarrow} X$
-  * Convergence almost surely $X_n\stackrel{a.s.}{\rightarrow} X$
-</div>
-
-
-## Convergence in Distribution
-* Definition $lim_{n \rightarrow \infty} F_{X_n}(x)=F_{X}(x)$, or
-            $lim_{n \rightarrow \infty} |F_{X_n}(x)-F_{X}(x)|=0$
-  * $F_X(x)$ is continuous
-  * Cumulative Density Function (CDF)
-
-Below is the empirical cumulative distribution for binomial distribution and the appropriate normal distribution. We investigate the distribution of the sample means from the binomial distribution out of 1000 repetitions.
-
-<div class = "clearfix"> </div>
-  
-:::: {style="display: flex;"}
-
-::: {}
-
-
-```{r, echo=FALSE,message=FALSE, eval = FALSE}
-#ggplot(datamat[datamat$samplesize==500,], aes(mean)) +                      # Draw cumulative ggplot2 histogram
-  #stat_ecdf(geom = "step", pad = FALSE)
-p=0.6
-n=100
-NN=1000
-n500cdf=rbinom(NN,n,p)
-
-ecdf <- data.frame(
-  x = c(n500cdf, rnorm(NN, n*p, sqrt(n*p*(1-p)))),
-   CDF= c(rep("Binormial (100,0.6)",NN), rep("Normal (60, 24)",NN))
-)
-ggplot(ecdf, aes(x,color=CDF)) +stat_ecdf()+
-  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.8, 0.1))+
-  ggtitle("Emprical Cumulative Distribution Function") +
-  ylab("Cumulative Distribution Function") + 
-  xlab("Observed Mean Value ")
-
-#![](/Users/xzhao17/Desktop/empirical1.png) 
-```
-
-
-
-
-:::
-
-::: {}
-
-
-```{r, echo=FALSE,message=FALSE, eval = FALSE}
-MM=1000 #number of simulation
-n500cdfmean=c(0)
-for (i in 1:MM){
-  n500cdfmean[i]=mean(rbinom(NN,n,p))
-}
-n500df=data.frame(n500cdfmean)
-ggplot(n500df,aes(x=n500cdfmean)) +
-     geom_histogram(aes(y = ..density..),col="red",fill="green") + geom_density(alpha=.2)+ theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-     ggtitle("Distribution of Observed Mean values") +
-     ylab("Absolute Frequency out of 1000") + 
-     xlab("Observed Mean Value ") 
-```
-:::
-
-
-
-
-```{r, include=FALSE, eval = FALSE}
-#From 501 notes
-#Simulate N data sets, each of size n, from an exp(1) distribution
-n <- c(3, 30, 300)
-N <- 50000
-
-#list to save data values in (this is not an efficient way to create this data!)
-data <- list()
-for(i in 1:length(n)){ 	
-    data[[i]] <- matrix(0, nrow = N, ncol = n[i])  #each row of a matrix will represent a data set
-}
-
-#Create the data - loop over sample sizes
-for (j in 1:length(n)){	#loop over sample sizes
-     for (i in 1:N){  #loop to create many data sets of a given sample size
-           data[[j]][i,] <- rexp(n = n[j])	#store the data set in a row of the appropriate matrix
-     }
-}
-#mean and variance for exp(1)
-mu<-sigma<-1
-
-#calculate the z statistic for each set of samples.  Apply the z-score transform to each row of values.
-means1 <- apply(X = data[[1]], FUN = function(data){(mean(data)-mu)/(sigma/sqrt(n[1]))}, MARGIN = 1)
-hist(means1, main = paste("Histogram of z's with n=", n[1], " from exp(1)", sep = ""), 
-      xlab = "Means", prob = T)
-lines(seq(from = -3, to = 3, by = 0.01), dnorm(seq(from = -3, to = 3, by = 0.01)))
- #Repeat this part for n = 30, n = 300
-```
-
-
-::::
-
-
-:::
-
-
-<div class = "clearfix"> </div>
+Introduce CLT as a more general method to obtain an approximate distribution.
 
 ## Central Limit Theorem
-Define $\overline{X}=\frac{1}{n} \sum_{i=1}^{n} X_i$ such that $E(X_i)=\mu, Var(X_i)=\sigma^2 < \infty, \forall i$ and $X \sim N (0, 1)$
 
-* $\frac{\sqrt{n} (\overline{X_n}-\mu)}{\sigma} \stackrel {d} {\rightarrow} X$
+Define $\bar{Y}=\frac{1}{n} \sum_{i=1}^{n} Y_i$ such that $E(Y_i)=\mu, Var(Y_i)=\sigma^2 < \infty, \forall i$ and $Z \sim N(0, 1)$
 
+$$\frac{\bar{Y}-\mu}{\sigma/\sqrt{n}} \stackrel {d} {\rightarrow} Z$$
 
-```{r, echo=FALSE,message=FALSE,include=FALSE, eval = FALSE}
-#this is using gamma example-discussed to just use binomial to be consistent, histogram of mean and density plot
+Practically, we can say that a good approximating distribution or large-sample distribution for $\bar{Y}$ is
+$$\bar{Y}\stackrel{\bullet}\sim N(\mu, \sigma^2/n)$$
 
-ggplot(datamat[datamat$samplesize==500,],aes(x=mean)) +
-     geom_histogram(aes(y = ..density..),col="red",fill="green") + geom_density()+ theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-     ggtitle("Distribution of Observed Mean values") +
-     ylab("Absolute Frequency out of 1000") + 
-     xlab("Observed Mean Value ") 
-```
+**Apply to the gamma distribution example**
+
+**Now let them explore the CLT on a sample proportion with app. Ask for rules of thumb or if they know rules of thumb, to justify them.**
 
 
+## CLT Applied to a Sum 
 
-<div class = "clearfix"> </div>
+Recall the result: 
 
-##CLT Applied to a Sum 
+- If $X\sim N(\mu, \sigma^2)$ then $aX+b\sim N(a\mu+b,a^2\sigma^2)$
+- A Normal random variable multiplied by a constant is still Normally distributed, just with a different mean and variance. 
+- This implies we can find a good large-sample distribution for a summation when the CLT is applicable!
 
+Under the same assumptions as the CLT, since $n\bar{Y} = \sum_{i=1}^{n}Y_i$ we have the following result:
 $$\sum_{i=1}^{n} Y_i \stackrel{\bullet}{\sim}N(n\mu, n\sigma^2)$$
 
--Example: $Y_1,...,Y_{n}\stackrel{iid}{\sim}f_Y(y)=2y$ if $0<y<1$ (0 O.W.).  
-Note: $E(Y)=2/3$ and $Var(Y)=1/18$.\\
-Let $S=Y_1+...+Y_n$, can we approximate $P(S\leq 10)$?
+**Apply CLT to sum of iid gammas. Show how it can be used to show convergence of a gamma to a normal as $\alpha$ grows**
 
-Practically, why is the CLT so important?
-
-- Suppose we know $\sigma$ and we want inference for $\mu$.
-- If we get a RS $Y_1,...,Y_n$ we know 
-	$\bar{Y}\stackrel{\bullet}{\sim}N(\mu,\sigma^2/n)$ ($\mu$ only unknown)
-- We can make an approximate claim about $\mu$ via a confidence interval
-	$$P(-1.96<Z<1.96)=0.95 \Leftrightarrow 
-	P\left(-1.96<\frac{\bar{Y}-\mu}{\sigma/\sqrt{n}}<1.96\right)=0.95$$
-	$$\Leftrightarrow 
-	P\left(\bar{Y}-1.96\sigma/\sqrt{n}<\mu<\bar{Y}+1.96\sigma/\sqrt{n}\right)=0.95$$
-	- That is, there is a 95\% probability the RVs 
-	$\bar{Y}-1.96\sigma/\sqrt{n}$ and $\bar{Y}+1.96\sigma/\sqrt{n}$ capture 
-	$\mu$.
-	- Observe $\bar{Y}=\bar{y}$, get observed CI.  Range we are `confident' 
-	contains $\mu$.
-	- Note: No assumption about $Y$'s distribution made other than finite 
-	variance!
-:::
-
-::::
-<div class = "clearfix"> </div>
-
-
-##CLT Applied to a Sum 
-
-$$\sum_{i=1}^{n} Y_i \stackrel{\bullet}{\sim}N(n\mu, n\sigma^2)$$
-
--Example: $Y_1,...,Y_{n}\stackrel{iid}{\sim}f_Y(y)=2y$ if $0<y<1$ (0 O.W.).  
-Note: $E(Y)=2/3$ and $Var(Y)=1/18$.\\
-Let $S=Y_1+...+Y_n$, can we approximate $P(S\leq 10)$?
+**Quick exercise, apply CLT on sum to binomial**
 
 Practically, why is the CLT so important?
 
@@ -657,424 +657,31 @@ Practically, why is the CLT so important?
 	variance!
 
 
-
-<div class = "clearfix"> </div>
-
-
-
-
-## R shiny demonstration by the instructor
-
-### This section illustrates convergence in distribution
-
-#### "\\(\\star\\)By definition, \\(X_n \\overset{d} {\\to} X\\) or \\(X_n \\overset{L} {\\to} X\\) if and only if \\(l_n= \\lvert F_{X_n}(t)-F_X(t) \\rvert \\underset{n\\to \\infty} \\rightarrow  0\\) for all \\(t\\) and \\(F_X(x)\\) is continuous. "
-
-#### "\\(\\star\\) \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) is used for convergence in distribution. \\(F_X(t)\\) is the cumulative distribution function of \\(X\\) and \\(\\widehat F_{X_n} (t)\\) is the empirical distribution function of \\(X_n\\) such that  \\(\\widehat F_{X_n} (t)=\\frac{\\# \\{x_n^{j} \\leq t \\}}{M}, \forall j =1,\\cdots, M\\)."
-
-<div class = "clearfix"> </div>
-
-```{r, include=FALSE}
-#hist(rbeta(1000 , 10000, 10000)) #beta (bigalpha,bigalpha) normal (1/2,sqrt(1/4(2bigalpha+1)))
-```
-
-
-
-
-```{r, include=FALSE}
-#hist(rpois(1000, lambda=1000)). #poisson (biglamda) normal(biglamda, biglamda)
-```
-
-
-We want to explore the distribution convergence in distribution and central limit theorem through the interactive app. Before we jump into shiny, let's introduce some parameters which can be varied. We will still use the binomial distribution example we visualized earlier.
-
-*n: The number of the sample size. With everything else fixed, as $n\rightarrow \infty$:
-    *Histogram: it becomes a symmetric bell-shape
-    *CDF:
-    *3D distance between ECDF and Normal CDF:
-    *Sample path
-```{r,echo=FALSE,message=FALSE, eval = FALSE}
-#histogram by sample size
-n20b=c(0)
-for (i in 1:M){
-  n20b[i]=rbinom(NN,20,p)
-}
-n50b=c(0)
-for (i in 1:M){
-  n50b[i]=rbinom(NN,50,p)
-}
-
-n100b=c(0)
-for (i in 1:M){
-  n100b[i]=rbinom(NN,100,p)
-}
-n500b=c(0)
-for (i in 1:M){
-  n500b[i]=rbinom(NN,500,p)
-}
-datamatb=data.frame(cbind(c(rep(c(20,50,100,500),each=M)),c(n20b,n50b,n100b,n500b)))
-colnames(datamatb)=c("samplesize","Value")
-
-# create ggplot2 plot
-ggplot(datamatb) + 
-  geom_histogram(mapping=aes(x=Value,group=samplesize),bins=50,col="red",fill="red")  +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-  ggtitle("Histogram of Observed Values") +
-  labs(subtitle=("Sample Size : {closest_state}")) +
-  ylab("Absolute Frequency out of 1000") + 
-  xlab("Observed Value ") + 
-  transition_states(samplesize)
-```
-
-
-
-```{r,echo=FALSE,message=FALSE, eval = FALSE}
-#CDF by sample size
-library(EnvStats)
-library(transformr)
-
-##n=20
- n20=rbinom(NN,20,p)
- n20norm=rnorm(NN, 20*p, sqrt(20*p*(1-p)))
- # xx20 <- qemp(p = seq(0, 1, len = 100), obs = n20) 
- # y20 <- cumsum(demp(xx20, n20) )
- #y20 <- ecdf( n20)
- 
- y20=cumsum(density(n20,n=NN)$y)
- #repn=length(density(n20)$y)
- # 
- # xx20n <- qemp(p = seq(0, 1, len = 100), obs = n20norm) 
- #y20n <- ecdf( n20norm)
- 
- 
- ##CDF= c(rep("Binormial (20,0.6)",NN), rep("Normal (12, 4.8)",NN)). x=c(n20,n20norm)
- y20n <- cumsum(density(n20norm,n=NN)$y)
-ecdf20 <- data.frame(
-   x=c(n20,n20norm),
-   y = c(y20, y20n),
-  
-   
-   CDF= c(rep("Binormial (20,0.6)",NN), rep("Normal (12, 4.8)",NN))
-)
-
-##n=50
- n50=rbinom(NN,50,p)
- n50norm=rnorm(NN, 50*p, sqrt(50*p*(1-p)))
- #xx50 <- qemp(p = seq(0, 1, len = 100), obs = n50) 
- #y50 <- ecdf(n50 )
- y50=cumsum(density(n50,n=NN)$y)
- 
- #xx50n <- qemp(p = seq(0, 1, len = 100), obs = n50norm) 
- #y50n <- ecdf(n50norm)
- 
- y50n <- cumsum(density(n50norm,n=NN)$y)
-ecdf50 <- data.frame(
-   x=c(n50,n50norm),
-   y = c(y50, y50n),
-  
-   CDF= c(rep("Binormial (50,0.6)",NN), rep("Normal (30, 12)",NN))
-)
-
-##n=100
- n100=rbinom(NN,100,p)
- n100norm=rnorm(NN, 100*p, sqrt(100*p*(1-p)))
- #xx100 <- qemp(p = seq(0, 1, len = 100), obs = n100) 
- #y100 <- ecdf(n100 )
- y100=cumsum(density(n100,n=NN)$y)
- 
- #xx100n <- qemp(p = seq(0, 1, len = 100), obs = n100norm) 
-# y100n <- ecdf(n100norm)
- y100n <- cumsum(density(n100norm,n=NN)$y)
-ecdf100 <- data.frame(
-   x=c(n100,n100norm),
-   y = c(y100, y100n),
-  
-   CDF= c(rep("Binormial (100,0.6)",NN), rep("Normal (60, 24)",NN))
-)
-
-##n=500
- n500=rbinom(NN,500,p)
- n500norm=rnorm(NN, 500*p, sqrt(500*p*(1-p)))
- #xx500 <- qemp(p = seq(0, 1, len = 100), obs = n500) 
- #y500 <- ecdf( n500) 
-  y500=cumsum(density(n500,n=NN)$y)
- 
- #xx500n <- qemp(p = seq(0, 1, len = 100), obs = n500norm) 
- #y500n <- ecdf( n500norm)
- y500n <- cumsum(density(n500norm,n=NN)$y)
-ecdf500 <- data.frame(
-   x=c(n500,n500norm),
-   y = c(y500, y500n),
-  
-   CDF= c(rep("Binormial (500,0.6)",NN), rep("Normal (300, 120)",NN))
-)
-
-
-ecdfall=rbind(ecdf20,ecdf50,ecdf100,ecdf500)
-ecdfall$samplesize=rep(c(20,50,100,500),each=2*NN)
-
-#+stat_ecdf() +stat_ecdf(aes(color=CDF))+
-#color=CDF,
-ggplot(ecdfall, aes(x,group=samplesize,color=CDF)) +stat_ecdf()+
-  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.8, 0.1))+
-  ggtitle("Emprical Cumulative Distribution Function") + labs(subtitle=("Sample Size : {closest_state}"))+
-  ylab("Cumulative Distribution Function") + 
-  xlab("Observed Value ")+transition_states(samplesize)
-
-```
-
-
-
-
-```{r,echo=FALSE,message=FALSE, eval = FALSE}
-#3D plot by sample size
-library(EnvStats)
-library(transformr)
-library(viridis)
-library(ggridges)
-
-# ggplot(lincoln_weather, aes(x = `Mean Temperature [F]`, y = Month, fill = stat(x))) +
-#   geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
-#   scale_fill_viridis_c(name = "Temp. [F]", option = "C") +
-#   labs(title = 'Temperatures in Lincoln NE in 2016')
-
-#+stat_ecdf()
-#color=CDF,
-
-yall=c(y20,y50,y100,y500)
-yalln=c(y20n,y50n,y100n,y500n)
-yd=data.frame(cbind(yall,yalln))
-colnames(yd)=c("yall","yalln")
-yd$samplesize=rep(c(20,50,100,500),each=NN)
-
-#ggplot(iris, aes(x = Sepal.Length, y = Species)) + geom_density_ridges(scale = 0.9)
-
-
-ggplot(yd, aes(x=yalln-yall,y=samplesize,fill=stat(x),group=samplesize)) +geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01)+
-  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.9, 0.8))+scale_fill_viridis_c(name = "Differences", option = "C")+
-  ggtitle("Distance Between binormial ECDF and normal CDF ") + 
-  ylab("Sample Size") + 
-  xlab("Observed Differences ")
-
-```
-
-
-
-```{r ,echo=FALSE,message=FALSE, eval = FALSE}
-library(tidyverse)
-library(plotly)
-
-#https://stackoverflow.com/questions/72590265/3d-plot-of-monthly-temperature-in-r
-# temp %>% 
-#   pivot_longer(starts_with('Hour'), 
-#                names_to = 'Hour',
-#                values_to = 'Temperature') %>%
-#   group_by(Year, Month) %>%
-#   summarise(Temperature = mean(Temperature, na.rm = TRUE)) %>%
-#   pivot_wider(names_from = Month, values_from = Temperature) %>%
-#   ungroup() %>%
-#   select(-1) %>%
-#   as.matrix() %>%
-#   plot_ly(x = month.name, y = unique(temp$Year), z = .) %>%
-#   add_surface()
-yd$obs=rep(c(1:1000),4)
-yd$ydiff=yd$yall-yd$yalln
-ydsub=yd[,c(3,4,5)]
- ydsub%>% 
-  group_by(ydsub$samplesize, ydsub$obs) %>%
-  ungroup() %>%
-  #select(-1) %>%
-  as.matrix() %>%
-  plot_ly(x = ydsub$obs, y = unique(ydsub$samplesize), z = .) %>%
-  add_surface()
-```
-
-
-
-
-
-*Other distribution specific parameters:
- *$\alpha$: shape parameter for gamma distribution. 
-  As $\alpha\rightarrow \infty$, gamma distribution converges to normal distribution.
- *$\lambda$: rate parameter for poisson distribution. 
-  As $\lambda\rightarrow \infty$, poisson distribution converges to normal distribution
- *$\alpha,\beta$: rate parameters for beta distribution. 
-  As $\alpha=\beta\rightarrow \infty$, beta distribution converges to normal distribution
-
-```{r  echo=FALSE, eval = FALSE}
-law.plot3dnew=function (data, probfunc, tinf = -5, tsup = 5) 
-{
-    nmax <- ncol(data)
-    Fhat <- function(x) {
-        n <- x[1]
-        t <- x[2]
-        Fn <- ecdf(data[, n])
-        Fn(t)
-    }
-    g <- expand.grid(t = seq(from = tinf, to = tsup, length = 10), 
-        n = 1:nmax)
-    Mymat <- g[, 2:1]
-    g$z <- abs(apply(Mymat, FUN = Fhat, MARGIN = 1) - probfunc(g$t))
-    print(wireframe(z ~ t + n, data = g, scales = list(arrows = FALSE), 
-        drape = TRUE, colorkey = TRUE, screen = list(z = -50, 
-            x = -70), zlab = list(expression(hat(l)[n] ~ "(x)=|" ~ 
-            hat(F)[n] ~ "(x)-" ~ F ~ "(x)|"), rot = 90), main = "Convergence in Distribution?", xlab="x"))
-}
-sidebarPanel(#d_n=1000,
-#########
-
-                      #selectInput("tabs",
-                                  #"Distribution",
-                                  #list('Binormial','Beta','Poisson'),multiple = FALSE),
-
-                     # selectInput("tabs",
-                                 # "Distribution",
-                                 # list('Binormial','Beta','Poisson'),multiple = FALSE
-
-  # inputId,
-  # label,
-  # choices,
-  # selected = NULL,
-  # multiple = FALSE,
-  # selectize = TRUE,
-  # width = NULL,
-  # size = NULL
-
-#),
-
-                    
-                        # sliderInput("d_ns",
-                        #             "M: the number of simulations of the sequence",
-                        #             min = 1,
-                        #             max = 2000,
-                        #             step=30,
-                        #             value = 50,
-                        #           animate=animationOptions(
-                        #           interval = 1000,
-                        #           loop = TRUE,
-                        #           playButton = "Play",
-                        #           pauseButton = "Stop")) ,
-                        # 
-                        # 
-                        # helpText("As \\(M\\) increases,"),
-                        # helpText("\\(\\star\\) The 3-D plot of \\(\\widehat l_n(t)=\\lvert \\widehat F_{X_n}(t)-F_X(t) \\rvert\\) will get closer to zero horizontal plane"),
-                        # helpText("\\(\\star\\)  \\(X_n \\overset{d} {\\to} X\\sim N(0,1)\\)"),
-             #d_ns=1000,           
-      #####
-                    
-                          sliderInput("d_k",
-                                      #helpText("\\(K\\)=position of \\(X_n\\) and \\(K\\leq n_{max}\\)"),
-                                      helpText("\\(n\\)=Sample Size of \\(X_n\\)"),
-                                      min = 1,
-                                      max = 1000,
-                                      step=1,
-                                      value = 10,
-                                  animate=animationOptions(
-                                  interval = 1000,
-                                  loop = TRUE,
-                                  playButton = "Play",
-                                  pauseButton = "Stop")),
-                          helpText("As \\(n\\) increases,"),
-                          helpText("\\(\\star\\) Density plot of \\(X_n\\) values will resemble a standard normal curve"),
-                          helpText("\\(\\star\\) \\(\\widehat F_{X_n}(t)\\) will approach to \\(F_X(t)\\) ") )
-       
-
-############
-
-mainPanel(
-                          helpText(h4('Let \\(Y_1, Y_2,....,Y_n\\) be independent random variables \\(Y\\sim \\chi_1^2\\), \\(Xn=\\frac {\\sum Y_i-n}{\\sqrt{2*n}} \\) and \\(X\\sim N(0,1)\\).')),
-                      
-                      helpText(h4("\\(F_{X_n}(t)\\) is the empirical distribution of \\(X_n\\) and \\(F_X(t)\\) is cdf of \\(X\\). We use \\(\\widehat F_{X_n} (t)\\) to approximate \\(F_{X_n}(t)\\). ")),
-                      
-            
-      tabsetPanel(id = "Binormial",
-        tabPanel("Histogram and CDF", splitLayout(
-
-renderPlot({
-      set.seed(1)
-      #d_n=input$d_n
-     #d_n=1000
-      #d_ns=input$d_ns
-       d_ns=1000
-      d_k=input$d_k
-      d_n=input$d_k
-      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
-      d_data=data.frame()
-      for (s in 1:d_ns){
-        d_data=rbind(d_data,d_f(d_n))
-      }
-      d_h=hist(data.matrix(d_data[d_k]),main=mtext(bquote(bold("Density plot of"~X[n]~"values")),col="darkblue"),xlab="Xn values",col="green",border = "red",prob = T, xlim = c(-4,4))
-     
-      lines(seq(-4,4,length=d_ns),dnorm(seq(-4,4,length=d_ns)),col="darkblue",lwd=3)
-      
-      legend('topleft', c(expression(hat(f[X[n]](t))),expression(f[X](t))),
-             fill =c("green", "darkblue"))
-      
-      text(x=4,y=max(d_h$density),bquote(bold(f[X[n]](t)~"will resemble"~f[X](t))),col="red",adj=1)
-    }),
-#d_hist
-#######
-  renderPlot({
-      set.seed(1)
-
-      #d_n=input$d_n
-       d_n=input$d_k
-      #d_ns=input$d_ns
-      d_ns=1000
-      d_k=input$d_k
-      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
-      d_data=data.frame()
-      for (s in 1:d_ns){
-        d_data=rbind(d_data,d_f(d_n))
-      }
-      d_h=hist(data.matrix(d_data[d_k]),main=mtext(bquote(bold(.(d_ns)~"sample paths of"~X[n]~"values")),col="darkblue"),xlab="Xn values",col="green",border = "red",xlim = c(-4,4),prob=T,breaks = d_ns)
-
-      d_y=d_h$density
-      d_x=seq(-4,4,length.out =length(d_y))
-
-      plot(d_x,cumsum(d_y)/max(cumsum(d_y)),type="l",lwd=2,main=mtext(bquote(bold(hat(F[X[n]](t))~"and"~F[X](t))),col="darkblue"),col="green",xlim=c(-4,4),xlab = "X", ylab = "Cumulative probability" )
-      lines(d_x,pnorm(d_x),col="darkblue")
-      legend('topleft', c(expression(hat(F[X[n]](t))),expression(F[X](t))),lty = c(1,1),col = c("green", "darkblue") )
-             #fill =c("green", "darkblue"))
-
-      text(x=4,y=0.05,bquote(bold(F[X[n]](t)~"will resemble"~F[X](t))),col="red",adj=1)
-    })
-###########
-)),
-        tabPanel("3D Distance",  renderPlot({
-      set.seed(1)
-      #d_n=input$d_n
-  d_n=input$d_k
-      #d_ns=input$d_ns
-        d_ns=1000
-      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
-        d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
-        law.plot3dnew(d_data_3D,pnorm)
-    })),
-        tabPanel("Sample Path", renderPlot({
-      set.seed(1)
-      #d_n=input$d_n
-        d_n=input$d_k
-      #d_ns=input$d_ns
-      d_ns=1000
-        #eps2=input$ep2
-      d_f=function(d_n){(cumsum(rchisq(d_n,df=1))-(1:d_n))/sqrt(2*(1:d_n))}
-      d_data_3D <- generate(randomgen=d_f,nmax=d_n,M=d_ns)$data
-        visualize.sp(d_data_3D,nb.sp=d_ns,epsilon=3,main=mtext(bquote(bold(.(d_ns)~"sample paths of"~X[n]~"values")),col="darkblue"), col="grey")
-    }))
-      )
-             
-                  
-   
-
-
-)             
-     
- 
-
-```
-
-<div class = "clearfix"> </div>
-## Your Turn
-
+## Example problems (with solution)
+- **Basic CLT problem**
+- **Norm approx to poisson for large mean parameter (hint about using CLT)**
+- **Example Binomial convergence to a Poisson**
+- [Reference](https://www.probabilitycourse.com/chapter7/7_2_4_convergence_in_distribution.php): Let $X_1, X_2, X_3, X_4, \cdots$ be a sequence of random variable such that
+    $$F_{X_n}(x)=\begin{cases}
+      1-(1-\frac{1}{n})^{nx} \ , \  x>0
+      \\
+      0 \ \ \ \ \ \ \ \ \ \ \ \ \ , \ otherwise
+    \end{cases}    $$  
+    Show that $X_n$ converges in distribution to Exponential(1).
+
+    <button type="button" class="collapsible">Solution</button>
+    <div class="content">
+    Solution: Let $X \sim Exponential (1)$. For $x \leq 0$, we have
+    $$F_{X_n}(x)=F_x(x)=0,$$ for $n=2,3,4,\cdots$.
+    For $x \geq 0$, we have 
+    $$ \begin{aligned} lim_{n \rightarrow \infty} F_{X_n}(x)&=lim_{n \rightarrow \infty} (1-(1-\frac{1}{n})^{nx}) \\
+    &=1-lim_{n\rightarrow \infty} (1-\frac{1}{n})^{nx} \\
+    &=1-e^{-x}\\
+    &=F_X(x)\end{aligned}$$, for all $x$.
+    Thus, we conclude that $X_n \stackrel {d}{\rightarrow}X$.
+    </div>
+
+- **Perhaps the more general app with guidance on what to try?**
 ```{r  echo=FALSE, eval = FALSE}
 
 #gamma(r,lambda), mu=rlambda,var=rlambda^2, as r goes to infinity, it goesto normal
@@ -1276,34 +883,240 @@ helpText(h4("This app is designed to visualize \\(X_n=\\frac{\\sqrt{n} ( \\overl
 )
 ```
 
+Not sure what may be needed from these code chunks below.
+```{r, echo=FALSE,message=FALSE, eval = FALSE}
+MM=1000 #number of simulation
+n500cdfmean=c(0)
+for (i in 1:MM){
+  n500cdfmean[i]=mean(rbinom(NN,n,p))
+}
+n500df=data.frame(n500cdfmean)
+ggplot(n500df,aes(x=n500cdfmean)) +
+     geom_histogram(aes(y = ..density..),col="red",fill="green") + geom_density(alpha=.2)+ theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
+     ggtitle("Distribution of Observed Mean values") +
+     ylab("Absolute Frequency out of 1000") + 
+     xlab("Observed Mean Value ") 
+```
 
-<div class = "clearfix"> </div>
+```{r, include=FALSE, eval = FALSE}
+#From 501 notes
+#Simulate N data sets, each of size n, from an exp(1) distribution
+n <- c(3, 30, 300)
+N <- 50000
 
-### Homework practice
-reference: https://www.probabilitycourse.com/chapter7/7_2_4_convergence_in_distribution.php \
-Let $X_2, X_3,  X_4, \cdots $ be a sequence of random variable such that
-$$F_{X_n}(x)=\begin{cases}
-      1-(1-\frac{1}{n})^{nx} \ , \  x>0
-      \\
-      0 \ \ \ \ \ \ \ \ \ \ \ \ \ , \ otherwise
-    \end{cases}    $$
-Show that $X_n$ converges in distribution to Exponential(1).
+#list to save data values in (this is not an efficient way to create this data!)
+data <- list()
+for(i in 1:length(n)){ 	
+    data[[i]] <- matrix(0, nrow = N, ncol = n[i])  #each row of a matrix will represent a data set
+}
 
-<button type="button" class="collapsible">Solution</button>
-<div class="content">
-Solution: Let $X \sim Exponential (1)$. For $x \leq 0$, we have
-$$F_{X_n}(x)=F_x(x)=0,$$ for $n=2,3,4,\cdots$.
-For $x \geq 0$, we have 
-$$ \begin{aligned} lim_{n \rightarrow \infty} F_{X_n}(x)&=lim_{n \rightarrow \infty} (1-(1-\frac{1}{n})^{nx}) \\
-&=1-lim_{n\rightarrow \infty} (1-\frac{1}{n})^{nx} \\
-&=1-e^{-x}\\
-&=F_X(x)\end{aligned}$$, for all $x$.
-Thus, we conclude that $X_n \stackrel {d}{\rightarrow}X$.
-</div>
+#Create the data - loop over sample sizes
+for (j in 1:length(n)){	#loop over sample sizes
+     for (i in 1:N){  #loop to create many data sets of a given sample size
+           data[[j]][i,] <- rexp(n = n[j])	#store the data set in a row of the appropriate matrix
+     }
+}
+#mean and variance for exp(1)
+mu<-sigma<-1
 
-<div class = "clearfix"> </div>
+#calculate the z statistic for each set of samples.  Apply the z-score transform to each row of values.
+means1 <- apply(X = data[[1]], FUN = function(data){(mean(data)-mu)/(sigma/sqrt(n[1]))}, MARGIN = 1)
+hist(means1, main = paste("Histogram of z's with n=", n[1], " from exp(1)", sep = ""), 
+      xlab = "Means", prob = T)
+lines(seq(from = -3, to = 3, by = 0.01), dnorm(seq(from = -3, to = 3, by = 0.01)))
+ #Repeat this part for n = 30, n = 300
+```
 
-## Convergence in Probability Definition 
+```{r,echo=FALSE,message=FALSE, eval = FALSE}
+#histogram by sample size
+n20b=c(0)
+for (i in 1:M){
+  n20b[i]=rbinom(NN,20,p)
+}
+n50b=c(0)
+for (i in 1:M){
+  n50b[i]=rbinom(NN,50,p)
+}
+
+n100b=c(0)
+for (i in 1:M){
+  n100b[i]=rbinom(NN,100,p)
+}
+n500b=c(0)
+for (i in 1:M){
+  n500b[i]=rbinom(NN,500,p)
+}
+datamatb=data.frame(cbind(c(rep(c(20,50,100,500),each=M)),c(n20b,n50b,n100b,n500b)))
+colnames(datamatb)=c("samplesize","Value")
+
+# create ggplot2 plot
+ggplot(datamatb) + 
+  geom_histogram(mapping=aes(x=Value,group=samplesize),bins=50,col="red",fill="red")  +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
+  ggtitle("Histogram of Observed Values") +
+  labs(subtitle=("Sample Size : {closest_state}")) +
+  ylab("Absolute Frequency out of 1000") + 
+  xlab("Observed Value ") + 
+  transition_states(samplesize)
+```
+
+```{r,echo=FALSE,message=FALSE, eval = FALSE}
+#CDF by sample size
+library(EnvStats)
+library(transformr)
+
+##n=20
+ n20=rbinom(NN,20,p)
+ n20norm=rnorm(NN, 20*p, sqrt(20*p*(1-p)))
+ # xx20 <- qemp(p = seq(0, 1, len = 100), obs = n20) 
+ # y20 <- cumsum(demp(xx20, n20) )
+ #y20 <- ecdf( n20)
+ 
+ y20=cumsum(density(n20,n=NN)$y)
+ #repn=length(density(n20)$y)
+ # 
+ # xx20n <- qemp(p = seq(0, 1, len = 100), obs = n20norm) 
+ #y20n <- ecdf( n20norm)
+ 
+ 
+ ##CDF= c(rep("Binormial (20,0.6)",NN), rep("Normal (12, 4.8)",NN)). x=c(n20,n20norm)
+ y20n <- cumsum(density(n20norm,n=NN)$y)
+ecdf20 <- data.frame(
+   x=c(n20,n20norm),
+   y = c(y20, y20n),
+  
+   
+   CDF= c(rep("Binormial (20,0.6)",NN), rep("Normal (12, 4.8)",NN))
+)
+
+##n=50
+ n50=rbinom(NN,50,p)
+ n50norm=rnorm(NN, 50*p, sqrt(50*p*(1-p)))
+ #xx50 <- qemp(p = seq(0, 1, len = 100), obs = n50) 
+ #y50 <- ecdf(n50 )
+ y50=cumsum(density(n50,n=NN)$y)
+ 
+ #xx50n <- qemp(p = seq(0, 1, len = 100), obs = n50norm) 
+ #y50n <- ecdf(n50norm)
+ 
+ y50n <- cumsum(density(n50norm,n=NN)$y)
+ecdf50 <- data.frame(
+   x=c(n50,n50norm),
+   y = c(y50, y50n),
+  
+   CDF= c(rep("Binormial (50,0.6)",NN), rep("Normal (30, 12)",NN))
+)
+
+##n=100
+ n100=rbinom(NN,100,p)
+ n100norm=rnorm(NN, 100*p, sqrt(100*p*(1-p)))
+ #xx100 <- qemp(p = seq(0, 1, len = 100), obs = n100) 
+ #y100 <- ecdf(n100 )
+ y100=cumsum(density(n100,n=NN)$y)
+ 
+ #xx100n <- qemp(p = seq(0, 1, len = 100), obs = n100norm) 
+# y100n <- ecdf(n100norm)
+ y100n <- cumsum(density(n100norm,n=NN)$y)
+ecdf100 <- data.frame(
+   x=c(n100,n100norm),
+   y = c(y100, y100n),
+  
+   CDF= c(rep("Binormial (100,0.6)",NN), rep("Normal (60, 24)",NN))
+)
+
+##n=500
+ n500=rbinom(NN,500,p)
+ n500norm=rnorm(NN, 500*p, sqrt(500*p*(1-p)))
+ #xx500 <- qemp(p = seq(0, 1, len = 100), obs = n500) 
+ #y500 <- ecdf( n500) 
+  y500=cumsum(density(n500,n=NN)$y)
+ 
+ #xx500n <- qemp(p = seq(0, 1, len = 100), obs = n500norm) 
+ #y500n <- ecdf( n500norm)
+ y500n <- cumsum(density(n500norm,n=NN)$y)
+ecdf500 <- data.frame(
+   x=c(n500,n500norm),
+   y = c(y500, y500n),
+  
+   CDF= c(rep("Binormial (500,0.6)",NN), rep("Normal (300, 120)",NN))
+)
+
+
+ecdfall=rbind(ecdf20,ecdf50,ecdf100,ecdf500)
+ecdfall$samplesize=rep(c(20,50,100,500),each=2*NN)
+
+#+stat_ecdf() +stat_ecdf(aes(color=CDF))+
+#color=CDF,
+ggplot(ecdfall, aes(x,group=samplesize,color=CDF)) +stat_ecdf()+
+  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.8, 0.1))+
+  ggtitle("Emprical Cumulative Distribution Function") + labs(subtitle=("Sample Size : {closest_state}"))+
+  ylab("Cumulative Distribution Function") + 
+  xlab("Observed Value ")+transition_states(samplesize)
+
+```
+
+```{r,echo=FALSE,message=FALSE, eval = FALSE}
+#3D plot by sample size
+library(EnvStats)
+library(transformr)
+library(viridis)
+library(ggridges)
+
+# ggplot(lincoln_weather, aes(x = `Mean Temperature [F]`, y = Month, fill = stat(x))) +
+#   geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+#   scale_fill_viridis_c(name = "Temp. [F]", option = "C") +
+#   labs(title = 'Temperatures in Lincoln NE in 2016')
+
+#+stat_ecdf()
+#color=CDF,
+
+yall=c(y20,y50,y100,y500)
+yalln=c(y20n,y50n,y100n,y500n)
+yd=data.frame(cbind(yall,yalln))
+colnames(yd)=c("yall","yalln")
+yd$samplesize=rep(c(20,50,100,500),each=NN)
+
+#ggplot(iris, aes(x = Sepal.Length, y = Species)) + geom_density_ridges(scale = 0.9)
+
+
+ggplot(yd, aes(x=yalln-yall,y=samplesize,fill=stat(x),group=samplesize)) +geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01)+
+  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+theme(legend.text = element_text(size=15))+ theme(legend.position = c(0.9, 0.8))+scale_fill_viridis_c(name = "Differences", option = "C")+
+  ggtitle("Distance Between binormial ECDF and normal CDF ") + 
+  ylab("Sample Size") + 
+  xlab("Observed Differences ")
+
+```
+
+```{r ,echo=FALSE,message=FALSE, eval = FALSE}
+library(tidyverse)
+library(plotly)
+
+#https://stackoverflow.com/questions/72590265/3d-plot-of-monthly-temperature-in-r
+# temp %>% 
+#   pivot_longer(starts_with('Hour'), 
+#                names_to = 'Hour',
+#                values_to = 'Temperature') %>%
+#   group_by(Year, Month) %>%
+#   summarise(Temperature = mean(Temperature, na.rm = TRUE)) %>%
+#   pivot_wider(names_from = Month, values_from = Temperature) %>%
+#   ungroup() %>%
+#   select(-1) %>%
+#   as.matrix() %>%
+#   plot_ly(x = month.name, y = unique(temp$Year), z = .) %>%
+#   add_surface()
+yd$obs=rep(c(1:1000),4)
+yd$ydiff=yd$yall-yd$yalln
+ydsub=yd[,c(3,4,5)]
+ ydsub%>% 
+  group_by(ydsub$samplesize, ydsub$obs) %>%
+  ungroup() %>%
+  #select(-1) %>%
+  as.matrix() %>%
+  plot_ly(x = ydsub$obs, y = unique(ydsub$samplesize), z = .) %>%
+  add_surface()
+```
+
+
+# Convergence in Probability Definition 
 
 
 A sequence of RVs $Y_1,...,Y_n,...$ converges in probability to a RV $Y$ if for every $\epsilon>0$
