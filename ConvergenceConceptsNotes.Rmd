@@ -1,5 +1,5 @@
 ---
-title: "Convergence Concepts with Shiny"
+title: "Convergence Concepts for Statisticians"
 author: "Xiaoxia Champon, Justin Post"
 date: "2023-04-25"
 output: 
@@ -27,25 +27,213 @@ for (i = 0; i < coll.length; i++) {
 
 ```{r setup, include=FALSE,warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-
-
-```{r include=FALSE,warning=FALSE}
 #add library
 library(shiny)
 library(shinydashboard)
 library(ConvergenceConcepts)
 ```
 
-# Convergence Concepts
 
-## What is Limit Theory?
+# Motivation
 
-By limit or asymptotic theory we mean we want to understand the behavior of some quantity, usually a statistic, as something changes, usually the sample size. For instance, we will investigate the behavior of the sample mean as the sample size grows. We'll look at questions like
+A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023](https://www.pewresearch.org/science/2023/05/16/americans-largely-positive-views-of-childhood-vaccines-hold-steady/) (let's assume everyone responded). The survey asked participants questions related to their thoughts on vaccination. One question centered around the perceived efficacy of the MMR vaccine.
 
-- When the distribution of a statistic (called a **sampling distribution**) is difficult to derive *exactly*, is there a good **approximating** distribution we can use to get **approximate** probability statements about $\bar{Y}$?
-- What value does $\bar{Y}$ *get close to* as the sample size grows? (We hope the population mean we are often trying to estimate, $\mu$.)
+<div style = "float:right">
+```{r, echo = FALSE, out.width = "400px"}
+knitr::include_graphics("img/pew.jpg")
+```
+</div>
+
+The Center survey finds 88% of Americans say the benefits of childhood vaccines for measles, mumps and rubella (MMR) outweigh the risks, compared with just 10% who say the risks outweigh the benefits.
+
+The sample proportion of 0.88 is an estimate of the population proportion. That is, the actual proportion of U.S. adults that believe the benefits outweigh the risks. 
+
+Of course this is a single number estimate that would change if we sampled again. We can report the standard deviation of this sample proportion, called a standard error, to give us an idea of the variability in the estimate.  
+
+Assuming independence between study participants, we can easily find an estimated standard error of this sample proportion:
+
+$$\widehat{SE(\hat{p})} = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}} \approx \sqrt{\frac{0.88*0.12}{10701}} = 0.0031$$
+Two big questions arise:
+
+- First, can we provide a range of values we are 'confident' the true proportion falls in?
+    + We need to know about more than just the variability of the estimator
+    + We need to understand the **distribution** of the estimator!
+        - Called the **sampling distribution**
+        - Describes the pattern in which we observe this $\hat{p}$
+    + This can be difficult to derive in some cases!
+- Second, ideally we'd like for our estimator to get closer to the true proportion for larger sample sizes
+    + Is there a value that $\hat{p}$ *converges* to as n grows?
+    + What does it even mean for a random quantity to converge?
+    
+These two questions can often be answered by looking at the *limiting* behavior (here as the sample size grows) of the estimator $\hat{p}$.
+
+
+## Convergence in Distribution Idea
+
+To answer the first question, let's consider determining the sampling distribution through simulation. A distribution just describes the pattern in which we observe our variable. If we can simulate observing the variable, we can create many *realizations* of $\hat{p}$ to understand the sampling distribution. 
+
+To do this we need to make some assumptions. We need to assume a true $p$ and a sample size $n$. Let's use the app below to consider the sampling distribution when $p$ is 0.86 and $n$ is 100.
+
+```{r, echo = FALSE}
+shinyApp(
+  ui <- fluidPage(
+    #inputs on the side for n, p, and generating data
+    sidebarPanel(
+      sliderInput("sample_size",
+                  "n: sample size",
+                  min = 1,
+                  max = 500,
+                  step= 1,
+                  value = 100),
+      sliderInput("true_p",
+                  "p: true value in population",
+                  min = 0,
+                  max = 1,
+                  step= 0.01,
+                  value = 0.86),
+      actionButton("gen",
+                   "Generate a sample proportion"),
+      actionButton("gen100",
+                   "Generate 100 sample proportions"),
+      checkboxInput("bars", 
+                    "Add +/- 2 Standard Errors and\nOverlay Smoothed Density",
+                    value = FALSE)
+    ),
+    mainPanel(
+      plotOutput("samp_dist")
+    )
+  ),
+  server <- function(input, output, session){
+      ys <- reactiveValues(y = c(), n = 0)
+
+      observeEvent(input$gen, 
+                   {
+                     ys$y <- c(ys$y, rbinom(1, size = input$sample_size, prob = input$true_p))
+                     ys$n <- ys$n + 1
+                     }
+                   )
+      
+      observeEvent(input$gen100, 
+                   {
+                     ys$y <- c(ys$y, rbinom(100, size = input$sample_size, prob = input$true_p))
+                     ys$n <- ys$n + 100
+                     }
+       )
+      
+      observeEvent(c(input$sample_size, input$true_p), 
+                   {
+                     ys$y <- c()
+                     ys$n <- 0
+                     }
+                   )
+            
+      output$samp_dist <- renderPlot({
+        props <- ys$y/input$sample_size
+        if(length(props) > 0) {
+          hist(props, 
+               xlab = "Sample Proportions", 
+               main = paste0("Sampling Distribution of p-hat\n# of sample proportions plotted: ", ys$n),
+               freq = FALSE)
+          if(input$bars){
+            se <- sqrt(input$true_p*(1-input$true_p)/input$sample_size)
+            bounds <- c(input$true_p - 2*se, input$true_p + 2*se)
+            abline(v = bounds, col = "red", lwd = 2)
+            
+            text(x = input$true_p + 0.5*se, y = 2, labels = paste0(round(mean(props <= bounds[2] & props >= bounds[1]), 2), " of the distribution\nbetween the bars"))
+            lines(density(props, kernel = "gaussian", adjust = 2))
+          }
+        } else {
+          NULL
+        }
+      })
+  }
+)
+```
+
+As long as the distribution is roughly normal, we can see that 0.95 of the distribution falls within two standard errors of $p$. This means we could use something like 
+
+$$\hat{p}\pm 2*\widehat{SE(\hat{p})}$$
+
+as an interval to *capture* the true $p$. (Indeed this is the usual basic interval for a proportion!)
+
+
+## Convergence in Probability Idea
+
+To answer the second question, we could consider generating sample proportions for ever increasing values of the sample size and seeing how they behave. Below generate sample proportions and subtract off the true value of $p$, plotting those differences.
+
+```{r, echo = FALSE}
+shinyApp(
+  ui <- fluidPage(
+    #inputs on the side for n, p, and generating data
+    sidebarPanel(
+      numericInput("max_size",
+                   "Maximum Sample Size",
+                   value = 250,
+                   min = 10, 
+                   max = 5000),
+      sliderInput("num_samples",
+                  "# samples at each n",
+                  min = 1,
+                  max = 10,
+                  step= 1,
+                  value = 1),
+      sliderInput("true_p",
+                  "p: true value in population",
+                  min = 0,
+                  max = 1,
+                  step= 0.01,
+                  value = 0.5),
+      actionButton("create",
+                   "Create/Update graph")
+    ),
+    mainPanel(
+      plotOutput("convergence")
+    )
+  ),
+  server <- function(input, output, session){
+      ps <- reactiveValues(p = c())
+
+      observeEvent(input$create, 
+                   {
+                     ps$p <- sapply(1:input$max_size, FUN = function(x){
+                       rbinom(n = input$num_samples, 
+                              size = x,
+                              prob = input$true_p)/x
+                       })
+                     }
+                   )
+            
+      output$convergence <- renderPlot({
+        props <- ps$p
+        truth <- isolate(input$true_p)
+        num <- isolate(input$num_samples)
+        max_size <- isolate(input$max_size)
+        ep <- 0.05
+        if(length(props) == 0) {
+          NULL
+        } else {
+          plot(x = rep(1:max_size, each = num), y = c(props)-truth, 
+               main = "Plot of sample proportion minus the true proportion\nRed lines indicate +/- 0.05",
+               xlab = "Sample Size",
+               ylab = "phat - p",
+               type = "p")
+          abline(h = c(-ep, ep), col = "red", lwd = 2)
+        }
+      })
+  }
+)
+```
+
+We can see that $\hat{p}-p$ seems to get closer to 0. This indicates that $\hat{p}$ is in some sense *converging* to the true value of $p$!
+
+Now that we some basic intution, let's formalize what we are talking about.
+
+# What is Limit Theory?
+
+By limit, large-sample, or asymptotic theory we mean we want to understand the behavior of some quantity, usually a statistic, as something changes, usually the sample size $n$. For instance, we will investigate the behavior of the sample mean, $\bar{Y}$, as the sample size grows. We'll look at questions like:
+
+- When the distribution of a statistic (called a **sampling distribution**) is difficult to derive *exactly*, is there a good **approximating** distribution that can be used to get **approximate** probability statements about $\bar{Y}$?
+- What value does $\bar{Y}$ *get close to* or *converge* to as the sample size grows? 
 
 ## Common Assumptions & Definitions
 
@@ -72,25 +260,27 @@ Quantities that aren't statistics:
 - $\frac{\bar{Y}-\mu}{S/\sqrt{n}}$ (since $\mu$ is unknown) (if we assume it is known (like when we do a test statistic) then this is a statistic)
 - $\frac{(n-1)S^2}{\sigma^2}$ (since $\sigma^2$ is unknown)
 
-One type of convergence we'll look at is focused on how these statistics are observed, that is the **sampling distribution** of the statistics.
+One type of convergence we'll look at is focused on the pattern in which these statistics are observed, that is, the **sampling distribution** of the statistics.
 
 Sampling Distribution
 : The distribution of a statistic is called a sampling distribution.
 
 Recall that a distribution is just the pattern and frequency with which we observe a random variable. With a statistic, we give this distribution the special name of sampling distribution. This is because we can think of how that distribution is formed by considering repeated samples from the population, each sample producing the statistic of interest.
 
-## Convergence in Distribution
+
+
+# Definition of Convergence in Distribution 
 
 One of the most famous theorems in statistics is the **Central Limit Theorem** (or CLT). This is a result about the large-sample or asymptotic behavior of the sample mean. Before we look at the technical details, let's consider an example to motivate the idea!
 
-### Motivating Example
+## Motivating Example
 
 (Should we give context to this? Something like the amount of rain delivered by storms or something? Then apply a probability calculation at the end?)
 
 We are all statisticians, and we tend to describe anything related with numbers using average. For example, if we would like to encourage more students to pursue data science professions, the most persuasive way to show the growing value of statistics education and experience will be the following two figures. 
 
 
-```{r echo=FALSE, figures-side, fig.show="hold", out.width="50%"}
+```{r echo=FALSE, figures-side, fig.show="hold", out.width="50%", eval = FALSE}
 #https://data.bls.gov/cew/apps/data_views/data_views.htm#tab=Tables
 #https://www.bls.gov/oes/current/oes152051.htm#(2)
 par(mar = c(4, 4, .1, .1))
@@ -117,7 +307,7 @@ A distribution is just the pattern and frequency with which we observe the quant
 
 Below is the sample mean for different sample sizes 20, 50, 100 and 500 with the gamma distribution such that $Y_i\stackrel{iid}\sim Gamma(\alpha = 5, \lambda = 1)$. We randomly generate the data from known gamma distribution with a fixed sample size and find the mean. We repeat this process for that sample size 1000 times and plot the histogram below for that 1000 means under each sample size.
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, eval = FALSE}
 options(warn = -1)
 library(magick)
 library(ggplot2)
@@ -175,7 +365,7 @@ The theory behind this will be introduced below.
 
 **Then we put the app here and have them consider different values of $\alpha$, $\lambda$, and $n$ with guidance for trying to find some 'rule' for when the normal distribution might be appropriate.**
 
-```{r eruptions, echo=FALSE}
+```{r eruptions, echo=FALSE, eval = FALSE}
 sidebarPanel( sliderInput("d_ngam",
                                     "n: sample size",
                                     min = 1,
@@ -264,6 +454,7 @@ ggplot(datamatgam) +
 
 </div>
 <div class = "clearfix"> </div>
+
 ### Definitions
 
 We can see that there may be a distinction between the *actual* distribution and an approximating distribution. We call these by different names.
@@ -326,7 +517,7 @@ Below is the empirical cumulative distribution for binomial distribution and the
 ::: {}
 
 
-```{r, echo=FALSE,message=FALSE}
+```{r, echo=FALSE,message=FALSE, eval = FALSE}
 #ggplot(datamat[datamat$samplesize==500,], aes(mean)) +                      # Draw cumulative ggplot2 histogram
   #stat_ecdf(geom = "step", pad = FALSE)
 p=0.6
@@ -355,7 +546,7 @@ ggplot(ecdf, aes(x,color=CDF)) +stat_ecdf()+
 ::: {}
 
 
-```{r, echo=FALSE,message=FALSE}
+```{r, echo=FALSE,message=FALSE, eval = FALSE}
 MM=1000 #number of simulation
 n500cdfmean=c(0)
 for (i in 1:MM){
@@ -373,7 +564,7 @@ ggplot(n500df,aes(x=n500cdfmean)) +
 
 
 
-```{r, include=FALSE}
+```{r, include=FALSE, eval = FALSE}
 #From 501 notes
 #Simulate N data sets, each of size n, from an exp(1) distribution
 n <- c(3, 30, 300)
@@ -417,7 +608,7 @@ Define $\overline{X}=\frac{1}{n} \sum_{i=1}^{n} X_i$ such that $E(X_i)=\mu, Var(
 * $\frac{\sqrt{n} (\overline{X_n}-\mu)}{\sigma} \stackrel {d} {\rightarrow} X$
 
 
-```{r, echo=FALSE,message=FALSE,include=FALSE}
+```{r, echo=FALSE,message=FALSE,include=FALSE, eval = FALSE}
 #this is using gamma example-discussed to just use binomial to be consistent, histogram of mean and density plot
 
 ggplot(datamat[datamat$samplesize==500,],aes(x=mean)) +
@@ -524,7 +715,7 @@ We want to explore the distribution convergence in distribution and central limi
     *CDF:
     *3D distance between ECDF and Normal CDF:
     *Sample path
-```{r,echo=FALSE,message=FALSE}
+```{r,echo=FALSE,message=FALSE, eval = FALSE}
 #histogram by sample size
 n20b=c(0)
 for (i in 1:M){
@@ -558,7 +749,7 @@ ggplot(datamatb) +
 
 
 
-```{r,echo=FALSE,message=FALSE}
+```{r,echo=FALSE,message=FALSE, eval = FALSE}
 #CDF by sample size
 library(EnvStats)
 library(transformr)
@@ -656,7 +847,7 @@ ggplot(ecdfall, aes(x,group=samplesize,color=CDF)) +stat_ecdf()+
 
 
 
-```{r,echo=FALSE,message=FALSE}
+```{r,echo=FALSE,message=FALSE, eval = FALSE}
 #3D plot by sample size
 library(EnvStats)
 library(transformr)
@@ -690,7 +881,7 @@ ggplot(yd, aes(x=yalln-yall,y=samplesize,fill=stat(x),group=samplesize)) +geom_d
 
 
 
-```{r ,echo=FALSE,message=FALSE}
+```{r ,echo=FALSE,message=FALSE, eval = FALSE}
 library(tidyverse)
 library(plotly)
 
@@ -731,7 +922,7 @@ ydsub=yd[,c(3,4,5)]
  *$\alpha,\beta$: rate parameters for beta distribution. 
   As $\alpha=\beta\rightarrow \infty$, beta distribution converges to normal distribution
 
-```{r  echo=FALSE}
+```{r  echo=FALSE, eval = FALSE}
 law.plot3dnew=function (data, probfunc, tinf = -5, tsup = 5) 
 {
     nmax <- ncol(data)
@@ -907,7 +1098,7 @@ renderPlot({
 <div class = "clearfix"> </div>
 ## Your Turn
 
-```{r  echo=FALSE}
+```{r  echo=FALSE, eval = FALSE}
 
 #gamma(r,lambda), mu=rlambda,var=rlambda^2, as r goes to infinity, it goesto normal
 sidebarPanel(
@@ -1154,7 +1345,7 @@ E(Y)=\mu$$
 <div class = "clearfix"> </div>
 
 
-```{r, echo=FALSE,message=FALSE}
+```{r, echo=FALSE,message=FALSE, eval = FALSE}
 #Generate this many datasets
 N <- 10000
 #dummy vectors to store things
@@ -1180,7 +1371,7 @@ We will investigate the process of $X_n\stackrel{p}{\rightarrow}0$, where $X_1, 
 - $\epsilon=0.05$
 - Probability=$\frac{number \lvert X_n-0\rvert \geq \epsilon}{M}$ for each column
 
-```{r, echo=FALSE, message=FALSE,warnings=FALSE, include=FALSE}
+```{r, echo=FALSE, message=FALSE,warnings=FALSE, include=FALSE, eval = FALSE}
 #Load library and set seed
 #"formattable"
 
@@ -1216,7 +1407,7 @@ data %>%
 Convergence in probability is looking for the probability that the $|X_n-0|\geq\epsilon$ in each column.
 
 
-```{r, echo=FALSE,message=FALSE}
+```{r, echo=FALSE,message=FALSE, eval = FALSE}
 #Add rownames to a column in order to melt
 sample_path <- rownames(data)
 datanew <- cbind(sample_path,data)
@@ -1234,7 +1425,7 @@ ggplot(data_melted, aes(x = variable, y = value)) + geom_line(aes(color = sample
 
 
 
-```{r,echo=FALSE,message=FALSE}
+```{r,echo=FALSE,message=FALSE, eval = FALSE}
 #Transpose column dataset probability and rename the column names
 #caption = "<center> Probability for 5 Simuations <br>
                  # when sample size in 10 </center>"
@@ -1259,7 +1450,7 @@ row_spec(6, bold = T, color = "black", background = "lightblue")
 <div class = "clearfix"> </div>
 Let's graph the $p_n$ curve.
 <div class = "clearfix"> </div>
-```{r,echo=FALSE,message=FALSE}
+```{r,echo=FALSE,message=FALSE, eval = FALSE}
 #Plot the probability curve
 plot(Pn_critr,xlab="n",ylab=bquote(hat(p[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(p[n])~"Curve")),col="darkblue"),col="red",type="l")
 text(x =n, y = max(Pn_critr),bquote(bold(hat(p[k])~"will tend to and stay at 0")),col="red",adj=1)
