@@ -36,7 +36,7 @@ library(ConvergenceConcepts)
 
 # Motivation
 
-A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023](https://www.pewresearch.org/science/2023/05/16/americans-largely-positive-views-of-childhood-vaccines-hold-steady/) (let's assume everyone responded). The survey asked participants questions related to their thoughts on vaccination. One question centered around the perceived efficacy of the MMR vaccine.
+A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023](https://www.pewresearch.org/science/2023/05/16/americans-largely-positive-views-of-childhood-vaccines-hold-steady/). The survey asked participants questions related to their thoughts on vaccination. One question centered around the perceived efficacy of the MMR vaccine.
 
 <div style = "float:right">
 ```{r, echo = FALSE, out.width = "400px"}
@@ -50,7 +50,7 @@ The sample proportion of 0.88 is an estimate of the population proportion. That 
 
 Of course this is a single number estimate that would change if we sampled again. We can report the standard deviation of this sample proportion, called a standard error, to give us an idea of the variability in the estimate.  
 
-Assuming independence between study participants, we can easily find an estimated standard error of this sample proportion:
+Assuming independence between study participants, we can find an estimated standard error for this sample proportion using techniques learned eariler:
 
 $$\widehat{SE(\hat{p})} = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}} \approx \sqrt{\frac{0.88*0.12}{10701}} = 0.0031$$
 Two big questions arise:
@@ -60,7 +60,7 @@ Two big questions arise:
     + We need to understand the **distribution** of the estimator!
         - Called the **sampling distribution**
         - Describes the pattern in which we observe this $\hat{p}$
-    + This can be difficult to derive in some cases!
+    + The sampling distribution can be difficult to derive in some cases!
 - Second, ideally we'd like for our estimator to get closer to the true proportion for larger sample sizes
     + Is there a value that $\hat{p}$ *converges* to as n grows?
     + What does it even mean for a random quantity to converge?
@@ -72,7 +72,7 @@ These two questions can often be answered by looking at the *limiting* behavior 
 
 To answer the first question, let's consider determining the sampling distribution through simulation. A distribution just describes the pattern in which we observe our variable. If we can simulate observing the variable, we can create many *realizations* of $\hat{p}$ to understand the sampling distribution. 
 
-To do this we need to make some assumptions. We need to assume a true $p$ and a sample size $n$. Let's use the app below to consider the sampling distribution when $p$ is 0.86 and $n$ is 100.
+To do this we need to make some assumptions. We need to assume a true $p$ and a sample size $n$. Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 100.
 
 ```{r, echo = FALSE}
 shinyApp(
@@ -90,7 +90,7 @@ shinyApp(
                   min = 0,
                   max = 1,
                   step= 0.01,
-                  value = 0.86),
+                  value = 0.9),
       actionButton("gen",
                    "Generate a sample proportion"),
       actionButton("gen100",
@@ -210,7 +210,14 @@ shinyApp(
         max_size <- isolate(input$max_size)
         ep <- 0.05
         if(length(props) == 0) {
-          NULL
+          plot(x = NULL, 
+               y = NULL, 
+               xlim = c(0, max_size), 
+               ylim = c(-0.5, 0.5),
+               xlab = "Sample Size",
+               ylab = "phat-p",
+               main = "Plot of sample proportion minus the true proportion\nRed lines indicate +/- 0.05")
+          abline(h = c(-ep, ep), col = "red", lwd = 2)
         } else {
           plot(x = rep(1:max_size, each = num), y = c(props)-truth, 
                main = "Plot of sample proportion minus the true proportion\nRed lines indicate +/- 0.05",
@@ -235,6 +242,8 @@ By limit, large-sample, or asymptotic theory we mean we want to understand the b
 - When the distribution of a statistic (called a **sampling distribution**) is difficult to derive *exactly*, is there a good **approximating** distribution that can be used to get **approximate** probability statements about $\bar{Y}$?
 - What value does $\bar{Y}$ *get close to* or *converge* to as the sample size grows? 
 
+Answers to these questions will allows us to do inference (confidence intervals and hypothesis tests) and understand how well we are estimating a quantity, respectively.
+
 ## Common Assumptions & Definitions
 
 We must make some assumptions about how we observe our random variables in order to investigate these types of questions. For simplicity, we often assume we have a **random sample**.
@@ -244,7 +253,11 @@ Random Sample
 
 We'll often say 'assume we have a random sample' from some distribution or that 'our random variables are iid' from some distribution. These are equivalent ways of stating this assumption.
 
-We'll be interested in some function or **statistic** from the random sample.
+For the proportion example above we might formally state our assumption as follows:
+- Define $X_i$ as 1 if the $i^{th}$ individual says the benefits of childhood vaccines for measles, mumps and rubella (MMR) outweigh the risks and $X_i$ = 0 if not
+- Then $X_i\stackrel{iid}\sim Ber(p)$ where $p$ represents the true proportion of people in the U.S. that believe the benefits outweight the risks
+- The random variable $Y = \sum_{i=1}^{n}X_i \sim Bin(n,p)$
+- We then often try to use $Y$ or $\hat{p}=Y/n$ to make inference on $p$. $Y$ and $\hat{p}$ are referred to as **statistics**.
 
 Statistic
 : A function of $Y_1,Y_2,...,Y_n$ from a random sample that does not involve any unknown parameters is called a statistic.
@@ -252,48 +265,70 @@ Statistic
 Commonly studied statistics:  
 
 - $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$
+    + Note: The sample proportion above is really the mean of the $X_i$ variables!
 - $S^2 = \frac{1}{n-1}\sum_{i=1}^{n}(Y_i-\bar{Y})^2$
 - $Y_{(n)} = \mbox{the maximum value from the sample}$
 
 Quantities that aren't statistics:  
 
-- $\frac{\bar{Y}-\mu}{S/\sqrt{n}}$ (since $\mu$ is unknown) (if we assume it is known (like when we do a test statistic) then this is a statistic)
+- $\frac{\bar{Y}-\mu}{S/\sqrt{n}}$ (since $\mu$ is unknown - if we assume $\mu$ is known (like when we do a test statistic) then this is a statistic)
 - $\frac{(n-1)S^2}{\sigma^2}$ (since $\sigma^2$ is unknown)
 
 One type of convergence we'll look at is focused on the pattern in which these statistics are observed, that is, the **sampling distribution** of the statistics.
 
+Recall that a distribution is just the pattern and frequency with which we observe a random variable. With a statistic, we give this distribution the special name of sampling distribution. This is because we can think of how that distribution is formed by considering repeated samples from the population, each sample producing the statistic of interest.
+
 Sampling Distribution
 : The distribution of a statistic is called a sampling distribution.
 
-Recall that a distribution is just the pattern and frequency with which we observe a random variable. With a statistic, we give this distribution the special name of sampling distribution. This is because we can think of how that distribution is formed by considering repeated samples from the population, each sample producing the statistic of interest.
+# Convergence in Distribution 
+
+We saw with the simulation earlier that the distribution of $\hat{p}$ seemed to look like a bell curve for some combinations of $n$ and $p$. If we fix a $p$ and increase $n$, we will start to see a bell shape for large enough $n$! Later we'll see that a good **large-sample** distribution for $\hat{p}$ is the normal distribution with mean $p$ and variance $p(1-p)/n$.  
+
+We can see that there may be a distinction between the *actual* distribution and an approximating distribution. We call these by different names.
+
+Exact Distribution
+: The (sampling) distribution of a quantity that is valid for any sample size (or, occasionally, values of the parameters of the population distribution).
+
+Large-Sample or Approximate Distribution
+: A (sampling) distribution that is reasonable to use for a quantity for a *large* sample size (or occasionally other parameter values). 
+
+We use the notation
+$$Statistic \stackrel{\bullet}\sim f$$
+to denote a large-sample approximating distribution.
+
+In the sample proportion example, we would write
+
+$$\hat{p}\stackrel{\bullet}\sim N(p, p(1-p)/n)$$
+
+While this idea can be visually inspected with a histogram, formally we define **convergence in distribution** using the cumulative distribution function or CDF.
+
+Let's formally define convergence in distribution! Recall the Cumulative Distribution Function (or CDF) of a random variable $Y$ is defined as 
+
+$$F_Y(y) = P(Y\leq y)$$
+
+**Put the Binomial/normal CDF here**
+
+Convergence in Distribution
+: The quantity $Y_n$ converges in distribution to $Y$ if
+$$\lim_{n \rightarrow \infty} F_{Y_n}(y)=F_{Y}(y)$$
+or equivalently
+$$\lim_{n \rightarrow \infty} |F_{Y_n}(y)-F_{Y}(y)|=0$$
+(at all points $y$ where $F_Y(y)$ is continuous)
+
+For example, given a random sample from a distribution with finite variance, 
+$$Z_n = \frac{\bar{Y}_n - \mu}{\sigma/\sqrt{n}}$$
+can be shown to converge in distribution to a standard normal distribution. This means that
+$$\lim_{n \rightarrow \infty} F_{Z_n}(z)=F_{Z}(z)$$
+where $Z\sim N(0,1)$.
+
+Note: Here the subscript $n$ is just to explicitly note the dependence of the quantity on the sample size. We could leave that off if we'd like.
 
 
 
-# Definition of Convergence in Distribution 
-
-One of the most famous theorems in statistics is the **Central Limit Theorem** (or CLT). This is a result about the large-sample or asymptotic behavior of the sample mean. Before we look at the technical details, let's consider an example to motivate the idea!
-
-## Motivating Example
-
-(Should we give context to this? Something like the amount of rain delivered by storms or something? Then apply a probability calculation at the end?)
-
-We are all statisticians, and we tend to describe anything related with numbers using average. For example, if we would like to encourage more students to pursue data science professions, the most persuasive way to show the growing value of statistics education and experience will be the following two figures. 
-
-
-```{r echo=FALSE, figures-side, fig.show="hold", out.width="50%", eval = FALSE}
-#https://data.bls.gov/cew/apps/data_views/data_views.htm#tab=Tables
-#https://www.bls.gov/oes/current/oes152051.htm#(2)
-par(mar = c(4, 4, .1, .1))
-knitr::include_graphics("./meansalary.png")
-knitr::include_graphics("./meanincrease.png")
-```
 
 
 
-<div class = "clearfix"> </div>
-
-
-Hopefully, the information from these figures make the point. We consider the mean because it's reliable with proven theories. Let's explore the properties of the average together so students know those numbers are trustworthy to make their choice. 
 
 - Suppose that $Y_i\stackrel{iid}\sim Gamma(\alpha = 5, \lambda = 1)$. (That is, assume we have a random sample from a Gamma distribution.) 
 - Consider the *statistic* $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$. 
@@ -365,7 +400,7 @@ The theory behind this will be introduced below.
 
 **Then we put the app here and have them consider different values of $\alpha$, $\lambda$, and $n$ with guidance for trying to find some 'rule' for when the normal distribution might be appropriate.**
 
-```{r eruptions, echo=FALSE, eval = FALSE}
+```{r, echo=FALSE, eval = FALSE}
 sidebarPanel( sliderInput("d_ngam",
                                     "n: sample size",
                                     min = 1,
@@ -455,35 +490,6 @@ ggplot(datamatgam) +
 </div>
 <div class = "clearfix"> </div>
 
-### Definitions
-
-We can see that there may be a distinction between the *actual* distribution and an approximating distribution. We call these by different names.
-
-Exact Distribution:
-The (sampling) distribution of a quantity that is valid for any sample size (or, occasionally, values of the parameters of the population distribution).
-
-Large-Sample or Approximate Distribution:
-A (sampling) distribution that is reasonable to use for a quantity for a *large* sample size (or occasionally other parameter values). 
-
-We use the notation
-$$Statistic \stackrel{\bullet}\sim f$$
-to denote a large-sample approximating distribution.
-
-Let's formally define convergence in distribution! Recall the Cumulative Distribution Function (or CDF) of a random variable $Y$ is defined as 
-$$F_Y(y) = P(Y\leq y)$$. We define convergence in distribution via the CDF.
-
-Convergence in Distribution:
-The quantity $Y_n$ converges in distribution to $Y$ if
-$$\lim_{n \rightarrow \infty} F_{Y_n}(y)=F_{Y}(y)$$
-or equivalently
-$$\lim_{n \rightarrow \infty} |F_{Y_n}(y)-F_{Y}(y)|=0$$
-(at all points $y$ where $F_Y(y)$ is continuous)
-
-For example, given a random sample from a distribution with finite variance, 
-$$Z_n = \frac{\bar{Y}_n - \mu}{\sigma/\sqrt{n}}$$
-can be shown to converge in distribution to a standard normal distribution. Here the subscript $n$ is just to explicitly note the dependence of the quantity on the sample size. We'll later show that
-$$\lim_{n \rightarrow \infty} F_{Z_n}(z)=F_{Z}(z)$$
-where $Z\sim N(0,1)$.
 
 
 ## Why do we care about limit theory? 
