@@ -75,6 +75,19 @@ To answer the first question, let's consider determining the sampling distributi
 
 To do this we need to make some assumptions. We need to assume a true $p$ and a sample size $n$. Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 100. **Add instructions on what to do here**
 
+-Instructions:
+
+
+    -"n: sample size" Slider: Move the  slider to the right to increase the sample size
+  
+    -"p: true value in population" Slider: Move the  slider to the right to increase the true proportion
+  
+    -Action Button: Click on the "Generate a sample proportion" button to view the result for one sample
+  
+    - Action Button: Click on the "Generate 100 sample proportions" button to view the results for 100 samples
+  
+    -Check box: Check the "Add +/- 2 Standard Errors and Overlay Smoothed Density" check box to add standard errors
+
 ```{r, echo = FALSE}
 shinyApp(
   ui <- fluidPage(
@@ -161,6 +174,15 @@ as an interval to *capture* the true $p$. (Indeed this is the usual basic interv
 ## Convergence in Probability Idea
 
 To answer the second question, we could consider generating sample proportions for ever increasing values of the sample size and seeing how they behave. Below generate sample proportions and subtract off the true value of $p$, plotting those differences. **Add in instructions**
+
+Instructions:
+
+
+-Numeric Input for "Maximum Sample Size": Enter a number or click the "up"/"down" arrow to to increase/decrease the sample size from the default sample size 250
+-"# samples at each n" Slider: Move the slider to the right to increase the true proportion
+-Action Button: Click on the "Generate a sample proportion" button to view the result for one sample
+-Action Button: Click on the "Generate 100 sample proportions" button to view the results for 100 samples
+-Check box: Check the "Add +/- 2 Standard Errors and Overlay Smoothed Density" check box to add standard errors
 
 ```{r, echo = FALSE}
 shinyApp(
@@ -291,36 +313,72 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(gganimate)
-
-alpha=5
-lambda=1
-M <- 100 
-
-#quicker way than for loop for this
-n20 <- replicate(M, mean(rgamma(n = 20, shape = alpha, scale = lambda)))
-n50 <- replicate(M, mean(rgamma(n = 50, shape = alpha, scale = lambda)))
-n100 <- replicate(M, mean(rgamma(n = 100, shape = alpha, scale = lambda)))
-n500 <- replicate(M, mean(rgamma(n = 500, shape = alpha, scale = lambda)))
-
-#even better way to do this for many n values 
-ns <- 2:10
-means <- as.data.frame(
-  lapply(ns, 
-         FUN = function(x, M, alpha, lambda){replicate(M, mean(rgamma(n = x, shape = alpha, scale = lambda)))}, 
-         M = M, alpha = alpha, lambda = lambda), 
-  col.names = paste0("n",ns))
-
-means_long <- pivot_longer(means, cols = everything(), names_to = "n", values_to = "means")
-# create ggplot2 plot
-ggplot(means_long) + 
-  geom_histogram(aes(x = means, group=n),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-  ggtitle("Distribution of Observed Mean values") +
-  labs(subtitle=("Sample Size : {closest_state}")) +
-  ylab("Absolute Frequency out of 1000") + 
-  xlab("Observed Mean Value ") + 
-  transition_states(n)
+#################################################################################
+#gamma
+# alpha=5
+# lambda=1
+# M <- 100 
+# 
+# #quicker way than for loop for this
+# n20 <- replicate(M, mean(rgamma(n = 20, shape = alpha, scale = lambda)))
+# n50 <- replicate(M, mean(rgamma(n = 50, shape = alpha, scale = lambda)))
+# n100 <- replicate(M, mean(rgamma(n = 100, shape = alpha, scale = lambda)))
+# n500 <- replicate(M, mean(rgamma(n = 500, shape = alpha, scale = lambda)))
+# 
+# #even better way to do this for many n values 
+# ns <- 2:10
+# means <- as.data.frame(
+#   lapply(ns, 
+#          FUN = function(x, M, alpha, lambda){replicate(M, mean(rgamma(n = x, shape = alpha, scale = lambda)))}, 
+#          M = M, alpha = alpha, lambda = lambda), 
+#   col.names = paste0("n",ns))
+# 
+# means_long <- pivot_longer(means, cols = everything(), names_to = "n", values_to = "means")
+# # create ggplot2 plot
+# ggplot(means_long) + 
+#   geom_histogram(aes(x = means, group=n),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
+#   ggtitle("Distribution of Observed Mean values") +
+#   labs(subtitle=("Sample Size : {closest_state}")) +
+#   ylab("Absolute Frequency out of 1000") + 
+#   xlab("Observed Mean Value ") + 
+#   transition_states(n)
 #anim_save("gammean.gif")
+##################################################################################################
+#binormial proportion
+
+# p=0.25
+# nn=40
+# M <- 100
+# 
+# #quicker way than for loop for this
+# n20 <- replicate(M, mean(rbinom(n = 20, nn, p)))
+# n50 <- replicate(M, mean(rbinom(n = 50, nn, p)))
+# n100 <- replicate(M, mean(rbinom(n = 100, nn, p)))
+# n500 <- replicate(M, mean(rbinom(n = 500, nn, p)))
+# 
+# #even better way to do this for many n values 
+# ns <- c(20,50,100,500)
+# meansp <- as.data.frame(
+#   lapply(ns, 
+#          FUN = function(x, M, nn, p){replicate(M, mean(rbinom(n = x, nn, p))/nn)}, 
+#          M = M, nn, p), 
+#   col.names = paste0("n ",ns))
+# 
+# meansp_long <- pivot_longer(meansp, cols = everything(), names_to = "n", values_to = "means")
+# # create ggplot2 plot
+# animated_plot=ggplot(meansp_long) +
+#   geom_histogram(aes(x = means, group=n),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
+#   ggtitle("Distribution of Observed Mean Proportion") +
+#   labs(subtitle=("Sample Size : {closest_state}")) +
+#   ylab(paste0("Absolute Frequency out of ", M)) +
+#   xlab(paste0("Observed Mean Proportion for bin","(",nn,",",p,")"))+transition_states(n)
+# animation = animate(animated_plot)
+# anim_save( filename="binormmean.gif")
+
+#animation
 ```
+
+<img src="binormmean.gif"/>
 
 
 # Convergence in Distribution 
@@ -431,10 +489,48 @@ $$F_Y(y) = \begin{cases} 0 & y < 0\\ y & 0\leq y < 1 \\ 1 & y\geq 1\end{cases}$$
     for $y$ in the range of the original PDF.
     
 **Put in static graphs of histograms of realizations for increasing sample sizes.**
+```{r,  echo = FALSE, message = FALSE}
+
+M <- 100
+#even better way to do this for many n values
+ns <- c(20,50,100,500)
+maxu <- as.data.frame(
+  lapply(ns,
+         FUN = function(x, M, nn, p){replicate(M, max(runif(n = x, 0, 1)))},
+         M = M, 0, 1),
+  col.names = paste0("n ",ns))
+maxu_long <- pivot_longer(maxu, cols = everything(), names_to = "n", values_to = "maximum")
+maxuplot<-ggplot(maxu_long, aes(x=maximum)) +
+        geom_histogram()+
+        facet_wrap( ~ n,ncol = 2)+
+        theme(text = element_text(size = 15), 
+        plot.title = element_text(hjust = 0.5), 
+        legend.text = element_text(size=15), 
+        legend.position = c(0.1, 0.85)) +
+        ggtitle("Distribution of Maximum") +
+        ylab("Value") + 
+        xlab("Observed Maximum Value of uniform (0, 1)")
+ggsave("maxuplot.png")
+
+```
+
+
+```{r, echo = FALSE, out.width = "400px"}
+knitr::include_graphics("maxuplot.png")
+```
+
+
 **Discuss the ECDF from a sample as an approximation to the CDF.**
 **Show CDF comparison plot with a RV that is a point mass at 1. Discuss what we look for.**
 **Introduce the 3D plot and what we look for.**
 **Prove the result.**
+
+Let $X_1,X_2,..$ .are iid uniform(0,1) and $X(n)=max_{1≤i≤n}X_i$.
+
+As $n\rightarrow \infty$, $\forall \epsilon >0$, 
+
+$P(|Xn−1|≥ϵ)=P(X(n)≤1−ϵ) =P(Xi≤1−ϵ,i=1,...,n)=(1−ϵ)^n$, 
+
 
 - For the same situation, what does $W = n(1-Y_{(n)})$ converge in distribution to as $n$ grows? Can we describe a rule of thumb for when the approximating distribution is reasonable?
 
@@ -443,6 +539,10 @@ $$F_Y(y) = \begin{cases} 0 & y < 0\\ y & 0\leq y < 1 \\ 1 & y\geq 1\end{cases}$$
 **Show CDF comparison plot with a RV that is a point mass at 1. Discuss what we look for.**
 **Introduce the 3D plot and what we look for.**
 **Prove the result.**
+
+From above, let $\epsilon= \frac{t}{n}$, then $P(X(n)≤1−\frac{t}{n})=(1−\frac{t}{n})^n \rightarrow e^{−t}$. 
+$P(n(1−X(n))≤t) \rightarrow 1−e^{−t}$, the random variable $n (1−X(n))$ converges to exponential(1).
+
 
 ## Convergence Exploration
 
