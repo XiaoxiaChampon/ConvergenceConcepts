@@ -175,14 +175,13 @@ as an interval to *capture* the true $p$. (Indeed this is the usual basic interv
 
 To answer the second question, we could consider generating sample proportions for ever increasing values of the sample size and seeing how they behave. Below generate sample proportions and subtract off the true value of $p$, plotting those differences. **Add in instructions**
 
-Instructions:
+-Instructions:
 
-
--Numeric Input for "Maximum Sample Size": Enter a number or click the "up"/"down" arrow to to increase/decrease the sample size from the default sample size 250
--"# samples at each n" Slider: Move the slider to the right to increase the true proportion
--Action Button: Click on the "Generate a sample proportion" button to view the result for one sample
--Action Button: Click on the "Generate 100 sample proportions" button to view the results for 100 samples
--Check box: Check the "Add +/- 2 Standard Errors and Overlay Smoothed Density" check box to add standard errors
+    -Numeric Input for "Maximum Sample Size": Enter a number or click the "up"/"down" arrow to to increase/decrease the sample size from the default sample size 250
+    -"# samples at each n" Slider: Move the slider to the right to increase the true proportion
+    -Action Button: Click on the "Generate a sample proportion" button to view the result for one sample
+    -Action Button: Click on the "Generate 100 sample proportions" button to view the results for 100 samples
+    -Check box: Check the "Add +/- 2 Standard Errors and Overlay Smoothed Density" check box to add standard errors
 
 ```{r, echo = FALSE}
 shinyApp(
@@ -346,9 +345,9 @@ library(gganimate)
 ##################################################################################################
 #binormial proportion
 
-# p=0.25
-# nn=40
-# M <- 100
+p=0.25
+nn=40
+M <- 100
 # 
 # #quicker way than for loop for this
 # n20 <- replicate(M, mean(rbinom(n = 20, nn, p)))
@@ -357,25 +356,24 @@ library(gganimate)
 # n500 <- replicate(M, mean(rbinom(n = 500, nn, p)))
 # 
 # #even better way to do this for many n values 
-# ns <- c(20,50,100,500)
-# meansp <- as.data.frame(
-#   lapply(ns, 
-#          FUN = function(x, M, nn, p){replicate(M, mean(rbinom(n = x, nn, p))/nn)}, 
-#          M = M, nn, p), 
-#   col.names = paste0("n ",ns))
-# 
-# meansp_long <- pivot_longer(meansp, cols = everything(), names_to = "n", values_to = "means")
+ns <- c(20,50,100,500)
+meansp <- as.data.frame(
+  lapply(ns,
+         FUN = function(x, M, nn, p){replicate(M, mean(rbinom(n = x, nn, p))/nn)},
+         M = M, nn, p),
+  col.names = paste0("SampleSize",ns))
+#
+ meansp_long <- pivot_longer(meansp, cols = everything(), names_to = "n", values_to = "means")
 # # create ggplot2 plot
-# animated_plot=ggplot(meansp_long) +
-#   geom_histogram(aes(x = means, group=n),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-#   ggtitle("Distribution of Observed Mean Proportion") +
-#   labs(subtitle=("Sample Size : {closest_state}")) +
-#   ylab(paste0("Absolute Frequency out of ", M)) +
-#   xlab(paste0("Observed Mean Proportion for bin","(",nn,",",p,")"))+transition_states(n)
-# animation = animate(animated_plot)
-# anim_save( filename="binormmean.gif")
+animated_plot=ggplot(meansp_long) +
+  geom_histogram(aes(x = means, group=n),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
+  ggtitle("Distribution of Observed Mean Proportion") +
+  labs(subtitle=(" {closest_state}")) +
+  ylab(paste0("Absolute Frequency out of ", M)) +
+  xlab(paste0("Observed Mean Proportion for b","(",nn,",",p,")"))+transition_states(n)
+animation = animate(animated_plot)
+anim_save( filename="binormmean.gif")
 
-#animation
 ```
 
 <img src="binormmean.gif"/>
@@ -434,7 +432,7 @@ ggplot(ecdf, aes(x = x, y = y, color = CDF)) +
 ```
 </div>
 <div style = "float:right">
-```{r, echo = FALSE, message = FALSE, out.width = "400px"}
+```{r, echo = FALSE, message = FALSE,out.width = "400px"}
 p <- 0.35
 n <- 30
 plot_seq <- seq(from = -0.21, to = 22, by = 0.01)
@@ -490,38 +488,68 @@ $$F_Y(y) = \begin{cases} 0 & y < 0\\ y & 0\leq y < 1 \\ 1 & y\geq 1\end{cases}$$
     
 **Put in static graphs of histograms of realizations for increasing sample sizes.**
 ```{r,  echo = FALSE, message = FALSE}
-
+library(tidyr)
 M <- 100
 #even better way to do this for many n values
 ns <- c(20,50,100,500)
 maxu <- as.data.frame(
   lapply(ns,
-         FUN = function(x, M, nn, p){replicate(M, max(runif(n = x, 0, 1)))},
-         M = M, 0, 1),
-  col.names = paste0("n ",ns))
+         FUN = function(x, M){replicate(M, max(runif(n = x, 0, 1)))},
+         M = M),
+         col.names = paste0("SampleSize",ns)
+                     )
 maxu_long <- pivot_longer(maxu, cols = everything(), names_to = "n", values_to = "maximum")
 maxuplot<-ggplot(maxu_long, aes(x=maximum)) +
         geom_histogram()+
         facet_wrap( ~ n,ncol = 2)+
-        theme(text = element_text(size = 15), 
-        plot.title = element_text(hjust = 0.5), 
-        legend.text = element_text(size=15), 
+        theme(text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size=15),
         legend.position = c(0.1, 0.85)) +
-        ggtitle("Distribution of Maximum") +
-        ylab("Value") + 
-        xlab("Observed Maximum Value of uniform (0, 1)")
+        ggtitle("Distribution of Maximum of uniform (0, 1)") +
+        ylab("Value") +
+        xlab("Observed Maximum Value")
 ggsave("maxuplot.png")
 
 ```
 
 
-```{r, echo = FALSE, out.width = "400px"}
+```{r, echo = FALSE}
 knitr::include_graphics("maxuplot.png")
 ```
 
-
 **Discuss the ECDF from a sample as an approximation to the CDF.**
+
 **Show CDF comparison plot with a RV that is a point mass at 1. Discuss what we look for.**
+<div class = "clearfix"></div>
+```{r, message=FALSE,echo=FALSE}
+
+MMM=100
+plot_sequ <- seq(from = 0.99, to = 1, length=MMM)
+tmpm=c(replicate(MMM, max(runif(n = 500, 0, 1))))
+u500_cdfm <- ecdf(tmpm)(plot_sequ)
+
+
+
+p_cdfum <-rep(1,MMM)
+
+ecdfm <- data.frame(
+  y = c(u500_cdfm, p_cdfum),
+  CDF = c(rep("ECDF of X(n)", MMM), rep("R.V. Point Mass 1", MMM)),
+  x = c(plot_sequ, rep(1,MMM))
+)
+
+ggplot(ecdfm, aes(x = x, y = y, color = CDF)) + 
+  geom_line(stat = "identity") +
+  theme(text = element_text(size = 15), 
+        plot.title = element_text(hjust = 0.5), 
+        legend.text = element_text(size=8), 
+        legend.position = c(0.85, 0.1)) +
+  ggtitle("Emprical CDF vs R.V. with Point Mass 1") +
+  ylab("Cumulative Distribution Function") + 
+  xlab("Observed Value")
+```
+
 **Introduce the 3D plot and what we look for.**
 **Prove the result.**
 
@@ -535,12 +563,74 @@ $P(|Xn−1|≥ϵ)=P(X(n)≤1−ϵ) =P(Xi≤1−ϵ,i=1,...,n)=(1−ϵ)^n$,
 - For the same situation, what does $W = n(1-Y_{(n)})$ converge in distribution to as $n$ grows? Can we describe a rule of thumb for when the approximating distribution is reasonable?
 
 **Put in static graphs of histograms of realizations for increasing sample sizes.**
+```{r,message=FALSE,echo=FALSE}
+#W = n(1-Y_{(n)})
+library(tidyr)
+M <- 100
+#even better way to do this for many n values
+ns <- c(20,50,100,500)
+nmaxu <- as.data.frame(
+  lapply(ns,
+         FUN = function(x, M){replicate(M, ns*(1-max(runif(n = x, 0, 1))))},
+         M = M),
+  col.names = paste0("SampleSize ",ns)
+                      )
+nmaxu_long <- pivot_longer(nmaxu, cols = everything(), names_to = "n", values_to = "maximum")
+nmaxu_long$n=sub(".[^.]+$", "", nmaxu_long$n)
+nmaxuplot<-ggplot(nmaxu_long, aes(x=maximum)) +
+        geom_histogram()+
+        facet_wrap( ~ n,ncol = 2,scales = "free")+
+        theme(text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size=15),
+        legend.position = c(0.1, 0.85)) +
+        ggtitle(expression(paste("Distribution of ",n(1-X(n))))) +
+        ylab("Value") +
+        xlab("Observed Value")
+ggsave("nmaxuplot.png")
+
+```
+
+
+
+```{r, echo = FALSE}
+knitr::include_graphics("nmaxuplot.png")
+```
 **Discuss the ECDF from a sample as an approximation to the CDF.**
 **Show CDF comparison plot with a RV that is a point mass at 1. Discuss what we look for.**
+<div class = "clearfix"></div>
+```{r, message=FALSE,echo=FALSE}
+MM=1000
+plot_sequ <- seq(from = -0.5, to = 5, length=MM)
+lambda=1
+tmp=c(replicate(MM, 500*(1-max(runif(n = 500, 0, 1)))))
+u500_cdf <- ecdf(tmp)(plot_sequ)
+exp_cdfu <- pexp(plot_sequ,lambda )
+
+ecdfu <- data.frame(
+  y = c(u500_cdf, exp_cdfu),
+  CDF = c(rep("ECDF of n(1-X(n))", MM), rep("exp(1)", MM)),
+  x = c(plot_sequ, plot_sequ)
+)
+
+ggplot(ecdfu, aes(x = x, y = y, color = CDF)) + 
+  geom_line(stat = "identity") +
+  theme(text = element_text(size = 15), 
+        plot.title = element_text(hjust = 0.5), 
+        legend.text = element_text(size=15), 
+        legend.position = c(0.8, 0.15)) +
+  ggtitle("Emprical CDF vs Exponential") +
+  ylab("Cumulative Distribution Function") + 
+  xlab("Observed Value")
+```
+
 **Introduce the 3D plot and what we look for.**
 **Prove the result.**
 
-From above, let $\epsilon= \frac{t}{n}$, then $P(X(n)≤1−\frac{t}{n})=(1−\frac{t}{n})^n \rightarrow e^{−t}$. 
+From above, let $\epsilon= \frac{t}{n}$, 
+
+then $P(X(n)≤1−\frac{t}{n})=(1−\frac{t}{n})^n \rightarrow e^{−t}$. 
+
 $P(n(1−X(n))≤t) \rightarrow 1−e^{−t}$, the random variable $n (1−X(n))$ converges to exponential(1).
 
 
@@ -735,13 +825,190 @@ $$\bar{Y}\stackrel{\bullet}\sim N(\mu, \sigma^2/n)$$
 
 **Apply to the gamma distribution example**
 
+For example, if $Y_i\stackrel{iid}\sim Gamma(\alpha, \lambda)$ with mean $E(Y) = \alpha/\lambda$ and variance $Var(Y) = \alpha/\lambda^2$.
+
+Then $\bar{Y}$ is
+$$\bar{Y}\stackrel{\bullet}\sim N(\alpha/\lambda, \alpha/\lambda^2n)$$
+
+
 ## CLT Applied to a Sample Proportion
 
 A common application of the CLT is to the sample proportion from a Binomial experiment.
 
 **Apply CLT to the sample proportion**
 
+For example, if $Y_i\stackrel{iid}\sim Bin(n, p)$ with mean $E(Y) = np$ and variance $Var(Y) = np(1-p)$. 
+
+Then $X=\frac{Y}{n}$ has mean $E(X) = p$ and variance $Var(X) = p(1-p)/n$
+
+So ${X}$ is
+$${X}\stackrel{\bullet}\sim N(p, p(1-p)/n)$$
+
 **Now let them explore the CLT on a sample proportion with app. Ask for rules of thumb or if they know rules of thumb, to justify them.**
+
+```{r, echo=FALSE}
+shinyApp(
+  ui <- fluidPage(
+    sidebarLayout(
+      sidebarPanel( 
+        sliderInput("d_nprop",
+                    "n: sample size",
+                    min = 5,
+                    max = 100,
+                    step = 1,
+                    value = 20,
+                    animate=animationOptions(
+                      interval = 100,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    ),
+        sliderInput("prop",
+                    "p: probability of success",
+                    min = 0.1,
+                    max = 1,
+                    step = 0.05,
+                    value = 0.1,
+                    animate=animationOptions(
+                      interval = 1,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    ) ,
+        sliderInput("M",
+                    "M: the number of the simulations",
+                    min = 50,
+                    max = 1000,
+                    step= 50,
+                    value = 50,
+                    animate=animationOptions(
+                      interval = 1000,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    )
+      ),
+
+      mainPanel(
+        tabsetPanel(id = "proportion_example",
+          tabPanel("Histogram",
+                   plotOutput("hist")
+                   ),
+          tabPanel("CDF Plots",
+                   plotOutput("cdf")
+                   ),
+          tabPanel("Absolute Difference in ECDF with Normal",  
+                   actionButton("three_d_plot", "Create/Update 3D Plot"),
+                   plotOutput("three_d")
+                   )
+        )
+      )
+    )
+  ),
+  server <- function(input, output, session){
+    
+    sampled_values <- reactiveValues(sample_prop = c())
+    observeEvent(c(input$d_nprop, input$prop, input$M),
+                 sampled_values$sample_prop <- replicate(input$M, (rbinom(input$M,input$d_nprop, input$prop))/input$d_nprop)
+                 )
+    
+    output$hist <- renderPlot({
+      d_nprop <- isolate(input$d_nprop)
+      data_prop <- sampled_values$sample_prop
+      hist(data_prop, 
+           main = paste0("Distribution of ",input$M," Observed Sample proportionss\nWith n = ", d_nprop),
+           xlab = "Observed Sample Proportion",
+           freq = FALSE)
+          })
+    
+    output$cdf <- renderPlot({
+      d_nprop <- isolate(input$d_nprop)
+      prop <- isolate(input$prop)
+      M <- isolate(input$M)
+      data_prop <- sampled_values$sample_prop
+      #plot the ecdf of the sample means
+      plot(ecdf(data_prop), 
+           main = paste0("Comparison of Empirical CDF to Best\nApproximating Normal CDF with Sample Size n = ", d_nprop),
+           col = "red", 
+           lwd = 2,
+           xlab = "y/n",
+           ylab = "CDF")
+      #use theoretical normal here
+      prop_mean <- prop
+      prop_sd <- sqrt(prop*(1-prop)/d_nprop)
+      x_plot <- seq(from = prop_mean-3*prop_sd, to = prop_mean+3*prop_sd, length = 500)
+      #add the normal's cdf values
+      lines(x = x_plot, 
+            y = pnorm(x_plot, mean = prop_mean, sd = prop_sd),
+            col = "blue", 
+            lwd = 2)
+      #add legend
+      legend('topleft', 
+             c(expression(hat(F[y/n](y))),expression(F[X](y))),
+             col = c("red", "blue"),
+             lwd= 2)
+      })
+
+    three_d_plot_values <- reactiveValues(plot_data = c())
+    #create data for 3d plot
+    observeEvent(input$three_d_plot, {
+        d_nprop <- input$d_nprop
+        prop <- input$prop
+        M <- input$M
+        ns <- 2:d_nprop
+        #find means for each sample size
+        props <- as.data.frame(
+          #to every sample size value 2:n create 100 means of size n
+          lapply(ns, 
+                 FUN = function(x, M, prop){replicate(M, (rbinom(M, x, prop))/x)}, prop, M), 
+          col.names = paste0("n",ns))
+        #now find the ecdf for each sample size (each column)
+        ecdfs <- apply(X = props, MARGIN = 2, FUN = ecdf)
+        #gamma mean and sd
+        prop_mean <- prop
+        prop_sd <- sqrt(prop*(1-prop)/d_nprop)
+        #create a sequence of ybars to evaluate the ecdf at
+        ybars <- seq(from = prop_mean-3*prop_sd, to = prop_mean+3*prop_sd, length = 50)
+        #find the corresponding normal distribution's cdf values
+        zs <- as.data.frame(
+          lapply(ns,
+                 FUN = function(x, ybars, M,prop){
+                   pnorm(ybars, 
+                         mean = prop_mean, 
+                         sd =  sqrt(prop*(1-prop)/d_nprop))
+                   }, ybars = ybars,  M,prop),
+          col.names = paste0("n", ns)
+        )
+        diffs <- lapply(X = 1:length(ecdfs), FUN = function(x) abs(ecdfs[[x]](ybars) - zs[,x]))
+        #now we have the ns, ybars, and diffs to plot
+        plot_data <- expand.grid(ybars = ybars, ns = ns)
+        plot_data$diffs <- unlist(diffs) 
+        three_d_plot_values$plot_data <- plot_data
+    })
+    
+    output$three_d <- renderPlot({
+        plot_data <- three_d_plot_values$plot_data
+        # open3d()
+        # plot3d(x = plot_data$ybars, y = plot_data$ns, z = plot_data$diffs)
+        # scene <- scene3d()
+        # close3d()
+        # rglwidget(scene)
+        if(length(plot_data)>0){
+          print(wireframe(diffs ~ ybars + ns, 
+                          data = plot_data, 
+                          scales = list(arrows = FALSE), 
+                          drape = TRUE, 
+                          colorkey = TRUE, 
+                          screen = list(z = -50, x = -70), 
+                          zlab = list(expression(hat(l)[n] ~ "(x)=|" ~ hat(F)[n] ~ "(x)-" ~ F ~ "(x)|"), rot = 90), 
+                          main = "Convergence in Distribution?", 
+                          xlab="y/n"))
+        } else {
+          NULL
+        }
+    })
+  })
+```
 
 ## CLT Applied to a Sum 
 
@@ -971,6 +1238,10 @@ Other standard limit results exist such as
 $$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, 
 X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm 
 X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
+
+
+
+
 
 
 
