@@ -14,6 +14,9 @@ library(shinydashboard)
 library(ConvergenceConcepts)
 library(ggplot2)
 library(tidyr)
+library(dplyr)
+library(kableExtra)
+library(plotly)
 ```
 
 
@@ -83,7 +86,9 @@ ggplot(plot_data, aes(x = n, y = xn)) +
   ylim(c(-0.75,0.75)) + 
   ggtitle("A sample path of Xn") + 
   geom_abline(intercept = -epsilon, slope = 0, color = "red") + 
-  geom_abline(intercept = epsilon, slope = 0, color = "red")
+  geom_abline(intercept = epsilon, slope = 0, color = "red") + 
+  theme(legend.position = "none") +
+  scale_x_continuous("n", breaks = 1:n, labels = as.character(1:n))
 #plot(x = 1:n, 
 #     y = xn, 
 #     type = "l", 
@@ -96,7 +101,7 @@ ggplot(plot_data, aes(x = n, y = xn)) +
 
 Now let's add 9 more sample paths:
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 #gen sample path function
 get_path <- function(n){
   xn <- cumsum(rnorm(n))/((1:n)^2)
@@ -110,7 +115,11 @@ ggplot(plot_data, aes(x = n, y = xn, color = path)) +
   geom_line()  + 
   ggtitle("A sample path of Xn") + 
   geom_abline(intercept = -epsilon, slope = 0, color = "red", size = 1.1, lty = "dashed") + 
-  geom_abline(intercept = epsilon, slope = 0, color = "red", size = 1.1, lty = "dashed")
+  geom_abline(intercept = epsilon, slope = 0, color = "red", size = 1.1, lty = "dashed") + 
+  annotate("rect", xmin = 3.75, xmax = 4.25, ymin = -0.75, ymax = 0.75, alpha = .2) +
+  annotate("text", x = 4, y = 0.8, label = "7/10 fall within\nepsilon bounds", col = "darkblue") + 
+  theme(legend.position = "none") +
+  scale_x_continuous("n", breaks = 1:n, labels = as.character(1:n))
 
 ##add what xiaoxia has below with the bars and proportion business and ggploty this bitch 
 
@@ -133,8 +142,6 @@ What we hope to see is that the proportion of lines falling outside of the $\eps
 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-library(dplyr)
-library(kableExtra)
 #get matrix of probabilities for each n
 probability <- t(rowSums(abs(paths) > epsilon)/M)
 colnames(probability) <- paste0("X", 1:n)
@@ -158,16 +165,106 @@ round(table_data, 2) %>%
   row_spec(11, bold = T, color = "black", background = "lightblue")
 ```
 
+## Convergence in Probabilty Exploration
 
-## Now example with average of Xbar^2 values. App where they get to choose c, n, and epsilon and see if they can figure out c (mu^2)
+Suppose we have a random sample from a Normal distribution with mean 10 and standard deviation 1. What do you think $W = (\bar{Y})^2$ converges to in probability? Consider the application of the Law of Large Numbers and some educated guess work to use the app below to explore!
+
+- Select the value c that you guess $W$ converges to in probability.
+- Choose a sample size to go up to (start smaller and then get larger once you have a good idea).
+- Select an $\epsilon$ range.
+- Look for the proportion of lines (50 sample paths are generated) falling outside of the $\epsilon$ bars to go to 0!
+
+```{r, echo=FALSE,message=FALSE, eval = TRUE}
+#path for data
+get_path <- function(n){
+  xn <- (cumsum(rnorm(n, mean = 10, sd = 1))/(1:n))^2
+}
+M <- 50
+shinyApp(
+  ui <- fluidPage(
+    #inputs on the side for n, p, and generating data
+    sidebarPanel(
+      numericInput("c",
+                   "c: Value to converge to",
+                   value = 0,
+                   min = -1000, 
+                   max = 1000),
+      numericInput("n",
+                  "n: Sample Size (1 to 10,000)",
+                  min = 1,
+                  max = 10000,
+                  step= 1,
+                  value = 5),
+      sliderInput("epsilon",
+                  "epsilon: range",
+                  min = 0.0001,
+                  max = 1,
+                  step= 0.01,
+                  value = 0.5),
+      actionButton("create",
+                   "Create/Update graph")
+    ),
+    mainPanel(
+      plotlyOutput("convergence")
+    )
+  ),
+  server <- function(input, output, session){
+      ps <- reactiveValues(p = c())
+
+      observeEvent(input$create, 
+                   {
+                    n <- input$n
+                     #gen sample path function
+                    paths <- replicate(M, get_path(n))
+                    plot_data <- data.frame(xn = c(paths), 
+                                            n = rep(1:n, times = M), 
+                                            path = as.factor(rep(1:M, each = n)))
+
+                    ps$p <- plot_data
+                     }
+                   )
+            
+      output$convergence <- renderPlotly({
+        plot_data <- ps$p
+        c <- isolate(input$c)
+        n <- isolate(input$n)
+        epsilon <- isolate(input$epsilon)
+
+        if(length(plot_data) == 0) {
+          NULL
+        } else {
+           #add proportion in bounds to data frame
+          hover_data <- plot_data %>% 
+            group_by(n) %>% 
+            summarize(proportion = mean(abs(xn-c) < epsilon))
+          p <- ggplot(plot_data, aes(x = n, y = xn)) +
+            geom_line(aes(color = path, group = path)) + 
+            geom_hline(yintercept = c+epsilon, size = 1, col = "purple") + 
+            geom_hline(yintercept = c-epsilon, size = 1, col = "purple") +
+            theme_classic() + 
+            theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5), legend.position = "none") +
+            ggtitle("50 Sample Paths Visualized as the Sample Size Increases") + 
+            ylab("Path Values") + 
+            scale_x_continuous("n", breaks = 1:n, labels = as.character(1:n))
+          p2 <- ggplotly(p)
+          for (i in 1:M){
+            p2 <- p2 %>% add_polygons(x = c(hover_data$n[i]-0.5, 
+                                            hover_data$n[i]-0.5, 
+                                            hover_data$n[i]+0.5,
+                                            hover_data$n[i]+0.5), 
+                                      y = c(-1000, 1000, 1000, -1000), 
+                                      line = list(width = 0), 
+                                      fillcolor = 'rgba(0, 0, 0, 0)', 
+                                      inherit = FALSE, 
+                                      name = paste0("Proportion of Sample Paths\n within epsilon bounds (n = ", n, "): ", hover_data$proportion[i]))
+          }
+          p2
+        }
+      })
+  }
+)
 
 
-
-```{r, echo=FALSE, message=FALSE,warnings=FALSE, eval = FALSE}
-#Load library and set seed
-#"formattable"
-
-Packages <- c("ConvergenceConcepts","kableExtra","dplyr", "knitr","textshape","radiant.data", "magrittr","reshape2","ggplot2")
 ```
 
 
@@ -175,21 +272,6 @@ Packages <- c("ConvergenceConcepts","kableExtra","dplyr", "knitr","textshape","r
 Convergence in probability is looking for the probability that the $|X_n-0|\geq\epsilon$ in each column.
 
 
-```{r, echo=FALSE,message=FALSE, eval = FALSE}
-#Add rownames to a column in order to melt
-sample_path <- rownames(data)
-datanew <- cbind(sample_path,data)
-data_melted = reshape2::melt(datanew, id.vars = 'sample_path')
-ggplot(data_melted, aes(x = variable, y = value)) + geom_line(aes(color = sample_path, group =sample_path))+
-  geom_hline(yintercept = epsilon,size=1,col="purple")+geom_hline(yintercept = -epsilon,size=1,col="purple")+
-  annotate("rect", xmin = 3.75, xmax = 4.25, ymin = -0.75, ymax = 0.75,
-  alpha = .2)+
-  annotate("text",x = 4, y = 0.8, label = "hat(p[3])==0.8",parse = TRUE,col="darkblue")+
-  theme_classic()+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-     ggtitle("Probability of 5 Sample Paths as Sample Size Increases")+
-     ylab("Probability") + 
-     xlab("Sequence ") 
-```
 
 
 

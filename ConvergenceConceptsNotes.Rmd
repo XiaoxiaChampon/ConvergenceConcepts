@@ -32,6 +32,7 @@ library(shiny)
 library(shinydashboard)
 library(ConvergenceConcepts)
 library(ggplot2)
+library(tidyr)
 ```
 
 
@@ -308,7 +309,6 @@ Sampling Distribution
 **I've put the code you used for a gif here below. I would not have the code evaluate at run time but produce an output .gif with the anim_save() you had. Then just load that gif in. I've streamlined your code for the gamma example below. This code won't work for what goes here but perhaps can be used later!**
 
 ```{r, echo=FALSE, message=FALSE, eval = FALSE}
-library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(gganimate)
@@ -465,7 +465,8 @@ Convergence in Distribution
 $$\lim_{n \rightarrow \infty} F_{Y_n}(y)=F_{Y}(y)$$
 or equivalently
 $$\lim_{n \rightarrow \infty} |F_{Y_n}(y)-F_{Y}(y)|=0$$
-(at all points $y$ where $F_Y(y)$ is continuous)
+(at all points $y$ where $F_Y(y)$ is continuous). We denote this as
+$$Y_n\stackrel{d}\rightarrow Y$$
 
 For example, given a random sample from a distribution with finite variance, 
 $$Z_n = \frac{\bar{Y}_n - \mu}{\sigma/\sqrt{n}}$$
