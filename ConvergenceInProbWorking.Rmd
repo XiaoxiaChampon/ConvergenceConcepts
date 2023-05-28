@@ -187,20 +187,20 @@ shinyApp(
       numericInput("c",
                    "c: Value to converge to",
                    value = 0,
-                   min = -1000, 
-                   max = 1000),
+                   min = -500, 
+                   max = 500),
       numericInput("n",
-                  "n: Sample Size (1 to 10,000)",
+                  "n: Sample Size (1 to 1000)",
                   min = 1,
-                  max = 10000,
+                  max = 1000,
                   step= 1,
                   value = 5),
       sliderInput("epsilon",
                   "epsilon: range",
-                  min = 0.0001,
-                  max = 1,
-                  step= 0.01,
-                  value = 0.5),
+                  min = 1,
+                  max = 10,
+                  step= 0.5,
+                  value = 10),
       actionButton("create",
                    "Create/Update graph")
     ),
@@ -237,26 +237,49 @@ shinyApp(
           hover_data <- plot_data %>% 
             group_by(n) %>% 
             summarize(proportion = mean(abs(xn-c) < epsilon))
-          p <- ggplot(plot_data, aes(x = n, y = xn)) +
-            geom_line(aes(color = path, group = path)) + 
-            geom_hline(yintercept = c+epsilon, size = 1, col = "purple") + 
-            geom_hline(yintercept = c-epsilon, size = 1, col = "purple") +
-            theme_classic() + 
-            theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5), legend.position = "none") +
-            ggtitle("50 Sample Paths Visualized as the Sample Size Increases") + 
-            ylab("Path Values") + 
-            scale_x_continuous("n", breaks = 1:n, labels = as.character(1:n))
-          p2 <- ggplotly(p)
-          for (i in 1:M){
-            p2 <- p2 %>% add_polygons(x = c(hover_data$n[i]-0.5, 
-                                            hover_data$n[i]-0.5, 
-                                            hover_data$n[i]+0.5,
-                                            hover_data$n[i]+0.5), 
-                                      y = c(-1000, 1000, 1000, -1000), 
-                                      line = list(width = 0), 
-                                      fillcolor = 'rgba(0, 0, 0, 0)', 
-                                      inherit = FALSE, 
-                                      name = paste0("Proportion of Sample Paths\n within epsilon bounds (n = ", n, "): ", hover_data$proportion[i]))
+          if(n < 50){
+            p <- ggplot(plot_data, aes(x = n, y = xn)) +
+              geom_line(aes(color = path, group = path)) + 
+              geom_hline(yintercept = c+epsilon, size = 1, col = "purple") + 
+              geom_hline(yintercept = c-epsilon, size = 1, col = "purple") +
+              theme_classic() + 
+              theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5), legend.position = "none") +
+              ggtitle("50 Sample Paths Visualized as the Sample Size Increases") + 
+              ylab("Path Values") + 
+              scale_x_continuous("n", breaks = 1:n, labels = as.character(1:n))
+            p2 <- ggplotly(p)
+            for (i in 1:n){
+              p2 <- p2 %>% add_polygons(x = c(hover_data$n[i]-0.5, 
+                                              hover_data$n[i]-0.5, 
+                                              hover_data$n[i]+0.5,
+                                              hover_data$n[i]+0.5), 
+                                        y = c(-1000, 1000, 1000, -1000), 
+                                        line = list(width = 0), 
+                                        fillcolor = 'rgba(0, 0, 0, 0)', 
+                                        inherit = FALSE, 
+                                        name = paste0("Proportion of Sample Paths\n within epsilon bounds (n = ", i, "): ", hover_data$proportion[i]))
+            }
+          } else {
+            p <- ggplot(plot_data, aes(x = n, y = xn)) +
+              geom_line(aes(color = path, group = path)) + 
+              geom_hline(yintercept = c+epsilon, size = 1, col = "purple") + 
+              geom_hline(yintercept = c-epsilon, size = 1, col = "purple") +
+              theme_classic() + 
+              theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5), legend.position = "none") +
+              ggtitle("50 Sample Paths Visualized as the Sample Size Increases") + 
+              ylab("Path Values")
+            p2 <- ggplotly(p)
+            for (i in c(seq(5, n, by = 10), n)){
+              p2 <- p2 %>% add_polygons(x = c(hover_data$n[i]-5, 
+                                              hover_data$n[i]-5, 
+                                              hover_data$n[i]+5,
+                                              hover_data$n[i]+5), 
+                                        y = c(-500, 500, 500, -500), 
+                                        line = list(width = 0), 
+                                        fillcolor = 'rgba(0, 0, 0, 0)', 
+                                        inherit = FALSE, 
+                                        name = paste0("Proportion of Sample Paths\n within epsilon bounds (n = ", i, "): ", hover_data$proportion[i]))
+            }
           }
           p2
         }
@@ -267,96 +290,77 @@ shinyApp(
 
 ```
 
+## How do we prove convergence in probability?
 
-
-Convergence in probability is looking for the probability that the $|X_n-0|\geq\epsilon$ in each column.
-
-
-
-
-
-
-<div class = "clearfix"> </div>
-- $lim_{n\rightarrow\infty}P(|X_n-0|\geq \epsilon)=0$
-- $X_n\stackrel{p}{\rightarrow}0$
-<div class = "clearfix"> </div>
-Let's graph the $p_n$ curve.
-<div class = "clearfix"> </div>
-```{r,echo=FALSE,message=FALSE, eval = FALSE}
-#Plot the probability curve
-plot(Pn_critr,xlab="n",ylab=bquote(hat(p[n])~"value"), main=mtext(bquote(bold("Criterion Value"~hat(p[n])~"Curve")),col="darkblue"),col="red",type="l")
-text(x =n, y = max(Pn_critr),bquote(bold(hat(p[k])~"will tend to and stay at 0")),col="red",adj=1)
-```
-
-
-<div class = "clearfix"> </div>
-
-##Details:  How do we prove convergence in probability?
-
--Markov's Inequality 
- * If $X$ is a nonnegative RV (support has no negative values) for which $E(X)$ exists, then for $t>0$
+Markov's Inequality
+: If $X$ is a nonnegative RV (support has no negative values) for which $E(X)$ exists, then for $t>0$
 $$P(X\geq t)\leq \frac{E(X)}{t}$$
 
 Example: If $X\sim exp(1)$ then $P(X\geq t)=e^{-t}$ and $E(X)/t=1/t$.
 
-Chebychev's Inequality 
+```{r, echo = FALSE, fig.align = 'center', out.width = "550px"}
+x <- 1:120/20
+plot(x, y = 1/x, type = "l", ylim = c(0,1), col = "blue", lwd = 2)
+lines(x, y = exp(-x), type = "l", col = "green", lwd = 2)
+legend("topright", legend = c("1/t", "exp(-t)"), col = c("blue", "green"), lwd = 2)
+```
 
- Let $X$ be a RV with mean = $\mu$ and variance = $\sigma^2$, then for $t>0$ 
+
+Chebychev's Inequality 
+: Let $X$ be a RV with mean = $\mu$ and variance = $\sigma^2$, then for $t>0$ 
 $$P(|X-\mu|\geq t)\leq \frac{\sigma^2}{t^2}$$
 
 Example:  If $t=\sigma k$ for $k>0$, we can apply Chebychev's to get
 $$P\left(|X-\mu|\geq k\sigma\right)\leq \frac{\sigma^2}{k^2\sigma^2}=\frac{1}{k^2}$$
 For $k=2$ we have $P\left(|X-\mu|\geq 2\sigma\right)\leq 1/4$.
 
-
+Practically, what can we take home from this?
 - At least 75\% of a RVs distribution lies within 2 standard deviations of the mean (if these moments exist)
 - Regardless of distribution! (if moments exist)
 - If $X\sim N(\mu,\sigma^2)$ we know $P(|X-\mu|\geq 2\sigma)\approx 0.05$. The bound isn't always very tight!
 
-
-
-
 ## Relating the inequalities to convergence in probability
 
-Weak Law of Large Numbers (WLLN) 
+Proving the WLLN: Suppose $Y_i\stackrel{iid}\sim f$ where the mean and variance of $Y_i$ exist. We want to show $$\bar{Y}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}\rightarrow E(Y)=\mu$$
 
-- If $Y_1,Y_2,...$ is a sequence of independent RVs with $E(Y_i)=\mu$, $Var(Y_i)=\sigma^2$ then $\bar{Y}_{n}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}{\rightarrow}\mu$
+### Very powerful result!
 
+- Big picture goal is to estimate parameters such as $\mu$
+- If we get a RS we know that $\bar{Y}$ will be a `close' to $\mu$ for `large' samples
+- Applies to the average of any independent random variables with the same finite mean
 
-#Very powerful result!
+Example: Let $Y_i\stackrel{iid}{\sim}f_Y(y)$ where $E(Y^2)$ exists (that is, $E\left(|Y^2|\right)<\infty$). As the $Y_i$ are independent, we know the $Y_i^2$ are independent. Further, they all have the same expectation!
+Thus, the WLLN implies that 
+$$\frac{\sum_{i=1}^{n}Y_i^2}{n} \stackrel{p}{\rightarrow} E(Y^2)$$
 
+Continuing the previous example: If $Y_i\stackrel{iid}\sim N(\mu, \sigma^2)$ then $$\frac{\sum_{i=1}^{n}Y_i^2}{n} \stackrel{p}{\rightarrow} E(Y^2) = Var(Y)+\left(E(Y)\right)^2 = \sigma^2+\mu^2$$
 
-- Big picture goal is to estimate parameters such as $\mu$.
-- If we get a RS we know that $\bar{Y}$ will be a `close' to $\mu$ for `large' samples.
+## Continuity Theorem (works for convergence in distribution, probability, and almost surely) 
+The WLLN is also quite useful when combined with the continuity theorem.
 
-
-Example: $Y_i\stackrel{iid}{\sim}f_Y(y)$ where $E(Y_i^2)$ exists ($E\left(|Y_i^2|\right)<\infty$) then $Y_i^2$ are independent and all have the same expectation!
-
-Example: If $Y_i\stackrel{iid}\sim f_Y(y)$ with $E(Y)=\mu$ and 
-$Var(Y)=\sigma^2$ then 
-
-##Continuity Theorem (works for all three types of convergence) 
-- If $Y_1,Y_2,Y_3,...$ converge to $Y$ and $g$ is a continuous function then 
+Continuity Theorem
+: If $Y_1,Y_2,Y_3,...$ converge to $Y$ and $g()$ is a continuous function then 
 $g(Y_1),g(Y_2),g(Y_3)...$ converge to $g(Y)$. 
 
-Example: Suppose $Y_i$ are independent each with mean $\mu$, we have interest 
-in $\mu^2$.
+Example (exploration example proved): 
+Suppose we have a random sample from a Normal distribution with mean 10 and standard deviation 1. Consider $W = (\bar{Y})^2$. What does this converge to in probability?
 
+By the WLLN we know that $\bar{Y}\stackrel{p}\rightarrow 10$. Now can apply the continuity theorem and we know that 
+$$W = (\bar{Y})^2 \stackrel{p}\rightarrow 10^2 = 100$$
 
-A sequence of RVs $Y_1,...,Y_n,...$ converges in probability to a RV $Y$ if for every $\epsilon>0$
-$$lim_{n\rightarrow\infty}P(|Y_n-Y|\geq \epsilon)=0 \iff 
-lim_{n\rightarrow\infty}P(|Y_n-Y|<\epsilon)=1$$
-Denoted by $Y_n\stackrel{p}{\rightarrow}Y$.  \\
+Example: We can also use the continuity theorem with the CLT. Suppose that $Y_i\stackrel{iid}\sim gamma(\alpha, \lambda)$. We have that 
+$$\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\stackrel{d}\rightarrow Z$$
+where $Z\sim N(0,1)$. By the continuity theorem we have that 
+$$\left(\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\right)^2\stackrel{d}\rightarrow Z^2$$
+and recall that a standard Normal squared is distributed as a $\chi^2_1$ or a $gamma(1/2, 1/2)$. 
 
-We'll mostly care about convergence in probability to a constant, call it $c$.
-$$lim_{n\rightarrow\infty}P(|Y_n-c|< \epsilon)=\lim_{n\rightarrow\infty}P(-\epsilon < Y_n-c<\epsilon) =  \lim_{n\rightarrow\infty}P(c-\epsilon < Y_n<c+\epsilon)=1$$
+## Other Standard Limit Results 
 
+Most of the common limit theorem ideas from calculus follow here as well ($\theta$ and $\lambda$ are constants below):
 
-Other standard limit results exist such as
-$$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, 
-X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm 
-X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
+$$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
 
+## Convergence in Distribution and Probability Relationship
 
 
 
