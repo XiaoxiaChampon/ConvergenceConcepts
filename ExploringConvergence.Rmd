@@ -1,5 +1,5 @@
 ---
-title: "Convergence Concepts for Statisticians"
+title: "Exploring Convergence"
 author: "Xiaoxia Champon, Justin Post"
 date: "2023-04-25"
 output: 
@@ -24,6 +24,10 @@ for (i = 0; i < coll.length; i++) {
   });
 }
 ```
+
+```{css, echo = FALSE}
+.shiny-frame{height: 850px;}
+```  
 
 ```{r setup, include=FALSE,warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -172,8 +176,7 @@ as an interval to *capture* the true $p$. (Indeed this is the usual basic interv
 
 ## Convergence in Probability Idea
 
-To answer the second question, we could consider generating sample proportions for ever increasing values of the sample size and seeing how they behave. Below generate sample proportions and subtract off the true value of $p$, plotting those differences. 
-
+To answer the second question, we could consider generating sample proportions for ever increasing values of the sample size and seeing how they behave. Below generate sample proportions and subtract off the true value of $p$, plotting those differences.
 Instructions:
 
 - "Maximum Sample Size": Enter a number to increase/decrease the largest sample size to consider
@@ -254,400 +257,27 @@ shinyApp(
 
 We can see that $\hat{p}-p$ seems to get closer to 0. This indicates that $\hat{p}$ is in some sense *converging* to the true value of $p$!
 
-Now that we some basic intuition, let's formalize what we are talking about.
 
-# What is Limit Theory?
-
-By limit, large-sample, or asymptotic theory we mean we want to understand the behavior of some quantity, usually a statistic, as something changes, usually the sample size $n$. For instance, we will investigate the behavior of the sample mean, $\bar{Y}$, as the sample size grows. We'll look at questions like:
-
-- When the distribution of a statistic (called a **sampling distribution**) is difficult to derive *exactly*, is there a good **approximating** distribution that can be used to get **approximate** probability statements about $\bar{Y}$?
-- What value does $\bar{Y}$ *get close to* or *converge* to as the sample size grows? 
-
-Answers to these questions will allows us to do inference (confidence intervals and hypothesis tests) and understand how well we are estimating a quantity, respectively.
-
-## Common Assumptions & Definitions
-
-We must make some assumptions about how we observe our random variables in order to investigate these types of questions. For simplicity, we often assume we have a **random sample**.
-
-Random Sample
-: $Y_1,..., Y_n$ are a random sample (RS) of size $n$ if the random variables are independent and identically distributed (iid). 
-
-We'll often say 'assume we have a random sample' from some distribution or that 'our random variables are iid' from some distribution. These are equivalent ways of stating this assumption.
-
-For the proportion example above we might formally state our assumption as follows:
-
-- Define $X_i = \begin{cases} 1 & \mbox{if the }i^{th}\mbox{ individual says the benefits of childhood vaccines for MMR outweigh the risks}\\ 0 & \mbox{if not}\end{cases}$
-- Then $X_i\stackrel{iid}\sim Ber(p)$ where $p$ represents the true proportion of people in the U.S. that believe the benefits outweight the risks
-- The random variable $Y = \sum_{i=1}^{n}X_i \sim Bin(n,p)$
-- We then often try to use $Y$ or $\hat{p}=Y/n$ to make inference on $p$. $Y$ and $\hat{p}$ are referred to as **statistics**. Note: $\hat{p}$ is also $\bar{X}$!
-
-Statistic
-: A function of $Y_1,Y_2,...,Y_n$ from a random sample that does not involve any unknown parameters is called a statistic.
-
-Commonly studied statistics:  
-
-- $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$
-- $S^2 = \frac{1}{n-1}\sum_{i=1}^{n}(Y_i-\bar{Y})^2$
-- $Y_{(n)} = \mbox{the maximum value from the sample}$
-
-Quantities that aren't statistics:  
-
-- $\frac{\bar{Y}-\mu}{S/\sqrt{n}}$ (since $\mu$ is unknown - if we assume $\mu$ is known (like when we do a test statistic) then this is a statistic)
-- $\frac{(n-1)S^2}{\sigma^2}$ (since $\sigma^2$ is unknown)
-
-One type of convergence we'll look at is focused on the pattern in which these statistics are observed, that is, the **sampling distribution** of the statistics.
-
-Recall that a distribution is just the pattern and frequency with which we observe a random variable. With a statistic, we give this distribution the special name of sampling distribution. This is because we can think of how that distribution is formed by considering repeated samples from the population, each sample producing the statistic of interest.
-
-Sampling Distribution
-: The distribution of a statistic is called a sampling distribution.
-
-**Put a gif of a sampling distribution being built by adding values using the binomial p-hat example. Sample size of n = 40 with p = 0.25 or something like that. Very skinny bars so they can see the discrete nature with a normal distribution overlay. The gif should add say 500 values of p-hat over 5 seconds or so.**
-
-**I've put the code you used for a gif here below. I would not have the code evaluate at run time but produce an output .gif with the anim_save() you had. Then just load that gif in. I've streamlined your code for the gamma example below. This code won't work for what goes here but perhaps can be used later!**
-
-```{r, echo=FALSE, message=FALSE, eval = FALSE}
-library(dplyr)
-library(ggplot2)
-library(gganimate)
-#################################################################################
-#gamma
-# alpha=5
-# lambda=1
-# M <- 100 
-# 
-# #quicker way than for loop for this
-# n20 <- replicate(M, mean(rgamma(n = 20, shape = alpha, scale = lambda)))
-# n50 <- replicate(M, mean(rgamma(n = 50, shape = alpha, scale = lambda)))
-# n100 <- replicate(M, mean(rgamma(n = 100, shape = alpha, scale = lambda)))
-# n500 <- replicate(M, mean(rgamma(n = 500, shape = alpha, scale = lambda)))
-# 
-# #even better way to do this for many n values 
-# ns <- 2:10
-# means <- as.data.frame(
-#   lapply(ns, 
-#          FUN = function(x, M, alpha, lambda){replicate(M, mean(rgamma(n = x, shape = alpha, scale = lambda)))}, 
-#          M = M, alpha = alpha, lambda = lambda), 
-#   col.names = paste0("n",ns))
-# 
-# means_long <- pivot_longer(means, cols = everything(), names_to = "n", values_to = "means")
-# # create ggplot2 plot
-# ggplot(means_long) + 
-#   geom_histogram(aes(x = means, group=n),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-#   ggtitle("Distribution of Observed Mean values") +
-#   labs(subtitle=("Sample Size : {closest_state}")) +
-#   ylab("Absolute Frequency out of 1000") + 
-#   xlab("Observed Mean Value ") + 
-#   transition_states(n)
-#anim_save("gammean.gif")
-##################################################################################################
-#binormial proportion
-
-p=0.25
-nn=40
-M <- 100
-# 
-# #quicker way than for loop for this
-# n20 <- replicate(M, mean(rbinom(n = 20, nn, p)))
-# n50 <- replicate(M, mean(rbinom(n = 50, nn, p)))
-# n100 <- replicate(M, mean(rbinom(n = 100, nn, p)))
-# n500 <- replicate(M, mean(rbinom(n = 500, nn, p)))
-# 
-# #even better way to do this for many n values 
-ns <- c(20,50,100,500)
-meansp <- as.data.frame(
-  lapply(ns,
-         FUN = function(x, M, nn, p){replicate(M, mean(rbinom(n = x, nn, p))/nn)},
-         M = M, nn, p),
-  col.names = paste0("SampleSize",ns))
-#
- meansp_long <- pivot_longer(meansp, cols = everything(), names_to = "n", values_to = "means")
-# # create ggplot2 plot
-animated_plot=ggplot(meansp_long) +
-  geom_histogram(aes(x = means, group=n),bins=50,col="red",fill="red") +  theme(text = element_text(size = 15))+theme(plot.title = element_text(hjust = 0.5),plot.subtitle=element_text(hjust=0.5))+
-  ggtitle("Distribution of Observed Mean Proportion") +
-  labs(subtitle=(" {closest_state}")) +
-  ylab(paste0("Absolute Frequency out of ", M)) +
-  xlab(paste0("Observed Mean Proportion for b","(",nn,",",p,")"))+transition_states(n)
-animation = animate(animated_plot)
-anim_save( filename="binormmean.gif")
-
-```
-
-<img src="binormmean.gif"/>
-
-
-# Convergence in Distribution 
-
-We saw that the distribution of $\hat{p}$ seemed to look like a bell curve for some combinations of $n$ and $p$. If we fix a $p$ and increase $n$, we will start to see a bell shape for large enough $n$! Later we'll see that a good **large-sample** distribution for $\hat{p}$ is the Normal distribution with mean $p$ and variance $p(1-p)/n$.  
-
-We can see that there may be a distinction between the *actual* distribution, which is a discrete distribution for $\hat{p}$, and an approximating distribution, the Normal distribution for $\hat{p}$. We call these by different names.
-
-Exact Distribution
-: The (sampling) distribution of a quantity that is valid for any sample size (or, occasionally, values of the parameters of the population distribution).
-
-Large-Sample or Approximate Distribution
-: A (sampling) distribution that is reasonable to use for a quantity for a *large* sample size (or occasionally other parameter values). 
-
-We use the notation
-$$Statistic \stackrel{\bullet}\sim f$$
-to denote a large-sample approximating distribution.
-
-In the sample proportion example, we would write
-
-$$\hat{p}\stackrel{\bullet}\sim N(p, p(1-p)/n)$$
-
-While this idea can be visually inspected with a histogram, formally we define **convergence in distribution** using the cumulative distribution function or CDF.
-
-Let's formally define convergence in distribution! Recall the Cumulative Distribution Function (or CDF) of a random variable $Y$ is defined as 
-
-$$F_Y(y) = P(Y\leq y)$$
-
-<div style = "float:left">
-```{r, echo = FALSE, message = FALSE, out.width = "400px"}
-p <- 0.05
-n <- 20
-plot_seq <- seq(from = -0.21, to = 8, by = 0.01)
-NN <- length(plot_seq)
-bin_cdf <- pbinom(plot_seq, size = n, prob = p)
-norm_cdf <- pnorm(plot_seq, mean = n*p, sd = sqrt(n*p*(1-p)))
-
-ecdf <- data.frame(
-  y = c(bin_cdf, norm_cdf),
-  CDF = c(rep(paste0("Bin(", n, ", ", p, ")"), NN), rep(paste0("N(", n*p, ", ", round(n*p*(1-p), 2), ")"), NN)),
-  x = c(plot_seq, plot_seq)
-)
-
-ggplot(ecdf, aes(x = x, y = y, color = CDF)) + 
-  geom_line(stat = "identity") +
-  theme(text = element_text(size = 15), 
-        plot.title = element_text(hjust = 0.5), 
-        legend.text = element_text(size=15), 
-        legend.position = c(0.8, 0.15)) +
-  ggtitle("Emprical CDF vs Normal") +
-  ylab("Cumulative Distribution Function") + 
-  xlab("Observed Value")
-```
-</div>
-<div style = "float:right">
-```{r, echo = FALSE, message = FALSE,out.width = "400px"}
-p <- 0.35
-n <- 30
-plot_seq <- seq(from = -0.21, to = 22, by = 0.01)
-NN <- length(plot_seq)
-bin_cdf <- pbinom(plot_seq, size = n, prob = p)
-norm_cdf <- pnorm(plot_seq, mean = n*p, sd = sqrt(n*p*(1-p)))
-
-ecdf <- data.frame(
-  y = c(bin_cdf, norm_cdf),
-  CDF = c(rep(paste0("Bin(", n, ", ", p, ")"), NN), rep(paste0("N(", n*p, ", ", round(n*p*(1-p), 2), ")"), NN)),
-  x = c(plot_seq, plot_seq)
-)
-
-ggplot(ecdf, aes(x = x, y = y, color = CDF)) + 
-  geom_line(stat = "identity") +
-  theme(text = element_text(size = 15), 
-        plot.title = element_text(hjust = 0.5), 
-        legend.text = element_text(size=15), 
-        legend.position = c(0.8, 0.15)) +
-  ggtitle("Emprical CDF vs Normal") +
-  ylab("Cumulative Distribution Function") + 
-  xlab("Observed Value")
-```
-</div>
-
-<div class = "clearfix"></div>
-
-Convergence in Distribution
-: The quantity $Y_n$ converges in distribution to $Y$ if
-$$\lim_{n \rightarrow \infty} F_{Y_n}(y)=F_{Y}(y)$$
-or equivalently
-$$\lim_{n \rightarrow \infty} |F_{Y_n}(y)-F_{Y}(y)|=0$$
-(at all points $y$ where $F_Y(y)$ is continuous). We denote this as
-$$Y_n\stackrel{d}\rightarrow Y$$
-
-For example, given a random sample from a distribution with finite variance, 
-$$Z_n = \frac{\bar{Y}_n - \mu}{\sigma/\sqrt{n}}$$
-can be shown to converge in distribution to a standard normal distribution. This means that
-$$\lim_{n \rightarrow \infty} F_{Z_n}(z)=F_{Z}(z)$$
-where $Z\sim N(0,1)$.
-
-Note: Here the subscript $n$ is just to explicitly note the dependence of the quantity on the sample size. We could leave that off if we'd like.
-
-## Convergence in Distribution Example
-
-- Suppose that $Y_i\stackrel{iid}\sim U(0,1)$. That is,
-$$f_Y(y) = \begin{cases}1 & 0<y<1\\0 & otherwise\end{cases}$$
-and
-$$F_Y(y) = \begin{cases} 0 & y < 0\\ y & 0\leq y < 1 \\ 1 & y\geq 1\end{cases}$$
-- What does the maximum from the sample converge to in distribution as $n$ grows?
-    + Recall the PDF of the maximum, $Y_{(n)}$ from a random sample is given by 
-    $$F_{Y_{(n)}}(y) = nf_Y(y)\left[F_Y(y)\right]^{n-1}$$ 
-    for $y$ in the range of the original PDF.
-    
-**Put in static graphs of histograms of realizations for increasing sample sizes.**
-```{r,  echo = FALSE, message = FALSE}
-library(tidyr)
-M <- 100
-#even better way to do this for many n values
-ns <- c(20,50,100,500)
-maxu <- as.data.frame(
-  lapply(ns,
-         FUN = function(x, M){replicate(M, max(runif(n = x, 0, 1)))},
-         M = M),
-         col.names = paste0("SampleSize",ns)
-                     )
-maxu_long <- pivot_longer(maxu, cols = everything(), names_to = "n", values_to = "maximum")
-maxuplot<-ggplot(maxu_long, aes(x=maximum)) +
-        geom_histogram()+
-        facet_wrap( ~ n,ncol = 2)+
-        theme(text = element_text(size = 15),
-        plot.title = element_text(hjust = 0.5),
-        legend.text = element_text(size=15),
-        legend.position = c(0.1, 0.85)) +
-        ggtitle("Distribution of Maximum of uniform (0, 1)") +
-        ylab("Value") +
-        xlab("Observed Maximum Value")
-ggsave("maxuplot.png")
-
-```
-
-
-```{r, echo = FALSE}
-knitr::include_graphics("maxuplot.png")
-```
-
-**Discuss the ECDF from a sample as an approximation to the CDF.**
-
-**Show CDF comparison plot with a RV that is a point mass at 1. Discuss what we look for.**
-<div class = "clearfix"></div>
-```{r, message=FALSE,echo=FALSE}
-
-MMM=100
-plot_sequ <- seq(from = 0.99, to = 1, length=MMM)
-tmpm=c(replicate(MMM, max(runif(n = 500, 0, 1))))
-u500_cdfm <- ecdf(tmpm)(plot_sequ)
-
-
-
-p_cdfum <-rep(1,MMM)
-
-ecdfm <- data.frame(
-  y = c(u500_cdfm, p_cdfum),
-  CDF = c(rep("ECDF of X(n)", MMM), rep("R.V. Point Mass 1", MMM)),
-  x = c(plot_sequ, rep(1,MMM))
-)
-
-ggplot(ecdfm, aes(x = x, y = y, color = CDF)) + 
-  geom_line(stat = "identity") +
-  theme(text = element_text(size = 15), 
-        plot.title = element_text(hjust = 0.5), 
-        legend.text = element_text(size=8), 
-        legend.position = c(0.85, 0.1)) +
-  ggtitle("Emprical CDF vs R.V. with Point Mass 1") +
-  ylab("Cumulative Distribution Function") + 
-  xlab("Observed Value")
-```
-
-**Introduce the 3D plot and what we look for.**
-**Prove the result.**
-
-Let $X_1,X_2,..$ .are iid uniform(0,1) and $X(n)=max_{1≤i≤n}X_i$.
-
-As $n\rightarrow \infty$, $\forall \epsilon >0$, 
-
-$P(|Xn−1|≥ϵ)=P(X(n)≤1−ϵ) =P(Xi≤1−ϵ,i=1,...,n)=(1−ϵ)^n$, 
-
-
-- For the same situation, what does $W = n(1-Y_{(n)})$ converge in distribution to as $n$ grows? Can we describe a rule of thumb for when the approximating distribution is reasonable?
-
-**Put in static graphs of histograms of realizations for increasing sample sizes.**
-```{r,message=FALSE,echo=FALSE}
-#W = n(1-Y_{(n)})
-library(tidyr)
-M <- 100
-#even better way to do this for many n values
-ns <- c(20,50,100,500)
-nmaxu <- as.data.frame(
-  lapply(ns,
-         FUN = function(x, M){replicate(M, ns*(1-max(runif(n = x, 0, 1))))},
-         M = M),
-  col.names = paste0("SampleSize ",ns)
-                      )
-nmaxu_long <- pivot_longer(nmaxu, cols = everything(), names_to = "n", values_to = "maximum")
-nmaxu_long$n=sub(".[^.]+$", "", nmaxu_long$n)
-nmaxuplot<-ggplot(nmaxu_long, aes(x=maximum)) +
-        geom_histogram()+
-        facet_wrap( ~ n,ncol = 2,scales = "free")+
-        theme(text = element_text(size = 15),
-        plot.title = element_text(hjust = 0.5),
-        legend.text = element_text(size=15),
-        legend.position = c(0.1, 0.85)) +
-        ggtitle(expression(paste("Distribution of ",n(1-X(n))))) +
-        ylab("Value") +
-        xlab("Observed Value")
-ggsave("nmaxuplot.png")
-
-```
-
-
-
-```{r, echo = FALSE}
-knitr::include_graphics("nmaxuplot.png")
-```
-**Discuss the ECDF from a sample as an approximation to the CDF.**
-**Show CDF comparison plot with a RV that is a point mass at 1. Discuss what we look for.**
-<div class = "clearfix"></div>
-```{r, message=FALSE,echo=FALSE}
-MM=1000
-plot_sequ <- seq(from = -0.5, to = 5, length=MM)
-lambda=1
-tmp=c(replicate(MM, 500*(1-max(runif(n = 500, 0, 1)))))
-u500_cdf <- ecdf(tmp)(plot_sequ)
-exp_cdfu <- pexp(plot_sequ,lambda )
-
-ecdfu <- data.frame(
-  y = c(u500_cdf, exp_cdfu),
-  CDF = c(rep("ECDF of n(1-X(n))", MM), rep("exp(1)", MM)),
-  x = c(plot_sequ, plot_sequ)
-)
-
-ggplot(ecdfu, aes(x = x, y = y, color = CDF)) + 
-  geom_line(stat = "identity") +
-  theme(text = element_text(size = 15), 
-        plot.title = element_text(hjust = 0.5), 
-        legend.text = element_text(size=15), 
-        legend.position = c(0.8, 0.15)) +
-  ggtitle("Emprical CDF vs Exponential") +
-  ylab("Cumulative Distribution Function") + 
-  xlab("Observed Value")
-```
-
-**Introduce the 3D plot and what we look for.**
-**Prove the result.**
-
-From above, let $\epsilon= \frac{t}{n}$, 
-
-then $P(X(n)≤1−\frac{t}{n})=(1−\frac{t}{n})^n \rightarrow e^{−t}$. 
-
-$P(n(1−X(n))≤t) \rightarrow 1−e^{−t}$, the random variable $n (1−X(n))$ converges to exponential(1).
-
-
-## Convergence Exploration
+## Convergence in Distribution Exploration
 
 - Suppose that $Y_i\stackrel{iid}\sim Gamma(\alpha, \lambda)$. That is, assume we have a random sample from a Gamma distribution with PDF
 $$f_Y(y) = \frac{\lambda^\alpha}{\Gamma(\alpha)}y^{\alpha -1}e^{-\lambda y}$$
 with mean $E(Y) = \alpha/\lambda$ and variance $Var(Y) = \alpha/\lambda^2$.
 - Consider the statistic $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$. 
 - The sampling distribution of this statistic can often be well approximated using a Normal distribution. Consider changes to $\alpha$, $\lambda$, and $n$ using the app below. 
-- Can you develop a rule of thumb around $\alpha$, $\lambda$, and $n$ for when a Normal distribution may be a reasonable approximation?  Remember we look for the following in each graph:  
+- Can you develop a rule of thumb around $\alpha$, $\lambda$, and $n$ for when a Normal distribution may be a reasonable approximation?  
+- What to look for in each graph:  
     + Histogram: when does it become a symmetric bell-shape?
-    + CDF comparison: When do the CDFs essentially overlap? (**Note: We know the result here and are using that here or something clearer than that**)
-    + Absolute difference in CDFs: When do the differences get small?
+    + CDF comparison: We know the result is a Normal distribution here. The graph compares the simulated distribution with a Normal distribution. When do the CDFs essentially overlap?     + Absolute difference in CDFs: When do the differences get small?
+- Instructions:
+    + "n: sample size": Change this slider to alter the sample sized used to find the sample means
+    + "alpha: shape parameter": Change this slide to alter the shape parameter of the population gamma distribution
+    + "lambda: scale parameter": Change this slide to alter the scale parameter of the population gamma distribution
+
 
 ```{r, echo=FALSE}
 shinyApp(
-  ui <- fluidPage(
+  ui <- fluidPage(    
     sidebarLayout(
       sidebarPanel( 
         sliderInput("d_ngam",
@@ -809,42 +439,21 @@ shinyApp(
   })
 ```
 
-## Central Limit Theorem
+## Central Limit Theorem Applied to a Sample Proportion
 
-One of the most important theorems in statistics is the Central Limit Theorem (CLT). The CLT gives us a general result about the large-sample behavior of a sample mean.
+A common application of the CLT is to the sample proportion from a Binomial experiment. If $X_i\stackrel{iid}\sim Bin(1, p)$ with mean $E(Y) = p$ and variance $Var(Y) = p(1-p)$, then define $Y = \sum_{i=1}^{n} X_i$.  We know that $Y\sim Bin(n,p)$. The sample propotion is the average of the $X_i$'s or $Y/n$. We can apply the CLT to obtain a large-sample distribution for the sample proportion:
 
-CLT
-: Suppose that $Y_i\stackrel{iid}\sim f_Y$ where $E(Y)=\mu$ and $Var(Y)=\sigma^2 < \infty$.  Define $\bar{Y}=\frac{1}{n} \sum_{i=1}^{n} Y_i$ and $Z \sim N(0, 1)$
-$$\frac{\bar{Y}-\mu}{\sigma/\sqrt{n}} \stackrel {d} {\rightarrow} Z$$
+$$\bar{X} = \frac{\sum_{i=1}^{n}X_i}{n} = \frac{Y}{n}\stackrel{\bullet}\sim N(p, p(1-p)/n)$$
 
-Practically, we can say that a good approximating distribution or large-sample distribution for $\bar{Y}$ is
-$$\bar{Y}\stackrel{\bullet}\sim N(\mu, \sigma^2/n)$$
-
-## CLT Applied to the Gamma Example
-
-**Apply to the gamma distribution example**
-
-For example, if $Y_i\stackrel{iid}\sim Gamma(\alpha, \lambda)$ with mean $E(Y) = \alpha/\lambda$ and variance $Var(Y) = \alpha/\lambda^2$.
-
-Then $\bar{Y}$ is
-$$\bar{Y}\stackrel{\bullet}\sim N(\alpha/\lambda, \alpha/\lambda^2n)$$
-
-
-## CLT Applied to a Sample Proportion
-
-A common application of the CLT is to the sample proportion from a Binomial experiment.
-
-**Apply CLT to the sample proportion**
-
-For example, if $Y_i\stackrel{iid}\sim Bin(n, p)$ with mean $E(Y) = np$ and variance $Var(Y) = np(1-p)$. 
-
-Then $X=\frac{Y}{n}$ has mean $E(X) = p$ and variance $Var(X) = p(1-p)/n$
-
-So ${X}$ is
-$${X}\stackrel{\bullet}\sim N(p, p(1-p)/n)$$
-
-**Now let them explore the CLT on a sample proportion with app. Ask for rules of thumb or if they know rules of thumb, to justify them.**
-
+- Try to develop a rule of thumb for when this large-sample Normal distribution can be used.
+- You may already know the rules of thumb. If you do, use the app below to see if you can provide an explanation for the rules of thumb.
+- What to look for in each graph:  
+    + Histogram: when does it become a symmetric bell-shape?
+    + CDF comparison: We know the result is a Normal distribution here. The graph compares the simulated distribution with a Normal distribution. When do the CDFs essentially overlap? - Instructions:
+    + "n: sample size": Change this slider to alter the sample sized used to find the sample means
+    + "p: probability of success": Change this slider to alter the probability of success
+    + "M: the number of simulations:" Change this slider to increase or decrease the number of simulated values to plot. The larger the value of M the more accurately the simulations mimic the actual sampling distribution. (Larger values require more computation time though!)
+    
 ```{r, echo=FALSE}
 shinyApp(
   ui <- fluidPage(
@@ -895,10 +504,6 @@ shinyApp(
                    ),
           tabPanel("CDF Plots",
                    plotOutput("cdf")
-                   ),
-          tabPanel("Absolute Difference in ECDF with Normal",  
-                   actionButton("three_d_plot", "Create/Update 3D Plot"),
-                   plotOutput("three_d")
                    )
         )
       )
@@ -947,127 +552,500 @@ shinyApp(
              col = c("red", "blue"),
              lwd= 2)
       })
-
-    three_d_plot_values <- reactiveValues(plot_data = c())
-    #create data for 3d plot
-    observeEvent(input$three_d_plot, {
-        d_nprop <- input$d_nprop
-        prop <- input$prop
-        M <- input$M
-        ns <- 2:d_nprop
-        #find means for each sample size
-        props <- as.data.frame(
-          #to every sample size value 2:n create 100 means of size n
-          lapply(ns, 
-                 FUN = function(x, M, prop){replicate(M, (rbinom(M, x, prop))/x)}, prop, M), 
-          col.names = paste0("n",ns))
-        #now find the ecdf for each sample size (each column)
-        ecdfs <- apply(X = props, MARGIN = 2, FUN = ecdf)
-        #gamma mean and sd
-        prop_mean <- prop
-        prop_sd <- sqrt(prop*(1-prop)/d_nprop)
-        #create a sequence of ybars to evaluate the ecdf at
-        ybars <- seq(from = prop_mean-3*prop_sd, to = prop_mean+3*prop_sd, length = 50)
-        #find the corresponding normal distribution's cdf values
-        zs <- as.data.frame(
-          lapply(ns,
-                 FUN = function(x, ybars, M,prop){
-                   pnorm(ybars, 
-                         mean = prop_mean, 
-                         sd =  sqrt(prop*(1-prop)/d_nprop))
-                   }, ybars = ybars,  M,prop),
-          col.names = paste0("n", ns)
-        )
-        diffs <- lapply(X = 1:length(ecdfs), FUN = function(x) abs(ecdfs[[x]](ybars) - zs[,x]))
-        #now we have the ns, ybars, and diffs to plot
-        plot_data <- expand.grid(ybars = ybars, ns = ns)
-        plot_data$diffs <- unlist(diffs) 
-        three_d_plot_values$plot_data <- plot_data
-    })
-    
-    output$three_d <- renderPlot({
-        plot_data <- three_d_plot_values$plot_data
-        # open3d()
-        # plot3d(x = plot_data$ybars, y = plot_data$ns, z = plot_data$diffs)
-        # scene <- scene3d()
-        # close3d()
-        # rglwidget(scene)
-        if(length(plot_data)>0){
-          print(wireframe(diffs ~ ybars + ns, 
-                          data = plot_data, 
-                          scales = list(arrows = FALSE), 
-                          drape = TRUE, 
-                          colorkey = TRUE, 
-                          screen = list(z = -50, x = -70), 
-                          zlab = list(expression(hat(l)[n] ~ "(x)=|" ~ hat(F)[n] ~ "(x)-" ~ F ~ "(x)|"), rot = 90), 
-                          main = "Convergence in Distribution?", 
-                          xlab="y/n"))
-        } else {
-          NULL
-        }
-    })
   })
 ```
 
-## CLT Applied to a Sum 
+## General Convergence in Distribution Exploration
 
-Recall the result: 
+You may wonder about the behavior of other statistics and other parent populations. The app below allows you to explore the sampling distribution of different statistics. 
+- Instructions:
+    + "Distribution": Choose the parent population's distribution
+        - Parameters corresponding to that distribution will show up below
+    + "Statistic": Choose the statistic to calculate, plot on the histogram, and summarize the sampling distribution of
+    + "Sample Size (2 if blank)": Set the size of the sample to take from the parent population
+    + "Number of Data Sets": Use this slider to set the number of data sets to sample and find the statistic for
 
-- If $X\sim N(\mu, \sigma^2)$ then $aX+b\sim N(a\mu+b,a^2\sigma^2)$
-- A Normal random variable multiplied by a constant is still Normally distributed, just with a different mean and variance. 
-- This implies we can find a good large-sample distribution for a summation when the CLT is applicable!
+```{r, echo = FALSE}
+#number of data sets to create
+NumData<-10000
+shinyApp(
+  ui <- fluidPage(
+          sidebarLayout(
+            sidebarPanel( 
+              selectizeInput("dist", 
+                             label = "Distribution",
+                             selected = "Uniform",
+                             choices = sort(c("Uniform", "Normal", "Gamma", "Exponential", "Chi-Square", "Beta", "Binomial", "Geometric", "Poisson", "Cauchy"))),
+              numericInput("param1", "Lower Limit", value = 0, step = 1),
+              conditionalPanel(condition =  "(input.dist=='Uniform')||(input.dist=='Normal')||(input.dist=='Gamma')||(input.dist=='Beta')||(input.dist=='Cauchy')",
+                               numericInput("param2", "Upper Limit", value = 1, step = 1)
+                               ),
+              selectizeInput("stat", label = "Statistic", selected = "Sample Mean", 
+                             choices=c("Sample Mean", "Standardized Sample Mean", "Sample Variance", "Sample Standard Deviation", "Sample Median", "Sample Max", "Sample Min")),
+              numericInput("n", label = "Sample Size (2 if blank)", value = 2, min = 2, step = 10, max = 10000),
+              sliderInput("N", label = "Number of Data Sets:", min = 1, max = 10000, value = 1, step = 1, animate = list(TRUE, interval = 350, loop = TRUE))
+            ),
+            mainPanel(
+              fluidRow(
+                #Show a plot of the parent population  
+                column(6, plotOutput("parentPlot")),
+              # Show a plot of the sampling distribution
+                column(6, plotOutput("samplePlot"))),
+              #sampling distribution
+              fluidRow(
+                column(9, plotOutput("statPlot")),
+                column(3, "Summary of Sampling Distribution", tableOutput("sampStatTable"))
+              )
+            )
+          )
+        ), 
+  server <- function(input, output, session){
+      #generate data
+  simData<-reactive({
+    #get reactive things and inputs
+    input$dist
+    input$n
+    input$param1
+    input$param2
+        
+    #sample size
+    n<-input$n
+    #Num samples
+    dist<-input$dist
+        
+    if (is.na(n)){n<-2}
+    
+    #get samples from appropriate distribution 
+    if (dist=="Uniform"){
+      min<-input$param1
+      max<-input$param2
+      samples<-matrix(runif(n*NumData,min=min,max=max),nrow=NumData,ncol=n)
+    } else if (dist=="Normal") {
+      mean<-input$param1
+      sd<-input$param2
+      samples<-matrix(rnorm(n*NumData,mean=mean,sd=sd),nrow=NumData,ncol=n)
+    } else if (dist=="Gamma") {
+      alpha<-input$param1
+      lambda<-input$param2
+      samples<-matrix(rgamma(n*NumData,shape=alpha,rate=lambda),nrow=NumData,ncol=n)
+    } else if (dist=="Exponential") {
+      lambda<-input$param1
+      samples<-matrix(rexp(n*NumData,rate=lambda),nrow=NumData,ncol=n)
+    } else if (dist=="Chi-Square") {
+      df<-input$param1
+      samples<-matrix(rchisq(n*NumData,df=df),nrow=NumData,ncol=n)
+    } else if (dist=="Beta") {
+      alpha<-input$param1
+      beta<-input$param2
+      samples<-matrix(rbeta(n*NumData,shape1=alpha,shape2=beta),nrow=NumData,ncol=n)
+    } else if (dist=="Binomial") {
+      prob<-input$param1
+      samples<-matrix(rbinom(n*NumData,size=1,prob=prob),nrow=NumData,ncol=n)
+    } else if (dist=="Geometric") {
+      prob<-input$param1
+      samples<-matrix(rgeom(n*NumData,prob=prob),nrow=NumData,ncol=n)
+    } else if (dist=="Poisson") {
+      lambda<-input$param1
+      samples<-matrix(rpois(n*NumData,lambda=lambda),nrow=NumData,ncol=n)
+    } else if (dist=="Cauchy") {
+      location<-input$param1
+      scale<-input$param2
+      samples<-matrix(rcauchy(n*NumData,location=location,scale=scale),nrow=NumData,ncol=n)
+    }
+    
+    #return data
+    samples
+  })
 
-Under the same assumptions as the CLT, since $n\bar{Y} = \sum_{i=1}^{n}Y_i$ we have the following result:
-$$\sum_{i=1}^{n} Y_i \stackrel{\bullet}{\sim}N(n\mu, n\sigma^2)$$
+ 
+  #update parameters in ui  
+  observe({
+    #get input
+    dist <- input$dist
+        
+    #update the values of the parameters in the ui based on the distribution
+    if (dist=="Uniform"){
+      updateNumericInput(session, "param1", label="Lower Limit",value = 0,step=1)
+      updateNumericInput(session, "param2", label="Upper Limit",value = 1,step=1)
+    } else if (dist=="Normal") {
+      updateNumericInput(session, "param1", label="Mean",value = 0,step=1)
+      updateNumericInput(session, "param2", label="Standard Deviation",value = 1,min=0,step=1)
+    } else if (dist=="Gamma") {
+      updateNumericInput(session, "param1", label="Alpha (Shape)",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="Lambda (Rate)",value = 1,min=0,step=1)
+    } else if (dist=="Exponential") {
+      updateNumericInput(session, "param1", label="Lambda (Rate)",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Chi-Square") {
+      updateNumericInput(session, "param1", label="DF",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Beta") {
+      updateNumericInput(session, "param1", label="alpha",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="beta",value = 1,min=0,step=1)
+    } else if (dist=="Binomial") {
+      updateNumericInput(session, "param1", label="Probability of Success",value = 0.5,min=0,max=1,step=0.05)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Geometric") {
+      updateNumericInput(session, "param1", label="Probability of Success",value = 0.5,min=0,max=1,step=0.05)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Poisson") {
+      updateNumericInput(session, "param1", label="Lambda (Mean)",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Cauchy") {
+      updateNumericInput(session, "param1", label="Location",value = 0,step=1)
+      updateNumericInput(session, "param2", label="Scale",value = 1,min=0,step=1)
+    }  
 
-**Apply CLT to sum of iid gammas. Show how it can be used to show convergence of a gamma to a normal as $\alpha$ grows**
+  })
 
-## Example CLT on a Sum Applied to the Binomial
+  
+  #create parent population plot
+  output$parentPlot<-renderPlot({
+    #input distribution
+    dist<-input$dist
+    #sample size
+    n<-input$n
+    
+    #choose appropriate distribution  
+    if (dist=="Uniform"){
+      #parameters
+      min<-input$param1
+      max<-input$param2
+      #Plotting sequence
+      x <- seq(from=min,to=max,length=2)
+      #draw the parent distribution plot
+      plot(x=x,y=dunif(x=x,min=min,max=max),main=paste(dist," Density"),
+           xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Normal") {
+      #parameters
+      mean<-input$param1
+      sd<-input$param2
+      #Plotting sequence
+      x <- seq(from=mean-4*sd,to=mean+4*sd,length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dnorm(x=x,mean=mean,sd=sd),main=paste(dist," Density"),
+           xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Gamma") {
+      #parameters
+      alpha<-input$param1
+      lambda<-input$param2
+      #Plotting sequence
+      x <- seq(from=0,to=alpha/lambda+4*sqrt(alpha/lambda^2),length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dgamma(x=x,shape=alpha,rate=lambda),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Exponential") {
+      #parameters
+      lambda<-input$param1
+      #Plotting sequence
+      x <- seq(from=0,to=5/lambda,length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dexp(x=x,rate=lambda),main=paste(dist," Density"),xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Chi-Square") {
+      #parameters
+      df<-input$param1
+      #Plotting sequence
+      x <- seq(from=0,to=df+4*sqrt(2*df),length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dchisq(x=x,df=df),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Beta") {
+      #Plotting sequence
+      x <- seq(from=0,to=1,length=1000)
+      #parameters
+      alpha<-input$param1
+      beta<-input$param2
+      #draw the parent distribution plot
+      plot(x=x,y=dbeta(x=x,shape1=alpha,shape2=beta),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Binomial") {
+      #Plotting sequence
+      x <- seq(from=0,to=n,by=1)
+      #parameters
+      prob<-input$param1
+      #draw the parent distribution plot
+      plot(x=x,y=dbinom(x=x,size=n,prob=prob),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="h")
+    } else if (dist=="Geometric") {
+      #parameters
+      prob<-input$param1
+      #Plotting sequence
+      x<-seq(from=0,to=1/prob+4*sqrt((1-prob)/prob^2)+2,by=1)
+      #draw the parent distribution plot
+      plot(x=x,y=dgeom(x=x,prob=prob),main=paste(dist," Density"),xlab="y", ylab="f(y)",type="h")
+    } else if (dist=="Poisson") {
+      #parameters
+      lambda<-input$param1
+      #Plotting sequence
+      x <- seq(from=0,to=lambda+4*sqrt(lambda),by=1)
+      #draw the parent distribution plot
+      plot(x=x,y=dpois(x=x,lambda=lambda),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="h")
+    } else if (dist=="Cauchy") {
+      #Plotting sequence
+      #parameters
+      location<-input$param1
+      scale<-input$param2
+      x <- seq(from=location-6*scale,to=location+6*scale,length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dcauchy(x=x,location=location,scale=scale),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
+    }
+    
+  })
+  
+  
+  #get plot of sample data for current data set
+  output$samplePlot<-renderPlot({
+    #input data set number
+    N<-input$N
+    #sample size
+    n<-input$n
+    #Get data for data set N
+    samples<-simData()
+    samples<-samples[N,]
 
-**Quick exercise, apply CLT on sum to binomial**
+    #Get statistic being used
+    statistic<-input$stat
 
-Practically, why is the CLT so important?
+    #create histogram and save it, need to find where stat lies so we can color it
+    temp<-hist(samples,main=paste("Histogram of Sample ",N,"'s data"),xlab="Data Values, y",prob=TRUE)    
 
-- Suppose we know $\sigma$ and we want inference for $\mu$.
-- If we get a RS $Y_1,...,Y_n$ we know  $\bar{Y}\stackrel{\bullet}{\sim}N(\mu,\sigma^2/n)$ ($\mu$ only unknown)
-- We can make an approximate claim about $\mu$ via a confidence interval
-$$P(-1.96<Z<1.96)=0.95 \Leftrightarrow 
-	P\left(-1.96<\frac{\bar{Y}-\mu}{\sigma/\sqrt{n}}<1.96\right)=0.95$$
-$$\Leftrightarrow P\left(\bar{Y}-1.96\sigma/\sqrt{n}<\mu<\bar{Y}+1.96\sigma/\sqrt{n}\right)=0.95$$
-- That is, there is a 95\% probability the RVs 
-$\bar{Y}-1.96\sigma/\sqrt{n}$ and $\bar{Y}+1.96\sigma/\sqrt{n}$ capture $\mu$.
-- Observe $\bar{Y}=\bar{y}$, get observed CI.  Range we are `confident' contains $\mu$.
-- Note: No assumption about $Y$'s distribution made other than finite variance!
+    #calculate value of statistic
+    if ((statistic=="Sample Mean")||(statistic=="Standardized Sample Mean")){
+      statval<-mean(samples)
+    } else if (statistic=="Sample Variance"){
+      statval<-var(samples)
+    } else if (statistic=="Sample Standard Deviation"){
+      statval<-sd(samples)
+    } else if (statistic=="Sample Median"){
+      statval<-median(samples)
+    } else if (statistic=="Sample Max"){
+      statval<-max(samples)
+    } else if (statistic=="Sample Min"){
+      statval<-min(samples)
+    }
+        
+    #get the break from the histogram where the stat occurs
+    index<-which((temp$breaks[1:(length(temp$breaks)-1)]<statval)*(statval<temp$breaks[2:length(temp$breaks)])==1)
+    #create the color vector to color the histogram
+    clr<-rep("white",length(temp$breaks))
+    if ((statistic=="Sample Mean")||(statistic=="Standardized Sample Mean")||(statistic=="Sample Median")||(statistic=="Sample Max")||(statistic=="Sample Min")){
+      clr[index]<-"blue"
+    }
+      #create histogram
+      hist(samples,main=paste("Histogram of Sample ",N,"'s data"),xlab="Data Values, y",prob=TRUE,col=clr)    
+      
+  })
+
+    
+  #get histogram of statistic based on data sets so far
+  output$statPlot <- renderPlot({
+    #sample size
+    n<-input$n
+    #Num samples
+    N<-input$N
+    #distribution
+    dist<-input$dist
+    #stat
+    statistic<-input$stat
+    
+    #figure out what mean and standard deviation of parent are for z-score
+    if (dist=="Uniform"){
+      min<-input$param1
+      max<-input$param2
+      meanz<-(min+max)/2
+      varz<-(max-min)^2/12
+    } else if (dist=="Normal") {
+      mean<-input$param1
+      sd<-input$param2
+      meanz<-mean
+      varz<-sd^2
+    } else if (dist=="Gamma") {
+      alpha<-input$param1
+      lambda<-input$param2
+      meanz<-alpha/lambda
+      varz<-alpha/lambda^2
+    } else if (dist=="Exponential") {
+      lambda<-input$param1
+      meanz<-1/lambda
+      varz<-1/lambda^2
+    } else if (dist=="Chi-Square") {
+      df<-input$param1
+      meanz<-df
+      varz<-2*df
+    } else if (dist=="Beta") {
+      alpha<-input$param1
+      beta<-input$param2
+      meanz<-alpha/(alpha+beta)
+      varz<-(alpha*beta)/((alpha+beta)^2*(alpha+beta+1))
+    } else if (dist=="Binomial") {
+      prob<-input$param1
+      meanz<-n*prob
+      varz<-n*prob*(1-prob)
+    } else if (dist=="Geometric") {
+      prob<-input$param1
+      meanz<-1/prob
+      varz<-(1-prob)/prob^2
+    } else if (dist=="Poisson") {
+      lambda<-input$param1
+      meanz<-varz<-lambda
+    } else if (dist=="Cauchy") {
+      location<-input$param1
+      scale<-input$param2
+      meanz<-location
+      varz<-scale
+    }
+    
+    #get values of the stat for each sample
+    samples<-simData()
+    if(N==1){
+      if (statistic=="Sample Mean"){
+        statvals<-mean(samples[1,])
+      } else if (statistic=="Standardized Sample Mean"){
+        statvals<-(mean(samples[1,])-meanz)/sqrt(varz/n)
+      } else if (statistic=="Sample Variance"){
+        statvals<-var(samples[1,])
+      } else if (statistic=="Sample Standard Deviation"){
+        statvals<-sd(samples[1,])
+      } else if (statistic=="Sample Median"){
+        statvals<-median(samples[1,])
+      } else if (statistic=="Sample Max"){
+        statvals<-max(samples[1,])
+      } else if (statistic=="Sample Min"){
+        statvals<-min(samples[1,])
+      }
+    } else if (N>1){
+      if (statistic=="Sample Mean"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=mean)
+      } else if (statistic=="Standardized Sample Mean"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=function(x,meanz,varz){(mean(x)-meanz)/sqrt(varz/n)}, meanz,varz)
+      } else if (statistic=="Sample Variance"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=var)
+      } else if (statistic=="Sample Standard Deviation"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=sd)
+      } else if (statistic=="Sample Median"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=median)
+      } else if (statistic=="Sample Max"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=max)
+      } else if (statistic=="Sample Min"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=min)
+      }
+    }
+
+    #get the break from the histogram where the stat for data set N occurs
+    temp<-hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values") 
+    index<-which((temp$breaks[1:(length(temp$breaks)-1)]<statvals[N])*(statvals[N]<temp$breaks[2:length(temp$breaks)])==1)
+    #create the color vector to color the histogram
+    clr<-rep("white",length(temp$breaks))
+    clr[index]<-"blue"
+    
+    # draw the sampling distribution
+    if ((dist=="Cauchy")&&(N>1)&&(N<2000)){
+      hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values",breaks=100,col=clr) 
+    } else {
+      hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values",col=clr) 
+    }
+
+  })
+
+  #get statistics about the sampling distribution  
+  output$sampStatTable<-renderTable({
+    #sample size
+    n<-input$n
+    #Num samples
+    N<-input$N
+    #distribution
+    dist<-input$dist
+    #stat
+    statistic<-input$stat
+    
+    #figure out what mean and standard deviation of parent are for z-score
+    if (dist=="Uniform"){
+      min<-input$param1
+      max<-input$param2
+      meanz<-(min+max)/2
+      varz<-(max-min)^2/12
+    } else if (dist=="Normal") {
+      mean<-input$param1
+      sd<-input$param2
+      meanz<-mean
+      varz<-sd^2
+    } else if (dist=="Gamma") {
+      alpha<-input$param1
+      lambda<-input$param2
+      meanz<-alpha/lambda
+      varz<-alpha/lambda^2
+    } else if (dist=="Exponential") {
+      lambda<-input$param1
+      meanz<-1/lambda
+      varz<-1/lambda^2
+    } else if (dist=="Chi-Square") {
+      df<-input$param1
+      meanz<-df
+      varz<-2*df
+    } else if (dist=="Beta") {
+      alpha<-input$param1
+      beta<-input$param2
+      meanz<-alpha/(alpha+beta)
+      varz<-(alpha*beta)/((alpha+beta)^2*(alpha+beta+1))
+    } else if (dist=="Binomial") {
+      prob<-input$param1
+      meanz<-n*prob
+      varz<-n*prob*(1-prob)
+    } else if (dist=="Geometric") {
+      prob<-input$param1
+      meanz<-1/prob
+      varz<-(1-prob)/prob^2
+    } else if (dist=="Poisson") {
+      lambda<-input$param1
+      meanz<-varz<-lambda
+    } else if (dist=="Cauchy") {
+      location<-input$param1
+      scale<-input$param2
+      meanz<-location
+      varz<-scale
+    }
+      
+    #get values of the stat for each sample
+    samples<-simData()
+    if(N==1){
+      if (statistic=="Sample Mean"){
+        statvals<-mean(samples[1,])
+      }else if (statistic=="Standardized Sample Mean"){
+        statvals<-(mean(samples[1,])-meanz)/sqrt(varz)
+      } else if (statistic=="Sample Variance"){
+        statvals<-var(samples[1,])
+      } else if (statistic=="Sample Standard Deviation"){
+        statvals<-sd(samples[1,])
+      } else if (statistic=="Sample Median"){
+        statvals<-median(samples[1,])
+      } else if (statistic=="Sample Max"){
+        statvals<-max(samples[1,])
+      } else if (statistic=="Sample Min"){
+        statvals<-min(samples[1,])
+      }
+    } else if (N>1){
+      if (statistic=="Sample Mean"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=mean)
+      } else if (statistic=="Standardized Sample Mean"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=function(x,meanz,varz){(mean(x)-meanz)/sqrt(varz/n)}, meanz,varz)
+      } else if (statistic=="Sample Variance"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=var)
+      } else if (statistic=="Sample Standard Deviation"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=sd)
+      } else if (statistic=="Sample Median"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=median)
+      } else if (statistic=="Sample Max"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=max)
+      } else if (statistic=="Sample Min"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=min)
+      }
+    }
+    sampstatdisplay<-data.frame(Stats=c("Sample Mean","Sample Var","Sample SD","Sample Min","Sample Median","Sample Max"),Value=c(sprintf("%.4f",mean(statvals)),sprintf("%.4f",var(statvals)),sprintf("%.4f",sd(statvals)),sprintf("%.4f",min(statvals)),sprintf("%.4f",median(statvals)),sprintf("%.4f",max(statvals))))
+    
+    sampstatdisplay
+  },include.colnames=FALSE)
+  }
+)
+```
 
 
-
-# Convergence in Probability Definition 
-
-We saw that the estimator of $p$, $\hat{p}$, from the Binomial example seemed to be observed closer and closer to $p$ for larger sample sizes. Additionally, we saw a good large-sample distribution for $\hat{p}$ is
-$$\hat{p}\stackrel{\bullet}\sim N\left(p, \frac{p(1-p)}{n}\right)$$
-As $n$ grows we can see that this distribution concentrates more and more around $p$. 
-
-This is the idea of **convergence in probability to a constant** - the probability our random variable is observed 'close' to that value goes to 1. Let's formally define this idea!
-
-Convergence in Probability
-: A sequence of RVs $Y_1,...,Y_n,...$ converges in probability to a RV $Y$ if for every $\epsilon>0$
-$$\lim_{n\rightarrow\infty}P(|Y_n-Y|\geq \epsilon)=0 \iff 
-\lim_{n\rightarrow\infty}P(|Y_n-Y|<\epsilon)=1$$
-This is denoted as 
-$$Y_n\stackrel{p}{\rightarrow}Y$$
-
-We'll mostly care about convergence in probability to a constant, call it $c$. We can see the definition in this case can be simplied to the following:
-$$\lim_{n\rightarrow\infty}P(|Y_n-c|< \epsilon)=\lim_{n\rightarrow\infty}P(-\epsilon < Y_n-c<\epsilon) =  \lim_{n\rightarrow\infty}P(c-\epsilon < Y_n<c+\epsilon)=1$$
-The last line emphasizes the interpretation. $Y_n\stackrel{p}\rightarrow c$ if the *probability* we observe $Y_n$ close to $c$ goes to 1 in the limit.
-
-One of the most important results regarding convergence in probability is called the Law of Large Numbers.
-
-(Weak) Law of Large Numbers
-: Suppose $Y_i\stackrel{iid}\sim f$ where the mean and variance of $Y_i$ exist. Then $$\bar{Y}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}\rightarrow E(Y)=\mu$$
-
-Also, note that the variance assumption is not needed but will help facilitate an easy proof. We'll prove this shortly, but first let's gain a bit more intuition. 
-
-## Convergence in probability idea
+## Convergence in Probability Ideas
 
 Assume that $Y_i\stackrel{iid}\sim N(0,1)$. Let's investigate the behavior of 
 $$X = \frac{1}{n^2}\sum_{i=1}^{n}Y_i$$
@@ -1310,78 +1288,5 @@ shinyApp(
 
 
 ```
-
-## How do we prove convergence in probability?
-
-Markov's Inequality
-: If $X$ is a nonnegative RV (support has no negative values) for which $E(X)$ exists, then for $t>0$
-$$P(X\geq t)\leq \frac{E(X)}{t}$$
-
-Example: If $X\sim exp(1)$ then $P(X\geq t)=e^{-t}$ and $E(X)/t=1/t$.
-
-```{r, echo = FALSE, fig.align = 'center', out.width = "550px"}
-x <- 1:120/20
-plot(x, y = 1/x, type = "l", ylim = c(0,1), col = "blue", lwd = 2)
-lines(x, y = exp(-x), type = "l", col = "green", lwd = 2)
-legend("topright", legend = c("1/t", "exp(-t)"), col = c("blue", "green"), lwd = 2)
-```
-
-
-Chebychev's Inequality 
-: Let $X$ be a RV with mean = $\mu$ and variance = $\sigma^2$, then for $t>0$ 
-$$P(|X-\mu|\geq t)\leq \frac{\sigma^2}{t^2}$$
-
-Example:  If $t=\sigma k$ for $k>0$, we can apply Chebychev's to get
-$$P\left(|X-\mu|\geq k\sigma\right)\leq \frac{\sigma^2}{k^2\sigma^2}=\frac{1}{k^2}$$
-For $k=2$ we have $P\left(|X-\mu|\geq 2\sigma\right)\leq 1/4$.
-
-Practically, what can we take home from this?
-- At least 75\% of a RVs distribution lies within 2 standard deviations of the mean (if these moments exist)
-- Regardless of distribution! (if moments exist)
-- If $X\sim N(\mu,\sigma^2)$ we know $P(|X-\mu|\geq 2\sigma)\approx 0.05$. The bound isn't always very tight!
-
-## Relating the inequalities to convergence in probability
-
-Proving the WLLN: Suppose $Y_i\stackrel{iid}\sim f$ where the mean and variance of $Y_i$ exist. We want to show $$\bar{Y}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}\rightarrow E(Y)=\mu$$
-
-### Very powerful result!
-
-- Big picture goal is to estimate parameters such as $\mu$
-- If we get a RS we know that $\bar{Y}$ will be a `close' to $\mu$ for `large' samples
-- Applies to the average of any independent random variables with the same finite mean
-
-Example: Let $Y_i\stackrel{iid}{\sim}f_Y(y)$ where $E(Y^2)$ exists (that is, $E\left(|Y^2|\right)<\infty$). As the $Y_i$ are independent, we know the $Y_i^2$ are independent. Further, they all have the same expectation!
-Thus, the WLLN implies that 
-$$\frac{\sum_{i=1}^{n}Y_i^2}{n} \stackrel{p}{\rightarrow} E(Y^2)$$
-
-Continuing the previous example: If $Y_i\stackrel{iid}\sim N(\mu, \sigma^2)$ then $$\frac{\sum_{i=1}^{n}Y_i^2}{n} \stackrel{p}{\rightarrow} E(Y^2) = Var(Y)+\left(E(Y)\right)^2 = \sigma^2+\mu^2$$
-
-## Continuity Theorem (works for convergence in distribution, probability, and almost surely) 
-The WLLN is also quite useful when combined with the continuity theorem.
-
-Continuity Theorem
-: If $Y_1,Y_2,Y_3,...$ converge to $Y$ and $g()$ is a continuous function then 
-$g(Y_1),g(Y_2),g(Y_3)...$ converge to $g(Y)$. 
-
-Example (exploration example proved): 
-Suppose we have a random sample from a Normal distribution with mean 10 and standard deviation 1. Consider $W = (\bar{Y})^2$. What does this converge to in probability?
-
-By the WLLN we know that $\bar{Y}\stackrel{p}\rightarrow 10$. Now can apply the continuity theorem and we know that 
-$$W = (\bar{Y})^2 \stackrel{p}\rightarrow 10^2 = 100$$
-
-Example: We can also use the continuity theorem with the CLT. Suppose that $Y_i\stackrel{iid}\sim gamma(\alpha, \lambda)$. We have that 
-$$\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\stackrel{d}\rightarrow Z$$
-where $Z\sim N(0,1)$. By the continuity theorem we have that 
-$$\left(\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\right)^2\stackrel{d}\rightarrow Z^2$$
-and recall that a standard Normal squared is distributed as a $\chi^2_1$ or a $gamma(1/2, 1/2)$. 
-
-## Other Standard Limit Results 
-
-Most of the common limit theorem ideas from calculus follow here as well ($\theta$ and $\lambda$ are constants below):
-
-$$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
-
-## Convergence in Distribution and Probability Relationship
-
 
 
