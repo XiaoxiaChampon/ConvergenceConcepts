@@ -13,19 +13,11 @@ The motivation of this activity is to encourage communicating these abstract top
 Participants will see a demonstration of the tools and walk away with a number of examples they can use in their class as an activity or as homework assignments (with included walk-throughs highlighting ways to effectively use the tools). The application is freely hosted on our website so participants will be able to take advantage of this visualization tool without needing knowledge of any programming language. They can share this app with their students and peers that teach these topics. 
 
 
-# Shiny App for ConvergenceConcepts
+# How to Use
 
-This is a Shiny app for visualizing convergence almost surely, in probability and in distribution. It is based on R-packages ConvergenceConcepts. You will need to have the following packages installed:
+There are two files demonstrating convergence concepts. To use them, you can download the files in this repo. Click the green `<> Code` button and then choose `Download ZIP`.
 
-```
-install.packages(c("shiny", "ConvergenceConcepts","shinydashboard"))
-```
+![](download.png)
 
-After installing these, you can run the app from the R console using:
-
-```
-library("shinydashboard")
-library("shiny") 
-library("ConvergenceConcepts")
-runGitHub("XiaoxiaChampon/ConvergenceConcepts")   
-```
+- `ExploringConvergenceInDisribution.Rmd` - This file has visuals and interactive elements for investigating convergence in distribution only. Open the file in RStudio and knit the document.
+- `ExploringConvergence.Rmd` - This file has visuals and interactive elements for investigating multiple types of convergence. Open the file in RStudio and knit the document
