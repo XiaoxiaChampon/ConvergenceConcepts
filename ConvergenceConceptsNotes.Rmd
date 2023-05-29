@@ -77,15 +77,15 @@ These two questions can often be answered by looking at the *limiting* behavior 
 
 To answer the first question, let's consider determining the sampling distribution through simulation. A distribution just describes the pattern in which we observe our variable. If we can simulate observing the variable, we can create many *realizations* of $\hat{p}$ to understand the sampling distribution. 
 
-To do this we need to make some assumptions. We need to assume a true $p$ and a sample size $n$. Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 100. **Add instructions on what to do here**
+To do this we need to make some assumptions. We need to assume a true $p$ and a sample size $n$. Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 100.
 
 Instructions:
 
 - "n: sample size" Slider: Move the  slider to the right to increase the sample size
 - "p: true value in population" Slider: Move the  slider to the right to increase the true proportion
-- Action Button: Click on the "Generate a sample proportion" button to view the result for one sample
-- Action Button: Click on the "Generate 100 sample proportions" button to view the results for 100 samples
-- Check box: Check the "Add +/- 2 Standard Errors and Overlay Smoothed Density" check box to add standard errors
+- "Generate a sample proportion": Click this button to add a single randomly generated sample proportion to the plot
+- "Generate 100 sample proportions": Click this button to add 100 randomly generated sample proportions to the plot
+- "Add +/- 2 Standard Error and Overlay Smoothed Density" Check this bot to add bars corresponding to two standard errors and also add a smoothed density overlayed
 
 ```{r, echo = FALSE}
 shinyApp(
@@ -176,11 +176,11 @@ To answer the second question, we could consider generating sample proportions f
 
 Instructions:
 
-- Numeric Input for "Maximum Sample Size": Enter a number or click the "up"/"down" arrow to to increase/decrease the sample size from the default sample size 250
-- # samples at each n" Slider: Move the slider to the right to increase the true proportion
-- Action Button: Click on the "Generate a sample proportion" button to view the result for one sample
-- Action Button: Click on the "Generate 100 sample proportions" button to view the results for 100 samples
-- Check box: Check the "Add +/- 2 Standard Errors and Overlay Smoothed Density" check box to add standard errors
+- "Maximum Sample Size": Enter a number to increase/decrease the largest sample size to consider
+- "# samples at each n" Slider: Move the slider to select the number of sample proportions to generate at each given sample size
+- "p: true value in population": Move this slider to select the true proportion from the population
+- "Create/Update graph": Click this button to create the initial graph or update the graph based off of new selections of the above values
+
 
 ```{r, echo = FALSE}
 shinyApp(
@@ -254,7 +254,7 @@ shinyApp(
 
 We can see that $\hat{p}-p$ seems to get closer to 0. This indicates that $\hat{p}$ is in some sense *converging* to the true value of $p$!
 
-Now that we some basic intution, let's formalize what we are talking about.
+Now that we some basic intuition, let's formalize what we are talking about.
 
 # What is Limit Theory?
 

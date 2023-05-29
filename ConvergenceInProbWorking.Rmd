@@ -360,7 +360,27 @@ Most of the common limit theorem ideas from calculus follow here as well ($\thet
 
 $$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
 
+Example: Suppose we have a random sample from a distribution with finite mean and variance. Let's show that $S_n^2 = \frac{1}{n}\sum_{i=1}^{n}(Y_i-\bar{Y})^2\stackrel{p}\rightarrow \sigma^2$
+
 ## Convergence in Distribution and Probability Relationship
+
+Convergence in probability implies convergence in distribution. However, the converse is not true unless we have $Y_n\stackrel{d}\rightarrow c$. In this case, we can also say that $Y_n\stackrel{p}\rightarrow c$.
+
+Example: 
+Consider having a random sample from a distribution with mean $\mu$ and variance $\sigma^2$. By the CLT we know that a good large-sample distribution for $\bar{Y}$ is
+$$\bar{Y}\stackrel{\bullet}\sim N(\mu,\sigma^2/n)$$
+This distribution becomes more and more concentrated about its mean, $\mu$, as the sample size increases. In considering the definition of convergence in probability to a constant, this concentration of the distribution about a single point gives good intuition as to why we also have convergence in probability to $\mu$!
+
+
+## Strategies for proving convergence in probability
+
+- If we are dealing with averages of iid RVs, apply the LLN!
+- If we have a function of averages of iid RVs, try the LLN and continuity!
+- If we don't have an average of iid RVs, resort to the definition of convergence in probability.  Likely try to apply an inequality such as Markov's inequality or Chebychev's inequality.
+- If we can show $Y_n\stackrel{d}\rightarrow c$ then we know $Y_n\stackrel{p}\rightarrow c$.
+
+
+
 
 
 

@@ -1,0 +1,958 @@
+---
+title: "Exploring Convergence in Distribution"
+author: "Xiaoxia Champon, Justin Post"
+date: "2023-04-25"
+output: 
+  html_document:
+    css: "style.css"
+runtime: shiny
+---
+
+```{js, echo = FALSE}
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.display === "block") {
+      content.style.display = "none";
+    } else {
+      content.style.display = "block";
+    }
+  });
+}
+```
+
+```{css, echo = FALSE}
+.shiny-frame{height: 850px;}
+```  
+
+```{r setup, include=FALSE,warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#add library
+library(shiny)
+library(shinydashboard)
+library(ConvergenceConcepts)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(kableExtra)
+library(plotly)
+```
+
+
+# Motivation
+
+A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023](https://www.pewresearch.org/science/2023/05/16/americans-largely-positive-views-of-childhood-vaccines-hold-steady/). The survey asked participants questions related to their thoughts on vaccination. One question centered around the perceived efficacy of the MMR vaccine.
+
+<div style = "float:right">
+```{r, echo = FALSE, out.width = "400px"}
+knitr::include_graphics("img/pew.jpg")
+```
+</div>
+
+The Center survey finds 88% of Americans say the benefits of childhood vaccines for measles, mumps and rubella (MMR) outweigh the risks, compared with just 10% who say the risks outweigh the benefits.
+
+The sample proportion of 0.88 is an estimate of the population proportion. That is, the actual proportion of U.S. adults that believe the benefits outweigh the risks. 
+
+Of course this is a single number estimate that would change if we sampled again. We can report the standard deviation of this sample proportion, called a standard error, to give us an idea of the variability in the estimate.  
+
+Assuming independence between study participants, we can find an estimated standard error for this sample proportion using techniques learned earlier:
+
+$$\widehat{SE(\hat{p})} = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}} \approx \sqrt{\frac{0.88*0.12}{10701}} = 0.0031$$
+A big question arises:
+
+- Can we provide a range of values we are 'confident' the true proportion falls in?
+    + We need to know about more than just the variability of the estimator
+    + We need to understand the **distribution** of the estimator!
+        - Called the **sampling distribution**
+        - Describes the pattern in which we observe this $\hat{p}$
+    + The sampling distribution can be difficult to derive in some cases!
+
+This question can often be answered by looking at the *limiting* behavior (here as the sample size grows) of the estimator $\hat{p}$.
+
+
+## Convergence in Distribution Idea
+
+To answer the first question, let's consider determining the sampling distribution through simulation. A distribution just describes the pattern in which we observe our variable. If we can simulate observing the variable, we can create many *realizations* of $\hat{p}$ to understand the sampling distribution. 
+
+To do this we need to make some assumptions. We need to assume a true $p$ and a sample size $n$. Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 100. 
+
+Instructions:
+
+- "n: sample size" Slider: Move the  slider to the right to increase the sample size
+- "p: true value in population" Slider: Move the  slider to the right to increase the true proportion
+- "Generate a sample proportion": Click this button to add a single randomly generated sample proportion to the plot
+- "Generate 100 sample proportions": Click this button to add 100 randomly generated sample proportions to the plot
+- "Add +/- 2 Standard Error and Overlay Smoothed Density" Check this bot to add bars corresponding to two standard errors and also add a smoothed density overlayed
+
+```{r, echo = FALSE}
+shinyApp(
+  ui <- fluidPage(
+    #inputs on the side for n, p, and generating data
+    sidebarPanel(
+      sliderInput("sample_size",
+                  "n: sample size",
+                  min = 1,
+                  max = 500,
+                  step= 1,
+                  value = 100),
+      sliderInput("true_p",
+                  "p: true value in population",
+                  min = 0,
+                  max = 1,
+                  step= 0.01,
+                  value = 0.9),
+      actionButton("gen",
+                   "Generate a sample proportion"),
+      actionButton("gen100",
+                   "Generate 100 sample proportions"),
+      checkboxInput("bars", 
+                    "Add +/- 2 Standard Errors and\nOverlay Smoothed Density",
+                    value = FALSE)
+    ),
+    mainPanel(
+      plotOutput("samp_dist")
+    )
+  ),
+  server <- function(input, output, session){
+      ys <- reactiveValues(y = c(), n = 0)
+
+      observeEvent(input$gen, 
+                   {
+                     ys$y <- c(ys$y, rbinom(1, size = input$sample_size, prob = input$true_p))
+                     ys$n <- ys$n + 1
+                     }
+                   )
+      
+      observeEvent(input$gen100, 
+                   {
+                     ys$y <- c(ys$y, rbinom(100, size = input$sample_size, prob = input$true_p))
+                     ys$n <- ys$n + 100
+                     }
+       )
+      
+      observeEvent(c(input$sample_size, input$true_p), 
+                   {
+                     ys$y <- c()
+                     ys$n <- 0
+                     }
+                   )
+            
+      output$samp_dist <- renderPlot({
+        props <- ys$y/input$sample_size
+        if(length(props) > 0) {
+          hist(props, 
+               xlab = "Sample Proportions", 
+               main = paste0("Sampling Distribution of p-hat\n# of sample proportions plotted: ", ys$n),
+               freq = FALSE)
+          if(input$bars){
+            se <- sqrt(input$true_p*(1-input$true_p)/input$sample_size)
+            bounds <- c(input$true_p - 2*se, input$true_p + 2*se)
+            abline(v = bounds, col = "red", lwd = 2)
+            
+            text(x = input$true_p + 0.5*se, y = 2, labels = paste0(round(mean(props <= bounds[2] & props >= bounds[1]), 2), " of the distribution\nbetween the bars"))
+            lines(density(props, kernel = "gaussian", adjust = 2))
+          }
+        } else {
+          NULL
+        }
+      })
+  }
+)
+```
+
+As long as the distribution is roughly normal, we can see that 0.95 of the distribution falls within two standard errors of $p$. This means we could use something like 
+
+$$\hat{p}\pm 2*\widehat{SE(\hat{p})}$$
+
+as an interval to *capture* the true $p$. (Indeed this is the usual basic interval for a proportion!)
+
+
+## Convergence Exploration
+
+- Suppose that $Y_i\stackrel{iid}\sim Gamma(\alpha, \lambda)$. That is, assume we have a random sample from a Gamma distribution with PDF
+$$f_Y(y) = \frac{\lambda^\alpha}{\Gamma(\alpha)}y^{\alpha -1}e^{-\lambda y}$$
+with mean $E(Y) = \alpha/\lambda$ and variance $Var(Y) = \alpha/\lambda^2$.
+- Consider the statistic $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$. 
+- The sampling distribution of this statistic can often be well approximated using a Normal distribution. Consider changes to $\alpha$, $\lambda$, and $n$ using the app below. 
+- Can you develop a rule of thumb around $\alpha$, $\lambda$, and $n$ for when a Normal distribution may be a reasonable approximation?  
+- What to look for in each graph:  
+    + Histogram: when does it become a symmetric bell-shape?
+    + CDF comparison: We know the result is a Normal distribution here. The graph compares the simulated distribution with a Normal distribution. When do the CDFs essentially overlap?     + Absolute difference in CDFs: When do the differences get small?
+- Instructions:
+    + "n: sample size": Change this slider to alter the sample sized used to find the sample means
+    + "alpha: shape parameter": Change this slide to alter the shape parameter of the population gamma distribution
+    + "lambda: scale parameter": Change this slide to alter the scale parameter of the population gamma distribution
+
+
+```{r, echo=FALSE}
+shinyApp(
+  ui <- fluidPage(    
+    sidebarLayout(
+      sidebarPanel( 
+        sliderInput("d_ngam",
+                    "n: sample size",
+                    min = 2,
+                    max = 100,
+                    step = 1,
+                    value = 20,
+                    animate=animationOptions(
+                      interval = 100,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    ),
+        sliderInput("alpha",
+                    "alpha: shape parameter",
+                    min = 0.05,
+                    max = 5,
+                    step = 0.05,
+                    value = 1,
+                    animate=animationOptions(
+                      interval = 100,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    ) ,
+        sliderInput("lambda",
+                    "lambda: scale parameter",
+                    min = 0.05,
+                    max = 5,
+                    step= 0.05,
+                    value = 1,
+                    animate=animationOptions(
+                      interval = 100,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    )
+      ),
+
+      mainPanel(
+        tabsetPanel(id = "gamma_example",
+          tabPanel("Histogram",
+                   plotOutput("hist")
+                   ),
+          tabPanel("CDF Plots",
+                   plotOutput("cdf")
+                   ),
+          tabPanel("Absolute Difference in ECDF with Normal",  
+                   actionButton("three_d_plot", "Create/Update 3D Plot"),
+                   plotOutput("three_d")
+                   )
+        )
+      )
+    )
+  ),
+  server <- function(input, output, session){
+    
+    sampled_values <- reactiveValues(gamma_means = c())
+    observeEvent(c(input$d_ngam, input$alpha, input$lambda),
+                 sampled_values$gamma_means <- replicate(1000, mean(rgamma(n = input$d_ngam, shape = input$alpha, rate = input$lambda)))
+                 )
+    
+    output$hist <- renderPlot({
+      d_ngam <- isolate(input$d_ngam)
+      data_gamma <- sampled_values$gamma_means
+      hist(data_gamma, 
+           main = paste0("Distribution of 1000 Observed Sample Means\nWith Sample Size n = ", d_ngam),
+           xlab = "Observed Sample Mean",
+           freq = FALSE)
+          })
+    
+    output$cdf <- renderPlot({
+      d_ngam <- isolate(input$d_ngam)
+      d_alpha <- isolate(input$alpha)
+      d_lambda <- isolate(input$lambda)
+      data_gamma <- sampled_values$gamma_means
+      #plot the ecdf of the sample means
+      plot(ecdf(data_gamma), 
+           main = paste0("Comparison of Empirical CDF to Best\nApproximating Normal CDF with Sample Size n = ", d_ngam),
+           col = "red", 
+           lwd = 2,
+           xlab = "y-bar",
+           ylab = "CDF")
+      #use theoretical normal here
+      gam_mean <- d_alpha/d_lambda
+      gam_sd <- sqrt(d_alpha/(d_ngam*d_lambda^2))
+      x_plot <- seq(from = gam_mean-3*gam_sd, to = gam_mean+3*gam_sd, length = 500)
+      #add the normal's cdf values
+      lines(x = x_plot, 
+            y = pnorm(x_plot, mean = gam_mean, sd = gam_sd),
+            col = "blue", 
+            lwd = 2)
+      #add legend
+      legend('topleft', 
+             c(expression(hat(F[bar(Y)](y))),expression(F[X](y))),
+             col = c("red", "blue"),
+             lwd= 2)
+      })
+
+    three_d_plot_values <- reactiveValues(plot_data = c())
+    #create data for 3d plot
+    observeEvent(input$three_d_plot, {
+        d_ngam <- input$d_ngam
+        d_alpha <- input$alpha
+        d_lambda <- input$lambda
+        ns <- 2:d_ngam
+        #find means for each sample size
+        means <- as.data.frame(
+          #to every sample size value 2:n create 100 means of size n
+          lapply(ns, 
+                 FUN = function(x, d_alpha, d_lambda){replicate(1000, mean(rgamma(n = x, shape = d_alpha, rate = d_lambda)))}, d_alpha = d_alpha, d_lambda = d_lambda), 
+          col.names = paste0("n",ns))
+        #now find the ecdf for each sample size (each column)
+        ecdfs <- apply(X = means, MARGIN = 2, FUN = ecdf)
+        #gamma mean and sd
+        gam_mean <- d_alpha/d_lambda
+        gam_sd <- sqrt(d_alpha/(d_lambda^2*2))
+        #create a sequence of ybars to evaluate the ecdf at
+        ybars <- seq(from = gam_mean-3*gam_sd, to = gam_mean+3*gam_sd, length = 50)
+        #find the corresponding normal distribution's cdf values
+        zs <- as.data.frame(
+          lapply(ns,
+                 FUN = function(x, ybars, d_alpha, d_lambda){
+                   pnorm(ybars, 
+                         mean = gam_mean, 
+                         sd = sqrt(d_alpha/(d_lambda^2*x)))
+                   }, ybars = ybars, d_alpha = d_alpha, d_lambda = d_lambda),
+          col.names = paste0("n", ns)
+        )
+        diffs <- lapply(X = 1:length(ecdfs), FUN = function(x) abs(ecdfs[[x]](ybars) - zs[,x]))
+        #now we have the ns, ybars, and diffs to plot
+        plot_data <- expand.grid(ybars = ybars, ns = ns)
+        plot_data$diffs <- unlist(diffs) 
+        three_d_plot_values$plot_data <- plot_data
+    })
+    
+    output$three_d <- renderPlot({
+        plot_data <- three_d_plot_values$plot_data
+        # open3d()
+        # plot3d(x = plot_data$ybars, y = plot_data$ns, z = plot_data$diffs)
+        # scene <- scene3d()
+        # close3d()
+        # rglwidget(scene)
+        if(length(plot_data)>0){
+          print(wireframe(diffs ~ ybars + ns, 
+                          data = plot_data, 
+                          scales = list(arrows = FALSE), 
+                          drape = TRUE, 
+                          colorkey = TRUE, 
+                          screen = list(z = -50, x = -70), 
+                          zlab = list(expression(hat(l)[n] ~ "(x)=|" ~ hat(F)[n] ~ "(x)-" ~ F ~ "(x)|"), rot = 90), 
+                          main = "Convergence in Distribution?", 
+                          xlab="ybar"))
+        } else {
+          NULL
+        }
+    })
+  })
+```
+
+## Central Limit Theorem Applied to a Sample Proportion
+
+A common application of the CLT is to the sample proportion from a Binomial experiment. If $X_i\stackrel{iid}\sim Bin(1, p)$ with mean $E(Y) = p$ and variance $Var(Y) = p(1-p)$, then define $Y = \sum_{i=1}^{n} X_i$.  We know that $Y\sim Bin(n,p)$. The sample propotion is the average of the $X_i$'s or $Y/n$. We can apply the CLT to obtain a large-sample distribution for the sample proportion:
+
+$$\bar{X} = \frac{\sum_{i=1}^{n}X_i}{n} = \frac{Y}{n}\stackrel{\bullet}\sim N(p, p(1-p)/n)$$
+
+- Try to develop a rule of thumb for when this large-sample Normal distribution can be used.
+- You may already know the rules of thumb. If you do, use the app below to see if you can provide an explanation for the rules of thumb.
+- What to look for in each graph:  
+    + Histogram: when does it become a symmetric bell-shape?
+    + CDF comparison: We know the result is a Normal distribution here. The graph compares the simulated distribution with a Normal distribution. When do the CDFs essentially overlap? - Instructions:
+    + "n: sample size": Change this slider to alter the sample sized used to find the sample means
+    + "p: probability of success": Change this slider to alter the probability of success
+    + "M: the number of simulations:" Change this slider to increase or decrease the number of simulated values to plot. The larger the value of M the more accurately the simulations mimic the actual sampling distribution. (Larger values require more computation time though!)
+    
+```{r, echo=FALSE}
+shinyApp(
+  ui <- fluidPage(
+    sidebarLayout(
+      sidebarPanel( 
+        sliderInput("d_nprop",
+                    "n: sample size",
+                    min = 5,
+                    max = 100,
+                    step = 1,
+                    value = 20,
+                    animate=animationOptions(
+                      interval = 100,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    ),
+        sliderInput("prop",
+                    "p: probability of success",
+                    min = 0.1,
+                    max = 1,
+                    step = 0.05,
+                    value = 0.1,
+                    animate=animationOptions(
+                      interval = 1,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    ) ,
+        sliderInput("M",
+                    "M: the number of the simulations",
+                    min = 50,
+                    max = 1000,
+                    step= 50,
+                    value = 50,
+                    animate=animationOptions(
+                      interval = 1000,
+                      loop = TRUE,
+                      playButton = "Play",
+                      pauseButton = "Stop")
+                    )
+      ),
+
+      mainPanel(
+        tabsetPanel(id = "proportion_example",
+          tabPanel("Histogram",
+                   plotOutput("hist")
+                   ),
+          tabPanel("CDF Plots",
+                   plotOutput("cdf")
+                   )
+        )
+      )
+    )
+  ),
+  server <- function(input, output, session){
+    
+    sampled_values <- reactiveValues(sample_prop = c())
+    observeEvent(c(input$d_nprop, input$prop, input$M),
+                 sampled_values$sample_prop <- replicate(input$M, (rbinom(input$M,input$d_nprop, input$prop))/input$d_nprop)
+                 )
+    
+    output$hist <- renderPlot({
+      d_nprop <- isolate(input$d_nprop)
+      data_prop <- sampled_values$sample_prop
+      hist(data_prop, 
+           main = paste0("Distribution of ",input$M," Observed Sample proportionss\nWith n = ", d_nprop),
+           xlab = "Observed Sample Proportion",
+           freq = FALSE)
+          })
+    
+    output$cdf <- renderPlot({
+      d_nprop <- isolate(input$d_nprop)
+      prop <- isolate(input$prop)
+      M <- isolate(input$M)
+      data_prop <- sampled_values$sample_prop
+      #plot the ecdf of the sample means
+      plot(ecdf(data_prop), 
+           main = paste0("Comparison of Empirical CDF to Best\nApproximating Normal CDF with Sample Size n = ", d_nprop),
+           col = "red", 
+           lwd = 2,
+           xlab = "y/n",
+           ylab = "CDF")
+      #use theoretical normal here
+      prop_mean <- prop
+      prop_sd <- sqrt(prop*(1-prop)/d_nprop)
+      x_plot <- seq(from = prop_mean-3*prop_sd, to = prop_mean+3*prop_sd, length = 500)
+      #add the normal's cdf values
+      lines(x = x_plot, 
+            y = pnorm(x_plot, mean = prop_mean, sd = prop_sd),
+            col = "blue", 
+            lwd = 2)
+      #add legend
+      legend('topleft', 
+             c(expression(hat(F[y/n](y))),expression(F[X](y))),
+             col = c("red", "blue"),
+             lwd= 2)
+      })
+  })
+```
+
+## General Convergence Exploration
+
+You may wonder about the behavior of other statistics and other parent populations. The app below allows you to explore the sampling distribution of different statistics. 
+- Instructions:
+    + "Distribution": Choose the parent population's distribution
+        - Parameters corresponding to that distribution will show up below
+    + "Statistic": Choose the statistic to calculate, plot on the histogram, and summarize the sampling distribution of
+    + "Sample Size (2 if blank)": Set the size of the sample to take from the parent population
+    + "Number of Data Sets": Use this slider to set the number of data sets to sample and find the statistic for
+
+```{r, echo = FALSE}
+#number of data sets to create
+NumData<-10000
+shinyApp(
+  ui <- fluidPage(
+          sidebarLayout(
+            sidebarPanel( 
+              selectizeInput("dist", 
+                             label = "Distribution",
+                             selected = "Uniform",
+                             choices = sort(c("Uniform", "Normal", "Gamma", "Exponential", "Chi-Square", "Beta", "Binomial", "Geometric", "Poisson", "Cauchy"))),
+              numericInput("param1", "Lower Limit", value = 0, step = 1),
+              conditionalPanel(condition =  "(input.dist=='Uniform')||(input.dist=='Normal')||(input.dist=='Gamma')||(input.dist=='Beta')||(input.dist=='Cauchy')",
+                               numericInput("param2", "Upper Limit", value = 1, step = 1)
+                               ),
+              selectizeInput("stat", label = "Statistic", selected = "Sample Mean", 
+                             choices=c("Sample Mean", "Standardized Sample Mean", "Sample Variance", "Sample Standard Deviation", "Sample Median", "Sample Max", "Sample Min")),
+              numericInput("n", label = "Sample Size (2 if blank)", value = 2, min = 2, step = 10, max = 10000),
+              sliderInput("N", label = "Number of Data Sets:", min = 1, max = 10000, value = 1, step = 1, animate = list(TRUE, interval = 350, loop = TRUE))
+            ),
+            mainPanel(
+              fluidRow(
+                #Show a plot of the parent population  
+                column(6, plotOutput("parentPlot")),
+              # Show a plot of the sampling distribution
+                column(6, plotOutput("samplePlot"))),
+              #sampling distribution
+              fluidRow(
+                column(9, plotOutput("statPlot")),
+                column(3, "Summary of Sampling Distribution", tableOutput("sampStatTable"))
+              )
+            )
+          )
+        ), 
+  server <- function(input, output, session){
+      #generate data
+  simData<-reactive({
+    #get reactive things and inputs
+    input$dist
+    input$n
+    input$param1
+    input$param2
+        
+    #sample size
+    n<-input$n
+    #Num samples
+    dist<-input$dist
+        
+    if (is.na(n)){n<-2}
+    
+    #get samples from appropriate distribution 
+    if (dist=="Uniform"){
+      min<-input$param1
+      max<-input$param2
+      samples<-matrix(runif(n*NumData,min=min,max=max),nrow=NumData,ncol=n)
+    } else if (dist=="Normal") {
+      mean<-input$param1
+      sd<-input$param2
+      samples<-matrix(rnorm(n*NumData,mean=mean,sd=sd),nrow=NumData,ncol=n)
+    } else if (dist=="Gamma") {
+      alpha<-input$param1
+      lambda<-input$param2
+      samples<-matrix(rgamma(n*NumData,shape=alpha,rate=lambda),nrow=NumData,ncol=n)
+    } else if (dist=="Exponential") {
+      lambda<-input$param1
+      samples<-matrix(rexp(n*NumData,rate=lambda),nrow=NumData,ncol=n)
+    } else if (dist=="Chi-Square") {
+      df<-input$param1
+      samples<-matrix(rchisq(n*NumData,df=df),nrow=NumData,ncol=n)
+    } else if (dist=="Beta") {
+      alpha<-input$param1
+      beta<-input$param2
+      samples<-matrix(rbeta(n*NumData,shape1=alpha,shape2=beta),nrow=NumData,ncol=n)
+    } else if (dist=="Binomial") {
+      prob<-input$param1
+      samples<-matrix(rbinom(n*NumData,size=1,prob=prob),nrow=NumData,ncol=n)
+    } else if (dist=="Geometric") {
+      prob<-input$param1
+      samples<-matrix(rgeom(n*NumData,prob=prob),nrow=NumData,ncol=n)
+    } else if (dist=="Poisson") {
+      lambda<-input$param1
+      samples<-matrix(rpois(n*NumData,lambda=lambda),nrow=NumData,ncol=n)
+    } else if (dist=="Cauchy") {
+      location<-input$param1
+      scale<-input$param2
+      samples<-matrix(rcauchy(n*NumData,location=location,scale=scale),nrow=NumData,ncol=n)
+    }
+    
+    #return data
+    samples
+  })
+
+ 
+  #update parameters in ui  
+  observe({
+    #get input
+    dist <- input$dist
+        
+    #update the values of the parameters in the ui based on the distribution
+    if (dist=="Uniform"){
+      updateNumericInput(session, "param1", label="Lower Limit",value = 0,step=1)
+      updateNumericInput(session, "param2", label="Upper Limit",value = 1,step=1)
+    } else if (dist=="Normal") {
+      updateNumericInput(session, "param1", label="Mean",value = 0,step=1)
+      updateNumericInput(session, "param2", label="Standard Deviation",value = 1,min=0,step=1)
+    } else if (dist=="Gamma") {
+      updateNumericInput(session, "param1", label="Alpha (Shape)",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="Lambda (Rate)",value = 1,min=0,step=1)
+    } else if (dist=="Exponential") {
+      updateNumericInput(session, "param1", label="Lambda (Rate)",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Chi-Square") {
+      updateNumericInput(session, "param1", label="DF",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Beta") {
+      updateNumericInput(session, "param1", label="alpha",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="beta",value = 1,min=0,step=1)
+    } else if (dist=="Binomial") {
+      updateNumericInput(session, "param1", label="Probability of Success",value = 0.5,min=0,max=1,step=0.05)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Geometric") {
+      updateNumericInput(session, "param1", label="Probability of Success",value = 0.5,min=0,max=1,step=0.05)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Poisson") {
+      updateNumericInput(session, "param1", label="Lambda (Mean)",value = 1,min=0,step=1)
+      updateNumericInput(session, "param2", label="Not Applicable",value = 0,min=0,max=0)
+    } else if (dist=="Cauchy") {
+      updateNumericInput(session, "param1", label="Location",value = 0,step=1)
+      updateNumericInput(session, "param2", label="Scale",value = 1,min=0,step=1)
+    }  
+
+  })
+
+  
+  #create parent population plot
+  output$parentPlot<-renderPlot({
+    #input distribution
+    dist<-input$dist
+    #sample size
+    n<-input$n
+    
+    #choose appropriate distribution  
+    if (dist=="Uniform"){
+      #parameters
+      min<-input$param1
+      max<-input$param2
+      #Plotting sequence
+      x <- seq(from=min,to=max,length=2)
+      #draw the parent distribution plot
+      plot(x=x,y=dunif(x=x,min=min,max=max),main=paste(dist," Density"),
+           xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Normal") {
+      #parameters
+      mean<-input$param1
+      sd<-input$param2
+      #Plotting sequence
+      x <- seq(from=mean-4*sd,to=mean+4*sd,length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dnorm(x=x,mean=mean,sd=sd),main=paste(dist," Density"),
+           xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Gamma") {
+      #parameters
+      alpha<-input$param1
+      lambda<-input$param2
+      #Plotting sequence
+      x <- seq(from=0,to=alpha/lambda+4*sqrt(alpha/lambda^2),length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dgamma(x=x,shape=alpha,rate=lambda),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Exponential") {
+      #parameters
+      lambda<-input$param1
+      #Plotting sequence
+      x <- seq(from=0,to=5/lambda,length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dexp(x=x,rate=lambda),main=paste(dist," Density"),xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Chi-Square") {
+      #parameters
+      df<-input$param1
+      #Plotting sequence
+      x <- seq(from=0,to=df+4*sqrt(2*df),length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dchisq(x=x,df=df),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Beta") {
+      #Plotting sequence
+      x <- seq(from=0,to=1,length=1000)
+      #parameters
+      alpha<-input$param1
+      beta<-input$param2
+      #draw the parent distribution plot
+      plot(x=x,y=dbeta(x=x,shape1=alpha,shape2=beta),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
+    } else if (dist=="Binomial") {
+      #Plotting sequence
+      x <- seq(from=0,to=n,by=1)
+      #parameters
+      prob<-input$param1
+      #draw the parent distribution plot
+      plot(x=x,y=dbinom(x=x,size=n,prob=prob),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="h")
+    } else if (dist=="Geometric") {
+      #parameters
+      prob<-input$param1
+      #Plotting sequence
+      x<-seq(from=0,to=1/prob+4*sqrt((1-prob)/prob^2)+2,by=1)
+      #draw the parent distribution plot
+      plot(x=x,y=dgeom(x=x,prob=prob),main=paste(dist," Density"),xlab="y", ylab="f(y)",type="h")
+    } else if (dist=="Poisson") {
+      #parameters
+      lambda<-input$param1
+      #Plotting sequence
+      x <- seq(from=0,to=lambda+4*sqrt(lambda),by=1)
+      #draw the parent distribution plot
+      plot(x=x,y=dpois(x=x,lambda=lambda),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="h")
+    } else if (dist=="Cauchy") {
+      #Plotting sequence
+      #parameters
+      location<-input$param1
+      scale<-input$param2
+      x <- seq(from=location-6*scale,to=location+6*scale,length=1000)
+      #draw the parent distribution plot
+      plot(x=x,y=dcauchy(x=x,location=location,scale=scale),main=paste(dist," Density"), xlab="y", ylab="f(y)",type="l")
+    }
+    
+  })
+  
+  
+  #get plot of sample data for current data set
+  output$samplePlot<-renderPlot({
+    #input data set number
+    N<-input$N
+    #sample size
+    n<-input$n
+    #Get data for data set N
+    samples<-simData()
+    samples<-samples[N,]
+
+    #Get statistic being used
+    statistic<-input$stat
+
+    #create histogram and save it, need to find where stat lies so we can color it
+    temp<-hist(samples,main=paste("Histogram of Sample ",N,"'s data"),xlab="Data Values, y",prob=TRUE)    
+
+    #calculate value of statistic
+    if ((statistic=="Sample Mean")||(statistic=="Standardized Sample Mean")){
+      statval<-mean(samples)
+    } else if (statistic=="Sample Variance"){
+      statval<-var(samples)
+    } else if (statistic=="Sample Standard Deviation"){
+      statval<-sd(samples)
+    } else if (statistic=="Sample Median"){
+      statval<-median(samples)
+    } else if (statistic=="Sample Max"){
+      statval<-max(samples)
+    } else if (statistic=="Sample Min"){
+      statval<-min(samples)
+    }
+        
+    #get the break from the histogram where the stat occurs
+    index<-which((temp$breaks[1:(length(temp$breaks)-1)]<statval)*(statval<temp$breaks[2:length(temp$breaks)])==1)
+    #create the color vector to color the histogram
+    clr<-rep("white",length(temp$breaks))
+    if ((statistic=="Sample Mean")||(statistic=="Standardized Sample Mean")||(statistic=="Sample Median")||(statistic=="Sample Max")||(statistic=="Sample Min")){
+      clr[index]<-"blue"
+    }
+      #create histogram
+      hist(samples,main=paste("Histogram of Sample ",N,"'s data"),xlab="Data Values, y",prob=TRUE,col=clr)    
+      
+  })
+
+    
+  #get histogram of statistic based on data sets so far
+  output$statPlot <- renderPlot({
+    #sample size
+    n<-input$n
+    #Num samples
+    N<-input$N
+    #distribution
+    dist<-input$dist
+    #stat
+    statistic<-input$stat
+    
+    #figure out what mean and standard deviation of parent are for z-score
+    if (dist=="Uniform"){
+      min<-input$param1
+      max<-input$param2
+      meanz<-(min+max)/2
+      varz<-(max-min)^2/12
+    } else if (dist=="Normal") {
+      mean<-input$param1
+      sd<-input$param2
+      meanz<-mean
+      varz<-sd^2
+    } else if (dist=="Gamma") {
+      alpha<-input$param1
+      lambda<-input$param2
+      meanz<-alpha/lambda
+      varz<-alpha/lambda^2
+    } else if (dist=="Exponential") {
+      lambda<-input$param1
+      meanz<-1/lambda
+      varz<-1/lambda^2
+    } else if (dist=="Chi-Square") {
+      df<-input$param1
+      meanz<-df
+      varz<-2*df
+    } else if (dist=="Beta") {
+      alpha<-input$param1
+      beta<-input$param2
+      meanz<-alpha/(alpha+beta)
+      varz<-(alpha*beta)/((alpha+beta)^2*(alpha+beta+1))
+    } else if (dist=="Binomial") {
+      prob<-input$param1
+      meanz<-n*prob
+      varz<-n*prob*(1-prob)
+    } else if (dist=="Geometric") {
+      prob<-input$param1
+      meanz<-1/prob
+      varz<-(1-prob)/prob^2
+    } else if (dist=="Poisson") {
+      lambda<-input$param1
+      meanz<-varz<-lambda
+    } else if (dist=="Cauchy") {
+      location<-input$param1
+      scale<-input$param2
+      meanz<-location
+      varz<-scale
+    }
+    
+    #get values of the stat for each sample
+    samples<-simData()
+    if(N==1){
+      if (statistic=="Sample Mean"){
+        statvals<-mean(samples[1,])
+      } else if (statistic=="Standardized Sample Mean"){
+        statvals<-(mean(samples[1,])-meanz)/sqrt(varz/n)
+      } else if (statistic=="Sample Variance"){
+        statvals<-var(samples[1,])
+      } else if (statistic=="Sample Standard Deviation"){
+        statvals<-sd(samples[1,])
+      } else if (statistic=="Sample Median"){
+        statvals<-median(samples[1,])
+      } else if (statistic=="Sample Max"){
+        statvals<-max(samples[1,])
+      } else if (statistic=="Sample Min"){
+        statvals<-min(samples[1,])
+      }
+    } else if (N>1){
+      if (statistic=="Sample Mean"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=mean)
+      } else if (statistic=="Standardized Sample Mean"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=function(x,meanz,varz){(mean(x)-meanz)/sqrt(varz/n)}, meanz,varz)
+      } else if (statistic=="Sample Variance"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=var)
+      } else if (statistic=="Sample Standard Deviation"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=sd)
+      } else if (statistic=="Sample Median"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=median)
+      } else if (statistic=="Sample Max"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=max)
+      } else if (statistic=="Sample Min"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=min)
+      }
+    }
+
+    #get the break from the histogram where the stat for data set N occurs
+    temp<-hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values") 
+    index<-which((temp$breaks[1:(length(temp$breaks)-1)]<statvals[N])*(statvals[N]<temp$breaks[2:length(temp$breaks)])==1)
+    #create the color vector to color the histogram
+    clr<-rep("white",length(temp$breaks))
+    clr[index]<-"blue"
+    
+    # draw the sampling distribution
+    if ((dist=="Cauchy")&&(N>1)&&(N<2000)){
+      hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values",breaks=100,col=clr) 
+    } else {
+      hist(statvals,main=paste("Sampling Distribution of the",statistic),prob=TRUE,xlab="Observed Values",col=clr) 
+    }
+
+  })
+
+  #get statistics about the sampling distribution  
+  output$sampStatTable<-renderTable({
+    #sample size
+    n<-input$n
+    #Num samples
+    N<-input$N
+    #distribution
+    dist<-input$dist
+    #stat
+    statistic<-input$stat
+    
+    #figure out what mean and standard deviation of parent are for z-score
+    if (dist=="Uniform"){
+      min<-input$param1
+      max<-input$param2
+      meanz<-(min+max)/2
+      varz<-(max-min)^2/12
+    } else if (dist=="Normal") {
+      mean<-input$param1
+      sd<-input$param2
+      meanz<-mean
+      varz<-sd^2
+    } else if (dist=="Gamma") {
+      alpha<-input$param1
+      lambda<-input$param2
+      meanz<-alpha/lambda
+      varz<-alpha/lambda^2
+    } else if (dist=="Exponential") {
+      lambda<-input$param1
+      meanz<-1/lambda
+      varz<-1/lambda^2
+    } else if (dist=="Chi-Square") {
+      df<-input$param1
+      meanz<-df
+      varz<-2*df
+    } else if (dist=="Beta") {
+      alpha<-input$param1
+      beta<-input$param2
+      meanz<-alpha/(alpha+beta)
+      varz<-(alpha*beta)/((alpha+beta)^2*(alpha+beta+1))
+    } else if (dist=="Binomial") {
+      prob<-input$param1
+      meanz<-n*prob
+      varz<-n*prob*(1-prob)
+    } else if (dist=="Geometric") {
+      prob<-input$param1
+      meanz<-1/prob
+      varz<-(1-prob)/prob^2
+    } else if (dist=="Poisson") {
+      lambda<-input$param1
+      meanz<-varz<-lambda
+    } else if (dist=="Cauchy") {
+      location<-input$param1
+      scale<-input$param2
+      meanz<-location
+      varz<-scale
+    }
+      
+    #get values of the stat for each sample
+    samples<-simData()
+    if(N==1){
+      if (statistic=="Sample Mean"){
+        statvals<-mean(samples[1,])
+      }else if (statistic=="Standardized Sample Mean"){
+        statvals<-(mean(samples[1,])-meanz)/sqrt(varz)
+      } else if (statistic=="Sample Variance"){
+        statvals<-var(samples[1,])
+      } else if (statistic=="Sample Standard Deviation"){
+        statvals<-sd(samples[1,])
+      } else if (statistic=="Sample Median"){
+        statvals<-median(samples[1,])
+      } else if (statistic=="Sample Max"){
+        statvals<-max(samples[1,])
+      } else if (statistic=="Sample Min"){
+        statvals<-min(samples[1,])
+      }
+    } else if (N>1){
+      if (statistic=="Sample Mean"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=mean)
+      } else if (statistic=="Standardized Sample Mean"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=function(x,meanz,varz){(mean(x)-meanz)/sqrt(varz/n)}, meanz,varz)
+      } else if (statistic=="Sample Variance"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=var)
+      } else if (statistic=="Sample Standard Deviation"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=sd)
+      } else if (statistic=="Sample Median"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=median)
+      } else if (statistic=="Sample Max"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=max)
+      } else if (statistic=="Sample Min"){
+        statvals<-apply(X=samples[1:N,],MARGIN=1,FUN=min)
+      }
+    }
+    sampstatdisplay<-data.frame(Stats=c("Sample Mean","Sample Var","Sample SD","Sample Min","Sample Median","Sample Max"),Value=c(sprintf("%.4f",mean(statvals)),sprintf("%.4f",var(statvals)),sprintf("%.4f",sd(statvals)),sprintf("%.4f",min(statvals)),sprintf("%.4f",median(statvals)),sprintf("%.4f",max(statvals))))
+    
+    sampstatdisplay
+  },include.colnames=FALSE)
+  }
+)
+```
