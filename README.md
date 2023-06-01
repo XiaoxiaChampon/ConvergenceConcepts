@@ -20,6 +20,6 @@ There are two files demonstrating convergence concepts. To use them, you can vie
 ![](img/download.png)
 
 - `ExploringConvergenceInDisribution.Rmd` - This file has visuals and interactive elements for investigating convergence in distribution only. Open the file in RStudio and knit the document.
-    + <a href = "" target = "_blank">Presentation file</a>
+    + <a href = "https://shiny.stat.ncsu.edu/jbpost2/ExploringConvergenceInDistribution/" target = "_blank">Presentation file</a>
 - `ExploringConvergence.Rmd` - This file has visuals and interactive elements for investigating multiple types of convergence. Open the file in RStudio and knit the document
-    + <a href = "" target = "_blank">Presentation file</a>
+    + <a href = "https://shiny.stat.ncsu.edu/jbpost2/ExploringConvergence/" target = "_blank">Presentation file</a>

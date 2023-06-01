@@ -1,0 +1,13 @@
+name: exploringconvergence
+title: ExploringConvergence
+username: jbpost2@ncsu.edu
+account: jbpost2@ncsu.edu
+server: shiny.stat.ncsu.edu
+hostUrl: https://shiny.stat.ncsu.edu/__api__
+appId: 65
+bundleId: 102
+url: https://shiny.stat.ncsu.edu/content/b60f0bd2-9038-4975-a181-57458e8e06c2/
+when: 1685646399.3841
+lastSyncTime: 1685646399.3841
+asMultiple: TRUE
+asStatic: FALSE
