@@ -45,7 +45,7 @@ A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023]
 
 <div style = "float:right">
 ```{r, echo = FALSE, out.width = "400px"}
-knitr::include_graphics("img/pew.jpg")
+knitr::include_graphics("../img/pew.jpg")
 ```
 </div>
 
@@ -514,7 +514,7 @@ ggsave("maxuplot.png")
 
 
 ```{r, echo = FALSE}
-knitr::include_graphics("maxuplot.png")
+knitr::include_graphics("../img/maxuplot.png")
 ```
 
 **Discuss the ECDF from a sample as an approximation to the CDF.**
@@ -593,7 +593,7 @@ ggsave("nmaxuplot.png")
 
 
 ```{r, echo = FALSE}
-knitr::include_graphics("nmaxuplot.png")
+knitr::include_graphics("../img/nmaxuplot.png")
 ```
 **Discuss the ECDF from a sample as an approximation to the CDF.**
 **Show CDF comparison plot with a RV that is a point mass at 1. Discuss what we look for.**

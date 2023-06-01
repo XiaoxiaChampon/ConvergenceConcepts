@@ -15,9 +15,11 @@ Participants will see a demonstration of the tools and walk away with a number o
 
 # How to Use
 
-There are two files demonstrating convergence concepts. To use them, you can download the files in this repo. Click the green `<> Code` button and then choose `Download ZIP`.
+There are two files demonstrating convergence concepts. To use them, you can view them online or you can download the files in this repo. To download, click the green `<> Code` button and then choose `Download ZIP`. Links to the 'live' presenation files are below.
 
-![](download.png)
+![](img/download.png)
 
 - `ExploringConvergenceInDisribution.Rmd` - This file has visuals and interactive elements for investigating convergence in distribution only. Open the file in RStudio and knit the document.
+    + <a href = "" target = "_blank">Presentation file</a>
 - `ExploringConvergence.Rmd` - This file has visuals and interactive elements for investigating multiple types of convergence. Open the file in RStudio and knit the document
+    + <a href = "" target = "_blank">Presentation file</a>
