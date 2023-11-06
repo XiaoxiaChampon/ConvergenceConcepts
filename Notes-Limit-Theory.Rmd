@@ -1,7 +1,4 @@
 ---
-title: "Exploring Convergence"
-author: "Xiaoxia Champon, Justin Post"
-date: "2023-04-25"
 output: 
   html_document:
     css: "style.css"
@@ -42,8 +39,18 @@ library(kableExtra)
 library(plotly)
 ```
 
+# Limit Theory {.tabset}
 
-# Motivation
+## Motivation & Ideas
+
+**Why do we care about Limit Theory?** By limit theory we mean "what is the behavior our our random variable as some quantity grows?" Usually, we concern ourselves with the sample size ($n$) being the quantity that grows. 
+
+We look at two major ideas:
+
+- Determining \textit{approximate (or large-sample or asymptotic)} distributions.  That is, distributions that can be used when some quantity is 'large' (usually the sample size).
+- Understanding whether or not a random variable is observed closer and closer to some quantity as our sample size grows. For instance, the sample mean 'converging' to the population mean $\mu$.
+
+### Motivating Example
 
 A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023](https://www.pewresearch.org/science/2023/05/16/americans-largely-positive-views-of-childhood-vaccines-hold-steady/). The survey asked participants questions related to their thoughts on vaccination. One question centered around the perceived efficacy of the MMR vaccine.
 
@@ -59,7 +66,7 @@ The sample proportion of 0.88 is an estimate of the population proportion. That 
 
 Of course this is a single number estimate that would change if we sampled again. We can report the standard deviation of this sample proportion, called a standard error, to give us an idea of the variability in the estimate.  
 
-Assuming independence between study participants, we can find an estimated standard error for this sample proportion using techniques learned eariler:
+Assuming independence between study participants, we can find an estimated standard error for this sample proportion using techniques learned earlier:
 
 $$\widehat{SE(\hat{p})} = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}} \approx \sqrt{\frac{0.88*0.12}{10701}} = 0.0031$$
 Two big questions arise:
@@ -77,11 +84,11 @@ Two big questions arise:
 These two questions can often be answered by looking at the *limiting* behavior (here as the sample size grows) of the estimator $\hat{p}$.
 
 
-## Convergence in Distribution Idea
+### Convergence in Distribution Idea
 
 To answer the first question, let's consider determining the sampling distribution through simulation. A distribution just describes the pattern in which we observe our variable. If we can simulate observing the variable, we can create many *realizations* of $\hat{p}$ to understand the sampling distribution. 
 
-To do this we need to make some assumptions. We need to assume a true $p$ and a sample size $n$. Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 10.
+To do this we need to make some assumptions. We need to assume we have $n$ $iid$ (independent and identically distributed) trials. We also need to assume a true $p$. Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 10.
 
 - After simulating many values, increase the sample size and repeat. As $n$ grows, what happens to the distribution?
 
@@ -176,7 +183,7 @@ $$\hat{p}\pm 2*\widehat{SE(\hat{p})}$$
 as an interval to *capture* the true $p$. (Indeed this is the usual basic interval for a proportion!)
 
 
-## Convergence in Probability Idea
+### Convergence in Probability Idea
 
 To answer the second question, we could consider generating sample proportions for ever increasing values of the sample size and seeing how they behave. Using the app below, we can generate many sample proportions for varying $n$, subtract off the true value of $p$, and see how that difference changes on the plot.
 
@@ -264,8 +271,60 @@ shinyApp(
 
 We can see that $\hat{p}-p$ seems to get closer to 0. This indicates that $\hat{p}$ is in some sense *converging* to the true value of $p$!
 
+## Definitions
 
-## Convergence in Distribution Exploration
+We have some common language you'll see that we should discuss.
+
+**Random Sample** - $Y_1,...,Y_n$ are a random sample (RS) of size $n$ if they are independent and identically distributed (or $iid$).
+
+This is an extremely common assumption for many methods of inference! 
+
+What does this allow us to know about the joint distribution of 
+$Y_1,...,Y_n$?<br><br><br><br>
+
+**Statistic** - Functions of $Y_1,...,Y_n$ from a $RS$ that do not involve unknown parameters.
+
+Examples: 
+
+- $\bar{Y} = \frac{1}{n}\sum_{i=1}^{n}Y_i$
+- $S^2 = \frac{1}{n-1}\sum_{i=1}^{n} \left(Y_i-\bar{Y}\right)^2$
+- $\mbox{Considering a particular value of }\mu_0, T = \frac{\bar{Y}-\mu_0}{S/\sqrt{n}}$
+
+**Sampling Distribution** - Distribution of a statistic<br><br><br><br>
+
+As we look at convergence in distribution, we'll see many results for approximating distributions. In this case we must be careful to note the difference between an **exact** distribution and an **approximate** (or **large-sample** or **asymptotic**) distribution.
+
+Example: If $Y_i\stackrel{iid}\sim N(\mu,\sigma^2)$ then the \underbar{exact} distribution of $\bar{Y}$ is $\bar{Y}\sim N(\mu,\sigma^2/n)$.  How to prove? Recall $m_Y(t) = e^{\mu t+t^2\sigma^2/2}$.<br><br><br><br><br><br><br><br>  
+
+Theory exists that says if $Y_i\stackrel{iid}\sim f_Y(y)$ where $Var(Y)<\infty$ then $\bar{Y}\stackrel{\bullet}{\sim}N(\mu,\sigma^2/n)$.<br><br><br>
+
+- If we use a exact (or true for any n) distribution for inference, we call it \underline{exact inference}.
+- If we use a 'large-sample' (or asymptotic) distribution for inference, we call it \underline{approximate} (or \underline{large-sample} or \underline{asympotic}) \underline{inference}
+
+## Convergence in Distribution
+
+Since RVs are not defined deterministically (we may observe different observations each time we see them!), we can't consider the usual calculus convergence ideas.  Instead we have different types of convergence.  \\
+
+3 major types of convergence of RVs (others exist)
+\begin{center}
+Almost Sure (with probability 1) $\implies$ Probability $\implies$ Distribution
+\end{center}
+
+\textbf{Convergence in Distribution Definition} - If a sequence of RVs 
+$Y_1,...,Y_n,...$ with corresponding CDFs $F_{Y_1},...,F_{Y_n},...$ is such 
+that 
+$$lim_{n\rightarrow\infty}F_{Y_n}(y)=F_Y(y)$$
+for some RV $Y$ at all points where $F_Y$ is continuous then 
+$Y_n\stackrel{d}\rightarrow Y$.\vspace{1.7in}
+
+Often easier to show convergence of MGFs (if they exist)\\
+\textbf{MGF convergence} - If 
+$$lim_{n\rightarrow\infty}m_{Y_n}(t) = m_Y(t)$$
+for some random variable $Y$ with MGF $m_Y(t)$ then $Y_n\stackrel{d}{\rightarrow}Y$.\\~\\
+
+Do gamma example for sample mean here(exact derived earlier in notes). 
+
+### Convergence in Distribution Exploration
 
 - Suppose that $Y_i\stackrel{iid}\sim Gamma(\alpha, \lambda)$. That is, assume we have a random sample from a Gamma distribution with PDF
 $$f_Y(y) = \frac{\lambda^\alpha}{\Gamma(\alpha)}y^{\alpha -1}e^{-\lambda y}$$
@@ -446,6 +505,183 @@ shinyApp(
   })
 ```
 
+<!--
+\large{\textbf{Details: How to prove convergence in distribution?} 
+}\normalsize\\
+
+Example: Let $Y_i\stackrel{iid}{\sim}U(0,1)$, what does 
+$Y_{(n)}=max\left\{Y_i\right\}$ converge to in distribution?
+
+\newpage
+
+
+\footnotesize
+\begin{verbatim}
+#######################################################################
+#Generate many samples of size n from Uniform(0,1), find max for each sample to see the
+          distribution of max
+n<-c(3,10,100,10000)
+N<-20000
+maxes<-matrix(,nrow=N,ncol=length(n))
+
+#loop over sample sizes
+for (j in 1:length(n)){
+  #loop through data sets
+  for (i in 1:N){maxes[i,j]<-max(runif(n[j]))}
+}
+
+par(mfrow=c(1,length(n)))
+hist(maxes[,1],breaks=seq(0,1,by=0.005),main=paste("Hist of Max, n=",n[1],sep=""),xlab="max",
+ylab="Dist of max")
+hist(maxes[,2],breaks=seq(0,1,by=0.005),main=paste("Hist of Max, n=",n[2],sep=""),xlab="max",
+ylab="Dist of max")
+hist(maxes[,3],breaks=seq(0,1,by=0.005),main=paste("Hist of Max, n=",n[3],sep=""),xlab="max",
+ylab="Dist of max")
+hist(maxes[,4],breaks=seq(0,1,by=0.005),main=paste("Hist of Max, n=",n[4],sep=""),xlab="max",
+ylab="Dist of max")
+\end{verbatim}
+\normalsize
+
+\begin{center}
+\includegraphics[scale=0.4]{convp1}~\\~\\
+\end{center}
+
+Note: 
+\textbf{Convergence in distribution to a constant} - If 
+$Y_n\stackrel{d}{\rightarrow}c$ then $Y_n\stackrel{p}\rightarrow c$.
+
+
+Example: Let $Y_i\stackrel{iid}{\sim}U(0,1)$, what is the distribution of 
+$W = n(1-Y_{(n)})$ as $n\rightarrow\infty$?  \vspace{4in}
+
+***Very useful result - if $a_1,a_2,...$ converges to $a$ as $n\rightarrow\infty$, then $lim_{n\rightarrow\infty}\left(1+\frac{a_n}{n}\right)^n=e^a$
+
+\newpage
+
+\footnotesize
+\begin{verbatim}
+#######################################################################
+
+## Convergence in distribution (of w=n(1-max) from U(0,1) to the exp(1))
+
+#Generate many samples of size n from Uniform(0,1), find max for each sample to see the
+                           distribution of w=n(1-max)
+n<-c(3,10,100,10000)
+N<-20000
+w<-matrix(,nrow=N,ncol=length(n))
+
+#loop over sample sizes
+for (j in 1:length(n)){
+  #loop through data sets
+  for (i in 1:N){
+    w[i,j]<-n[j]*(1-max(runif(n[j])))
+  }
+}
+
+par(mfrow=c(1,length(n)))
+hist(w[,1],main=paste("Hist of W, n=",n[1],sep=""),xlab="max",ylab="Dist of W",prob=T)
+seq<-seq(from=0,to=10,by=0.01)
+lines(seq,y=dexp(seq))
+hist(w[,2],main=paste("Hist of W, n=",n[2],sep=""),xlab="max",ylab="Dist of W",prob=T)
+lines(seq,y=dexp(seq))
+hist(w[,3],main=paste("Hist of W, n=",n[3],sep=""),xlab="max",ylab="Dist of W",prob=T)
+lines(seq,y=dexp(seq))
+hist(w[,4],main=paste("Hist of W, n=",n[4],sep=""),xlab="max",ylab="Dist of W",prob=T)
+lines(seq,y=dexp(seq))
+\end{verbatim}
+
+
+\textbf{Can also use MGFs for convergence in distribution.}\\
+
+Example: Binomial convergence to a Poisson.  Suppose $Y\sim Bin(n,p)$ where $np \rightarrow \lambda$ as $n$ grows (essentially the mean doesn't change as our sample size increases, implies that $p$ changes as $n$ grows).  Show $Y\stackrel{d}\rightarrow Poi(\lambda)$.\vspace{4.25in}
+
+\footnotesize
+\begin{verbatim}
+#Binomial convergence to Poisson
+#choose n and p combinations so that np is always 5
+n <- c(10, 100, 1000)
+p <- c(0.5, 0.05, 0.005) 
+
+#number of datasets to create
+N <- 100000
+
+set.seed(12)
+#create datasets & plot
+hist(rbinom(N, size = n[1], prob = p[1]), breaks = seq(-0.5, 10.5, by = 1), prob = T,
+xlab = "# of successes", ylab = "PMF value", main = "Comparison of Bin & Poi")
+#overlay poisson with mean np
+x <- 0:10
+lines(x, dpois(x, lambda = n[1]*p[1]), type = "h", col = "blue", lwd = 2)
+\end{verbatim}
+
+
+\newpage
+
+
+\includegraphics[scale=0.3]{BinPoi1.png}\\
+\includegraphics[scale=0.3]{BinPoi2.png}\\
+\includegraphics[scale=0.3]{BinPoi3.png}\\
+
+\newpage
+
+\large\textbf{Central Limit Theorem} - \\
+\normalsize Let $Y_1,Y_2,...$ be independent with MGF existing (really only need finite variance) and $E(Y_i)=\mu$ and $Var(Y_i)=\sigma^2$ then
+$$\frac{\bar{Y}_{n}-\mu}{\sigma/\sqrt{n}}\stackrel{d}{\rightarrow}N(0,1)$$\vspace{1.5in}
+
+\footnotesize
+\begin{verbatim}
+####################################
+#Simulate 10000 samples of size 3,10,50 from N(mu,sigma) distribution
+n<-c(3,10,50)
+N<-50000
+mu<-10
+sigma<-3
+
+#list to save data values in
+data<-list()
+for(i in 1:length(n)){data[[i]]<-matrix(0,nrow=N,ncol=n[i])}
+
+#Create the data
+#loop over sample sizes
+for (j in 1:length(n)){
+  #loop over data sets
+  for (i in 1:N){data[[j]][i,]<-rnorm(n=n[j],mean=mu,sd=sigma)}
+}
+
+#calculate the z statistic for each sample
+means3<-apply(X=data[[1]],FUN=function(data){(mean(data)-mu)/(sigma/sqrt(n[1]))},MARGIN=1)
+means10<-apply(X=data[[2]],FUN=function(data){(mean(data)-mu)/(sigma/sqrt(n[2]))},MARGIN=1)
+means50<-apply(X=data[[3]],FUN=function(data){(mean(data)-mu)/(sigma/sqrt(n[3]))},MARGIN=1)
+
+hist(means3,main=paste("Histogram of z's with n=",n[1]," from 
+N(",mu,",",sigma^2,")",sep=""),prob=T)
+lines(seq(from=-3,to=3,by=0.01),dnorm(seq(from=-3,to=3,by=0.01)))
+...
+\end{verbatim}
+\normalsize
+
+\newpage
+
+\begin{center}
+\includegraphics[scale=0.65]{CLT1}\\
+\includegraphics[scale=0.65]{CLT2}\\
+\includegraphics[scale=0.65]{CLT3}
+\end{center}
+
+\newpage
+
+\textbf{Proof of CLT} - Goal: Show $m_{\sqrt{n}\frac{\bar{Y}_{n}-\mu}{\sigma}}(t)\rightarrow e^{t^2/2}$ as $n\rightarrow\infty$.
+
+
+\textbf{CLT Applied to a Sum} - 
+$$\sum_{i=1}^{n} Y_i \stackrel{\bullet}{\sim}N(n\mu, n\sigma^2)$$
+
+Example: $Y_1,...,Y_{n}\stackrel{iid}{\sim}f_Y(y)=2y$ if $0<y<1$ (0 O.W.).  
+Note: $E(Y)=2/3$ and $Var(Y)=1/18$.\\
+Let $S=Y_1+...+Y_n$, can we approximate $P(S\leq 10)$?\vspace{4in}
+
+
+
 ## Central Limit Theorem Applied to a Sample Proportion
 
 A common application of the CLT is to the sample proportion from a Binomial experiment. If $X_i\stackrel{iid}\sim Bin(1, p)$ with mean $E(Y) = p$ and variance $Var(Y) = p(1-p)$, then define $Y = \sum_{i=1}^{n} X_i$.  We know that $Y\sim Bin(n,p)$. The sample propotion is the average of the $X_i$'s or $Y/n$. We can apply the CLT to obtain a large-sample distribution for the sample proportion:
@@ -561,6 +797,26 @@ shinyApp(
       })
   })
 ```
+
+
+Practically, why is the CLT so important?
+\begin{itemize}
+	\item Suppose we know $\sigma$ and we want inference for $\mu$.
+	\item If we get a RS $Y_1,...,Y_n$ we know 
+	$\bar{Y}\stackrel{\bullet}{\sim}N(\mu,\sigma^2/n)$ ($\mu$ only unknown)
+	\item We can make an approximate claim about $\mu$ via a confidence interval
+	$$P(-1.96<Z<1.96)=0.95 \Leftrightarrow 
+	P\left(-1.96<\frac{\bar{Y}-\mu}{\sigma/\sqrt{n}}<1.96\right)=0.95$$
+	$$\Leftrightarrow 
+	P\left(\bar{Y}-1.96\sigma/\sqrt{n}<\mu<\bar{Y}+1.96\sigma/\sqrt{n}\right)=0.95$$
+	\item That is, there is a 95\% probability the RVs 
+	$\bar{Y}-1.96\sigma/\sqrt{n}$ and $\bar{Y}+1.96\sigma/\sqrt{n}$ capture 
+	$\mu$.
+	\item Observe $\bar{Y}=\bar{y}$, get observed CI.  Range we are `confident' 
+	contains $\mu$.
+	\item Note: No assumption about $Y$'s distribution made other than finite 
+	variance!
+\end{itemize}
 
 ## General Convergence in Distribution Exploration
 
@@ -1052,6 +1308,40 @@ shinyApp(
 )
 ```
 
+## Delta Method Normality
+
+\textbf{Large Sample Normality and the Delta Method} - \\
+Let $Y_1,Y_2,...$ be a sequence of RVs such that
+$$\sqrt{n}(Y_n-\theta_0)\stackrel{d}{\rightarrow}N(0,\sigma^2)~~~~~~or~~~~Y_n\stackrel{\bullet}{\sim}N(\theta_0,\sigma^2/n)$$
+For a function g and value $\theta_0$ where $g^{'}(\theta_0)$ exists and is not 0 we have
+$$\sqrt{n}(g(Y_n)-g(\theta_0))\stackrel{d}{\rightarrow}N(0,(g^{'}(\theta_0))^2\sigma^2)~~~~~~or~~~~g(Y_n)\stackrel{\bullet}{\sim}N(g(\theta_0),(g^{'}(\theta_0))^2\sigma^2/n)$$
+\vspace{4.5in}
+
+Example: Let $Y_i\stackrel{iid}{\sim}Ber(p)$ then $\bar{Y}\stackrel{\bullet}{\sim}N(p,\frac{p(1-p)}{n})$.  Goal: make inference on $\frac{\bar{Y}}{1-\bar{Y}}$.
+
+\newpage
+
+Example:  Suppose $Y_i\stackrel{iid}{\sim}f_Y(y)$ where $E(Y_i)=\mu\neq 0$ and 
+$Var(Y_i)=\sigma^2<\infty$.  Goal: make inference on $\frac{1}{\mu}$.  Provide 
+an approximate distribution for $1/\bar{Y}$ an \textbf{estimator} of $1/\mu$.
+
+
+# Convergence in Probability {.tabset}
+
+3 major types of convergence of RVs (others exist)
+\begin{center}
+Almost Sure (with probability 1) $\implies$ Probability $\implies$ Distribution
+\end{center}
+
+
+\textbf{Convergence in Probability Definition} - A sequence of RVs $Y_1,...,Y_n,...$ converges in probability to a RV $Y$ if for every $\epsilon>0$
+$$lim_{n\rightarrow\infty}P(|Y_n-Y|\geq \epsilon)=0 \iff 
+lim_{n\rightarrow\infty}P(|Y_n-Y|<\epsilon)=1$$
+Denoted by $Y_n\stackrel{p}{\rightarrow}Y$.  \\
+
+We'll mostly care about convergence in probability to a constant, call it $c$.
+$$lim_{n\rightarrow\infty}P(|Y_n-c|< \epsilon)=\lim_{n\rightarrow\infty}P(-\epsilon < Y_n-c<\epsilon) =  \lim_{n\rightarrow\infty}P(c-\epsilon < Y_n<c+\epsilon)=1$$
+
 
 ## Convergence in Probability Ideas
 
@@ -1172,7 +1462,161 @@ round(table_data, 2) %>%
   row_spec(11, bold = T, color = "black", background = "lightblue")
 ```
 
-## Convergence in Probabilty Exploration
+
+\large{\textbf{Details:  How do we prove convergence in 
+probability?}}\normalsize\\
+
+\textbf{Markov's Inequality} - If $X$ is a nonnegative RV (support has no negative values) for which $E(X)$ exists, then for $t>0$
+$$P(X\geq t)\leq \frac{E(X)}{t}$$\vspace{4.25in}
+
+Example: If $X\sim exp(1)$ then $P(X\geq t)=e^{-t}$ and $E(X)/t=1/t$.\\
+\includegraphics[scale=1]{markov}\\~\\
+
+\textbf{Chebychev's Inequality} - Let $X$ be a RV with mean = $\mu$ and variance = $\sigma^2$, then for $t>0$ 
+$$P(|X-\mu|\geq t)\leq \frac{\sigma^2}{t^2}$$\vspace{1.5in}
+\vspace{2.5in}
+
+Example:  If $t=\sigma k$ for $k>0$, we can apply Chebychev's to get
+$$P\left(|X-\mu|\geq k\sigma\right)\leq \frac{\sigma^2}{k^2\sigma^2}=\frac{1}{k^2}$$
+For $k=2$ we have $P\left(|X-\mu|\geq 2\sigma\right)\leq 1/4$.
+
+\begin{itemize}
+\item At least 75\% of a RVs distribution lies within 2 standard deviations of the mean (if these moments exist)
+\item Regardless of distribution! (if moments exist)
+\item If $X\sim N(\mu,\sigma^2)$ we know $P(|X-\mu|\geq 2\sigma)\approx 0.05$. The bound isn't always very tight!
+\end{itemize}
+
+\newpage
+
+\textbf{Relating the inequalities to convergence in probability:}\\
+
+\textbf{Weak Law of Large Numbers (WLLN)} - If $Y_1,Y_2,...$ is a sequence of independent RVs with $E(Y_i)=\mu$, $Var(Y_i)=\sigma^2$ then $\bar{Y}_{n}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}{\rightarrow}\mu$
+\vspace{6in}
+
+\textbf{Very powerful result!}
+\begin{itemize}
+\item Big picture goal is to estimate parameters such as $\mu$.
+\item If we get a RS we know that $\bar{Y}$ will be a `close' to $\mu$ for `large' samples.
+\end{itemize}
+\newpage
+
+Example: $Y_i\stackrel{iid}{\sim}f_Y(y)$ where $E(Y_i^2)$ exists ($E\left(|Y_i^2|\right)<\infty$) then $Y_i^2$ are independent and all have the same expectation!\vspace{3.5in}
+
+Example: If $Y_i\stackrel{iid}\sim f_Y(y)$ with $E(Y)=\mu$ and 
+$Var(Y)=\sigma^2$ then\vspace{1in}
+
+\textbf{Continuity Theorem} (works for all three types of convergence) - If 
+$Y_1,Y_2,Y_3,...$ converge to $Y$ and $g$ is a continuous function then 
+$g(Y_1),g(Y_2),g(Y_3)...$ converge to $g(Y)$. \\
+
+Example: Suppose $Y_i$ are independent each with mean $\mu$, we have interest 
+in $\mu^2$.\vspace{1.75in}
+
+
+Other standard limit results exist such as
+$$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, 
+X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm 
+X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
+
+\newpage
+
+
+Example: Consider the `biased' version of the sample variance, $S_n^2=\frac{1}{n}\sum_{i=1}^{n}(Y_i-\bar{Y})^2$.  Let's show $S_n^2\stackrel{p}{\rightarrow}\sigma^2$
+\vspace{6.25in}
+
+\textbf{Strategies for proving convergence in probability:}
+\begin{itemize}
+	\item If we are dealing with averages of iid RVs, apply the LLN!
+	\item If we have a function of averages of iid RVs, try the LLN and continuity!
+	\item If we don't have an average of iid RVs, resort to the definition of convergence in probability.  Likely try to apply an inequality such as Markov's inequality or Chebychev's inequality.
+	\item If we can show $Y_n\stackrel{d}\rightarrow c$ then we know $Y_n\stackrel{p}\rightarrow c$ (later).
+\end{itemize}
+
+\newpage
+\textbf{Application of the WLLN}
+
+\textbf{Monte Carlo Integration} - Suppose we want to compute a 
+\textit{definite} integral but it must be done numerically.  Traditional 
+methods: Trapezoid Rule, Simpsons Rule, etc.
+
+Goal: Estimate $I(g)=\int_0^1 g(x)dx$\\
+
+Monte Carlo Integration: - 
+\begin{enumerate}
+	\item Generate a RS of size $n$ from a $U(0,1)$ distribution ($x_1,...,x_n$)
+	\item Evaluate $g$ each observation, $g(x_i)$, and find the average 
+\end{enumerate}
+Will work as $\frac{1}{n}\sum_{i=1}^{n}g(X_i)\stackrel{p}\rightarrow I(g)$.
+
+\newpage
+
+Example: Let $X\sim N(0,1)$, estimate $P(0<X<1)$.\\
+
+$$P(0<X<1) = \int_0^1 \frac{1}{\sqrt{2\pi}} e^{-x^2/2}dx$$
+
+How to estimate this via MC integration?
+\vspace{3in}
+
+\footnotesize
+\begin{verbatim}
+#X~N(0,1), estimate I(g(x))=P(0<X<1)
+#Generate n  values from U(0,1)
+n<-10000
+x<-runif(n)
+
+#Evaluate all x's at g
+gx<-(1/sqrt(2*pi))*exp(-x^2/2)
+#Approximate by averaging, which converges to truth by WLLN, i.e. converges to I(g(x))=P(0<X<1)
+approximation<-sum(gx)/n
+#0.3407
+
+#compare approximation to 'truth'
+approximation
+#truth
+pnorm(q=1)-pnorm(q=0)
+#0.3413
+\end{verbatim}
+\normalsize
+
+\newpage
+
+What if our definite integral is over a different range?\\
+
+Goal: Approximate $I(g)=\int_a^b g(x)dx$
+\begin{enumerate}
+	\item Generate a RS of size $n$ from a $U(a,b)$
+	\item Evaluate each at g(x) and average.  Multiply by appropriate constant.
+\end{enumerate}
+Works because:\vspace{2in}
+
+Idea can be extended to multivariate integrals:
+$$\int_{0}^{9/10}\int_{0}^{1}\int_{0}^{11/10}(4-x^2-y^2-z^2)dzdydx=I$$
+	$$E(4-X^2-Y^2-Z^2) = \int_{0}^{9/10}\int_0^1\int_0^{11/10}(4-x^2-y^2-z^2)\left(\frac{1}{9/10-0}\right)\left(\frac{1}{1-0}\right)\left(\frac{1}{11/10-0}\right)dzdydx$$
+\begin{enumerate}
+	\item Generate $u$ randomly distributed triplets in 
+	$(0,9/10)x(0,1)x(0,11/10)$
+\item Evaluate at $4-x^2-y^2-z^2$ and average.  Multiply by 
+	$(9/10)(1)(11/10)$.
+	$$(9/10)(1)(11/10)\frac{1}{n}\sum_{i=1}^{n}(4-x_i^2-y_i^2-z_i^2)\stackrel{p}\rightarrow I$$
+\end{enumerate}
+
+\footnotesize
+\begin{verbatim}
+##########################################
+#Estimation of g=4-x^2-y^2-z^2 from z=0,11/10, y=0,1, and x=0,9/10
+#generate random values from appropriate ranges 
+xyz<-data.frame(x=runif(n,min=0,max=9/10),y=runif(n,min=0,max=1),z=runif(n,min=0,max=11/10))
+
+#evaluate at g
+g<-4-xyz$x^2-xyz$y^2-xyz$z^2
+
+#Approximate by averaging with appropriate scaling
+(9/10)*(1)*(11/10)*mean(g)
+
+#Truth is 2.9634
+\end{verbatim}
+
+### Convergence in Probabilty Exploration
 
 Suppose we have a random sample from a Normal distribution with mean 10 and standard deviation 1. What do you think $W = (\bar{Y})^2$ converges to in probability? Consider the application of the Law of Large Numbers and some educated guess work to use the app below to explore!
 
@@ -1297,4 +1741,54 @@ shinyApp(
 
 ```
 
+Note: 
+\textbf{Convergence in distribution to a constant} - If 
+$Y_n\stackrel{d}{\rightarrow}c$ then $Y_n\stackrel{p}\rightarrow c$.
 
+
+%\textbf{Convergence in distribution does not imply convergence in 
+%probability!}\\
+%
+%Consider an example where $X\sim Beta(2,2)$ then $1-X$ will also be 
+%distributed as Beta(2,2) (recall the symmetry of the Beta distribution with 
+%equal $\alpha$ and $\beta$).\\
+%
+%Define a sequence of RVs to be $X_n=X$ for all $n$.  Then 
+%$X_n\stackrel{d}{\rightarrow}1-X\sim Beta(2,2)$.\\
+%
+%Now consider convergence in probability, does 
+%$X_n\stackrel{p}{\rightarrow}1-X$?  No!\\
+%
+%To converge in probability we need 
+%$$P(|X_n-(1-X)|<\epsilon)=P(|X+X_n-1|<\epsilon)\rightarrow 1$$
+%as n goes to infinity for \textbf{every} $\epsilon>0$.  \\
+%
+%But $X_n$ is defined as $X$, therefore for $\epsilon=1/2$ we have
+%\begin{eqnarray*}
+%P(|X+X_n-1|<\epsilon)=P(|2X-1|<\epsilon) & = & P((1-\epsilon)/2 < X < 
+%(1+\epsilon)/2) < 1\\
+%&= &P(1/4 < X < 3/4) <1
+%\end{eqnarray*}
+%for all $n$.
+%
+%\newpage
+%
+%\footnotesize
+%\begin{verbatim}
+%###########################
+%#For a visual display of this, we generate many values from a beta(2,2)
+%value<-rbeta(100000,2,2)
+%par(mfrow=c(1,2))
+%plot(x=seq(from=0,to=1,by=0.01),y=dbeta(seq(from=0,to=1,by=0.01),2,2),type="l",
+%                   main="Distribution of X_n for all n",xlab="x",ylab="f_X_n")
+%									
+%#Now we find |X-(1-X)| and plot this
+%hist(abs(value-(1-value)),main="Hist of |X_n-(1-X)| values",xlab="|x_n-(1-x)|")
+%\end{verbatim}
+%\normalsize
+%
+%\begin{center}
+%\includegraphics[scale=0.3]{convp2}~\\~\\
+%\end{center}
+%
+-->
