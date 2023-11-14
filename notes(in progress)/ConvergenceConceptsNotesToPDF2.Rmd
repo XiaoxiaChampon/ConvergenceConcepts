@@ -27,6 +27,7 @@ We saw that the estimator of $p$, $\hat{p}$, from the Binomial example seemed to
 $$\hat{p}\stackrel{\bullet}\sim N\left(p, \frac{p(1-p)}{n}\right)$$
 
 Does this large-sample distribution support the 'convergence' of $\hat{p}$ to $p$ idea?  
+\vspace{1.5in}
 
 More formally, we're going to take on the idea of **convergence in probability to a constant**. First, let's define convergence in probability generally.
 
@@ -41,6 +42,9 @@ We'll mostly care about convergence in probability to a constant, call it $c$. W
   $$\lim_{n\rightarrow\infty}P(|Y_n-c|< \epsilon)=\lim_{n\rightarrow\infty}P(-\epsilon < Y_n-c<\epsilon) =  \lim_{n\rightarrow\infty}P(c-\epsilon < Y_n<c+\epsilon)=1$$
 $Y_n\stackrel{p}\rightarrow c$ if the *probability* we observe $Y_n$ close to $c$ goes to 1 in the limit.
 
+\newpage
+
+
 
 **Example** - We can visualize this idea.
 
@@ -51,6 +55,8 @@ To put this in the context of the definition, let's refer to $X$ explicitly as a
     We want to understand the behavior of $X_n$ as n grows. We'll see that $X_n\stackrel{p}\rightarrow 0$, which implies that for any $\epsilon>0$ we have
 $$\lim_{n\rightarrow\infty}P(-\epsilon < X_n < \epsilon) =0$$
 
+\vspace{1in}
+
 To visualize this, we can consider **sample paths** of $X_n$. That is, we can look at a particular sequence of $y_i$'s that will generate a sequence of $x$ and see how the values change. 
   
   Consider the following 6 values randomly sampled from a $N(0,1)$ and the corresponding sequence of $x_n$ values.
@@ -60,20 +66,22 @@ To visualize this, we can consider **sample paths** of $X_n$. That is, we can lo
   xn <- cumsum(ys)/((1:length(ys))**2)
   ```
   
-  $y$ sequence      | $x$ sequence
-  ------------------|--------------
-    $y_1$ = `r ys[1]` | $x_1$ = `r ys[1]`$/1^2$ = `r xn[1]`
-  $y_2$ = `r ys[2]` | $x_2$ = (`r ys[1]`+`r ys[2]`)$/2^2$ = `r xn[2]`
-  $y_3$ = `r ys[3]` | $x_3$ = (`r ys[1]`+`r ys[2]`+`r ys[3]`)$/3^2$ = `r xn[3]`
-  $y_4$ = `r ys[4]` | $x_4$ = (`r ys[1]`+...+`r ys[4]`)$/4^2$ = `r xn[4]`
-  $y_5$ = `r ys[5]` | $x_5$ = (`r ys[1]`+...+`r ys[5]`)$/5^2$ = `r xn[5]`
-  $y_6$ = `r ys[6]` | $x_6$ = (`r ys[1]`+...+`r ys[6]`)$/6^2$ = `r xn[6]`
+$y$ sequence      | $x$ sequence
+------------------|--------------
+$y_1$ = `r ys[1]` | $x_1$ = `r ys[1]`$/1^2$ = `r xn[1]`
+$y_2$ = `r ys[2]` | $x_2$ = (`r ys[1]`+`r ys[2]`)$/2^2$ = `r xn[2]`
+$y_3$ = `r ys[3]` | $x_3$ = (`r ys[1]`+`r ys[2]`+`r ys[3]`)$/3^2$ = `r xn[3]`
+$y_4$ = `r ys[4]` | $x_4$ = (`r ys[1]`+...+`r ys[4]`)$/4^2$ = `r xn[4]`
+$y_5$ = `r ys[5]` | $x_5$ = (`r ys[1]`+...+`r ys[5]`)$/5^2$ = `r xn[5]`
+$y_6$ = `r ys[6]` | $x_6$ = (`r ys[1]`+...+`r ys[6]`)$/6^2$ = `r xn[6]`
   
-  If we consider multiple sample paths, then convergence in probability to 0 of this sequence implies that the proportion of sample paths outside of $\pm \epsilon$ should go to zero.
-  
-  Let's plot our sample path with an $\epsilon = 0.05$:
+**If we consider multiple sample paths, then convergence in probability to 0 of this sequence implies that the proportion of sample paths outside of $\pm \epsilon$ should go to zero.**
 
-```{r, echo = FALSE}
+\newpage
+
+Let's plot our sample path with an $\epsilon = 0.05$:
+
+```{r, echo = FALSE, out.width='250px'}
 epsilon <- 0.05
 n <- 6
 plot_data <- data.frame(n = 1:n, xn = xn)
@@ -97,7 +105,7 @@ ggplot(plot_data, aes(x = n, y = xn)) +
 
 Now let's add 9 more sample paths:
     
-```{r, echo = FALSE, warning = FALSE}
+```{r, echo = FALSE, out.width='250px', warning = FALSE}
   #gen sample path function
   get_path <- function(n){
     xn <- cumsum(rnorm(n))/((1:n)^2)
@@ -136,31 +144,7 @@ Now let's add 9 more sample paths:
   
 What we hope to see is that the proportion of lines falling outside of the $\epsilon$ bars goes to 0!
     
-    
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-  #get matrix of probabilities for each n
-  probability <- t(rowSums(abs(paths) > epsilon)/M)
-  colnames(probability) <- paste0("X", 1:n)
-  #produce data table and combind probability dataset
-  table_data <- rbind(t(paths), probability)
-  rownames(table_data) <- c(paste("Sample Path", 1:M), "Probability")
-  round(table_data, 2) %>% 
-    as.data.frame() %>%
-    mutate_if(is.numeric, 
-              function(x){
-                x = cell_spec(x, 
-                              color = ifelse(x >= 0.05, "red", "black"))
-              }) %>%
-    kable(escape = F, 
-          row.names = T, 
-          caption = "<center> Probability for 10 Simuations 
-                  with sample size 6 </center>", 
-          align = "l" ) %>%
-    kable_styling(bootstrap_options = c("striped", "hover"), 
-                  full_width = T) %>%
-    row_spec(11, bold = T, color = "black", background = "lightblue")
-```
-
+\vspace{1in}
 
 **Example** - Suppose we have a random sample from a Normal distribution with mean 10 and standard deviation 1. What do you think $W = (\bar{Y})^2$ converges to in probability? Take an educated guess and use the app below to explore!
   
@@ -168,9 +152,8 @@ What we hope to see is that the proportion of lines falling outside of the $\eps
 - Choose a sample size to go up to (start smaller and then get larger once you have a good idea).
 - Select an $\epsilon$ range.
 - Look for the proportion of lines (50 sample paths are generated) falling outside of the $\epsilon$ bars to go to 0!
-  
 
-\vspace{4in}
+\newpage
 
 ### Inequalities
 
@@ -182,7 +165,7 @@ $$P(X\geq t)\leq \frac{E(X)}{t}$$
 
 Example: If $X\sim exp(1)$ then $P(X\geq t)=e^{-t}$ and $E(X)/t=1/t$.
 
-```{r, echo = FALSE, fig.align = 'center', out.width = "550px"}
+```{r, echo = FALSE, fig.align = 'center', out.width = "250px"}
 x <- 1:120/20
 plot(x, y = 1/x, type = "l", ylim = c(0,1), col = "blue", lwd = 2)
 lines(x, y = exp(-x), type = "l", col = "green", lwd = 2)
@@ -198,12 +181,15 @@ Example:  If $t=\sigma k$ for $k>0$, we can apply Chebychev's to get
 $$P\left(|X-\mu|\geq k\sigma\right)\leq \frac{\sigma^2}{k^2\sigma^2}=\frac{1}{k^2}$$
 For $k=2$ we have $P\left(|X-\mu|\geq 2\sigma\right)\leq 1/4$.
 
+\\~\\
+
 Practically, what can we take home from this?
 
 - At least 75\% of a RVs distribution lies within 2 standard deviations of the mean (if these moments exist)
 - Regardless of distribution! (if moments exist)
 - If $X\sim N(\mu,\sigma^2)$ we know $P(|X-\mu|\geq 2\sigma)\approx 0.05$. The bound isn't always very tight!
-  
+
+\newpage  
 
 ### WLLN
 
@@ -216,12 +202,13 @@ One of the most important results regarding convergence in probability is called
 - If we get a RS we know that $\bar{Y}$ will be a 'close' to $\mu$ for `large' samples
 - Applies to the **average of any independent random variables with the same finite mean**
 
+\vspace{1in}
+
 Note that the variance assumption is actually not needed but will help us facilitate an easy proof. Let's use our inequalities to prove this result!
-
-
 
 **Example** - Let $Y_i\stackrel{iid}{\sim}N(\mu, \sigma^2)$. What does $\bar{Y}$ converge to? What does $\frac{1}{n}\sum_{i=1}^{n}Y_i^2$ converge to?
 
+\vspace{2in}
 
 ### Continuity Theorems
 
@@ -233,6 +220,7 @@ Continuity Theorem
 **Example (exploration example proved)** - 
 Suppose we have a random sample from a Normal distribution with mean 10 and standard deviation 1. Consider $W = (\bar{Y})^2$. What does this converge to in probability?
 
+\vspace{2in}
 
 Note: The continuity theorem also works for convergence in distribution!
 
@@ -242,7 +230,9 @@ where $Z\sim N(0,1)$. By the continuity theorem we have that
 $$\left(\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\right)^2\stackrel{d}\rightarrow Z^2$$
 and recall that a standard Normal squared is distributed as a $\chi^2_1$ or a $gamma(1/2, 1/2)$. 
 
-#### Other Standard Limit Results Work Too!
+\vspace{1in}
+
+#### Other Standard Limit Results Work Too!\\
 
 Most of the common limit theorem ideas from calculus follow here as well ($\theta$ and $\lambda$ are constants below):
 
@@ -251,24 +241,22 @@ $$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, X\stackrel{p}{\rightarrow}\lambda\
 
 **Example** - Consider the `biased' version of the sample variance, $S_n^2=\frac{1}{n}\sum_{i=1}^{n}(Y_i-\bar{Y})^2$.  Let's show $S_n^2\stackrel{p}{\rightarrow}\sigma^2$
 
+\newpage
 
 ### $\stackrel{d}\rightarrow$ & $\stackrel{p}\rightarrow$ Relationship
 
-Convergence in probability implies convergence in distribution. However, the converse is not true generally (convegence in distribution does not imply convergence in probability). 
+**Convergence in probability implies convergence in distribution.** However, the converse is not true generally (**convergence in distribution does not imply convergence in probability**). 
 
 **Example** - Suppose $X\sim Beta(2,2)$ then $1-X$ is also distributed as Beta(2,2) (recall the symmetry of the Beta distribution with equal $\alpha$ and $\beta$).
 
 Define a sequence of RVs to be $X_n=X$ for all $n$.  Then $X_n\stackrel{d}{\rightarrow}1-X\sim Beta(2,2)$.
 
-Now consider convergence in probability, does $X_n\stackrel{p}{\rightarrow}1-X$?  No! To converge in probability we need 
-$$P(|X_n-(1-X)|<\epsilon)=P(|X+X_n-1|<\epsilon)\rightarrow 1$$
-as n goes to infinity for **every** $\epsilon>0$. Pick an $\epsilon$, say $\epsilon = 1/2$. As $X_n$ is defined as $X$, we have
+\vspace{1in}
 
-\begin{eqnarray*}
-P(|X+X_n-1|<\epsilon)=P(|2X-1|<\epsilon) & = & P((1-\epsilon)/2 < X < (1+\epsilon)/2) < 1\\
-                     &= &P(1/4 < X < 3/4) <1
-\end{eqnarray*}
-for all $n$.
+Now consider convergence in probability, does $X_n\stackrel{p}{\rightarrow}1-X$?  
+
+\newpage
+
 
 **Convergence in distribution to a constant** - If $Y_n\stackrel{d}{\rightarrow}c$ then $Y_n\stackrel{p}\rightarrow c$.
 
@@ -299,6 +287,7 @@ ylab="Dist of max")
 par(mfrow = c(1,1))
 ```
 
+\vspace{1in}
 
 Another really useful theorem relating convergence results is called Slutsky's Theorem.
 
@@ -309,7 +298,9 @@ Slutsky's Theorem
 - $X_n+Y_n\stackrel{d}\rightarrow X+a$
 
 
-This theorem is extremely useful for creating hypothesis tests and confidence intervals! Recall the example we talked about when discussing the importance of the CLT:
+\newpage
+
+Slutsky's theorem is extremely useful for creating hypothesis tests and confidence intervals! Recall the example we talked about when discussing the importance of the CLT:
 
 **Example:**
 
@@ -328,26 +319,34 @@ $\bar{Y}-1.96\sigma/\sqrt{n}$ and $\bar{Y}+1.96\sigma/\sqrt{n}$ capture $\mu$!
 
 Of course, $\sigma$ won't be known. Slutsky's theorem allows us to substitute a `consistent' estimator of $\sigma$ (i.e. an estimator of $\sigma^2$ that converges in probability to $\sigma$) and obtain a similar result!
 
+\newpage
+
 
 ### Delta Method
 
 A common place where we'd use the CLT, LLN, and Slutsky's theorem together is when looking at **Delta Method Normality**.
+
+\vspace{3in}
 
 **Large Sample Normality and the Delta Method**
 : Let $Y_1,Y_2,...$ be a sequence of RVs such that $$\sqrt{n}(Y_n-\theta_0)\stackrel{d}{\rightarrow}N(0,\sigma^2)~~~~~~or~~~~Y_n\stackrel{\bullet}{\sim}N(\theta_0,\sigma^2/n)$$
 For a function g and value $\theta_0$ where $g^{'}(\theta_0)$ exists and is not 0 we have
 $$\sqrt{n}(g(Y_n)-g(\theta_0))\stackrel{d}{\rightarrow}N(0,(g^{'}(\theta_0))^2\sigma^2)~~~~~~or~~~~g(Y_n)\stackrel{\bullet}{\sim}N(g(\theta_0),(g^{'}(\theta_0))^2\sigma^2/n)$$
 
+\vspace{1in}
+
 **Example** - Suppose $Y \sim gamma(n, \lambda)$. Goal: make inference on $\frac{1}{\mu}$.  Provide an approximate distribution for $1/Y$ an \textbf{estimator} of $1/\mu$.
 
+\vspace{3in}
 
 **Example** -  Let $Y_i\stackrel{iid}{\sim}Ber(p)$ then $\bar{Y}\stackrel{\bullet}{\sim}N(p,\frac{p(1-p)}{n})$.  Goal: make inference for $\frac{p}{1-p}$ using $\frac{\bar{Y}}{1-\bar{Y}}$.
 
+\vspace{3in}
 
 **Example** - Suppose $Y_i\stackrel{iid}{\sim}N(\mu,\sigma^2)$ where $E(Y_i)=\mu\neq 0$.  Goal: make inference on $\frac{1}{\mu}$.  Provide 
 an approximate distribution for $1/\bar{Y}$ an \textbf{estimator} of $1/\mu$.
 
-
+\newpage
 
 ## Recap
 
@@ -377,7 +376,9 @@ Strategies for proving convergence in probability:
 - Convergence in distribution to a constant implies convergence in probability
 - Resort to the definition of convergence in probability and directly find the probability or use inequalities (Markov's or Chebychev's) 
 
-```{r, echo = FALSE, fig.align='center', out.width = "800px"}
+\newpage
+
+```{r, echo = FALSE, fig.align='center', out.width = "650px", out.extra='angle=90'}
 knitr::include_graphics("distr_relationship_wikipedia.jpg")
 ```
 
