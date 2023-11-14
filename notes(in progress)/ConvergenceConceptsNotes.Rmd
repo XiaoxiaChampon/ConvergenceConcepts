@@ -1,7 +1,6 @@
 ---
 title: "Convergence Concepts"
-output: 
-  html_document:
+html_document:
     css: "style.css"
 runtime: shiny
 ---
@@ -54,7 +53,7 @@ A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023]
 
 <div style = "float:right">
 ```{r, echo = FALSE, out.width = "400px"}
-knitr::include_graphics("../img/pew.jpg")
+knitr::include_graphics("pew.jpg")
 ```
 </div>
 
@@ -503,7 +502,7 @@ Convergence of MGFs
 : Consider a sequence of random variables $Y_1,...,Y_n,...$ with corresponding MGFs $m_{Y_1}(t), ..., m_{Y_n}(t),..$. Then $Y_n$ converges in distribution to the random variable $Y$ (with MGF $m_Y(t)$) if
 $$\lim_{n \rightarrow \infty} m_{Y_n}(t) = m_Y(t)$$
 
-<hr style="height:0px;border: none; border-top: 5px solid black">
+<hr style="height:0px;border: none; border-top: 5px solid">
 
 ### Proving $\stackrel{d}\rightarrow$ using CDFs
 
@@ -1167,5 +1166,478 @@ $\bar{Y}-1.96\sigma/\sqrt{n}$ and $\bar{Y}+1.96\sigma/\sqrt{n}$ capture $\mu$!
 
 
 
-## Convergence in Probability (in-progress)
+## Convergence in Probability {.tabset}
+
+### Definition 
+
+We saw that the estimator of $p$, $\hat{p}$, from the Binomial example seemed to be observed closer and closer to $p$ for larger sample sizes. Additionally, we saw a good large-sample distribution for $\hat{p}$ is
+$$\hat{p}\stackrel{\bullet}\sim N\left(p, \frac{p(1-p)}{n}\right)$$
+
+Does this large-sample distribution support the 'convergence' of $\hat{p}$ to $p$ idea?  
+
+More formally, we're going to take on the idea of **convergence in probability to a constant**. First, let's define convergence in probability generally.
+
+Convergence in Probability
+: A sequence of RVs $Y_1,...,Y_n,...$ converges in probability to a RV $Y$ if for every $\epsilon>0$
+$$\lim_{n\rightarrow\infty}P(|Y_n-Y|\geq \epsilon)=0 \iff 
+\lim_{n\rightarrow\infty}P(|Y_n-Y|<\epsilon)=1$$
+This is denoted as 
+$$Y_n\stackrel{p}{\rightarrow}Y$$
+
+We'll mostly care about convergence in probability to a constant, call it $c$. We can see the definition in this case can be simplied to the following:
+  $$\lim_{n\rightarrow\infty}P(|Y_n-c|< \epsilon)=\lim_{n\rightarrow\infty}P(-\epsilon < Y_n-c<\epsilon) =  \lim_{n\rightarrow\infty}P(c-\epsilon < Y_n<c+\epsilon)=1$$
+$Y_n\stackrel{p}\rightarrow c$ if the *probability* we observe $Y_n$ close to $c$ goes to 1 in the limit.
+
+
+**Example** - We can visualize this idea.
+
+Assume that $Y_i\stackrel{iid}\sim N(0,1)$. Let's investigate the behavior of 
+$$X = \frac{1}{n^2}\sum_{i=1}^{n}Y_i$$
+To put this in the context of the definition, let's refer to $X$ explicitly as a function of $n$:
+  $$X_n = \frac{1}{n^2}\sum_{i=1}^{n}Y_i$$
+    We want to understand the behavior of $X_n$ as n grows. We'll see that $X_n\stackrel{p}\rightarrow 0$, which implies that for any $\epsilon>0$ we have
+$$\lim_{n\rightarrow\infty}P(-\epsilon < X_n < \epsilon) =0$$
+
+To visualize this, we can consider **sample paths** of $X_n$. That is, we can look at a particular sequence of $y_i$'s that will generate a sequence of $x$ and see how the values change. 
+  
+  Consider the following 6 values randomly sampled from a $N(0,1)$ and the corresponding sequence of $x_n$ values.
+  ```{r, echo = FALSE}
+  set.seed(1)
+  ys <- rnorm(6)
+  xn <- cumsum(ys)/((1:length(ys))**2)
+  ```
+  
+  $y$ sequence      | $x$ sequence
+  ------------------|--------------
+    $y_1$ = `r ys[1]` | $x_1$ = `r ys[1]`$/1^2$ = `r xn[1]`
+  $y_2$ = `r ys[2]` | $x_2$ = (`r ys[1]`+`r ys[2]`)$/2^2$ = `r xn[2]`
+  $y_3$ = `r ys[3]` | $x_3$ = (`r ys[1]`+`r ys[2]`+`r ys[3]`)$/3^2$ = `r xn[3]`
+  $y_4$ = `r ys[4]` | $x_4$ = (`r ys[1]`+...+`r ys[4]`)$/4^2$ = `r xn[4]`
+  $y_5$ = `r ys[5]` | $x_5$ = (`r ys[1]`+...+`r ys[5]`)$/5^2$ = `r xn[5]`
+  $y_6$ = `r ys[6]` | $x_6$ = (`r ys[1]`+...+`r ys[6]`)$/6^2$ = `r xn[6]`
+  
+  If we consider multiple sample paths, then convergence in probability to 0 of this sequence implies that the proportion of sample paths outside of $\pm \epsilon$ should go to zero.
+  
+  Let's plot our sample path with an $\epsilon = 0.05$:
+
+```{r, echo = FALSE}
+epsilon <- 0.05
+n <- 6
+plot_data <- data.frame(n = 1:n, xn = xn)
+ggplot(plot_data, aes(x = n, y = xn)) + 
+  geom_line() + 
+  ylim(c(-0.75,0.75)) + 
+  ggtitle("A sample path of Xn") + 
+  geom_abline(intercept = -epsilon, slope = 0, color = "red") + 
+  geom_abline(intercept = epsilon, slope = 0, color = "red") + 
+  theme(legend.position = "none") +
+  scale_x_continuous("n", breaks = 1:n, labels = as.character(1:n))
+#plot(x = 1:n, 
+#     y = xn, 
+#     type = "l", 
+#     main = "A sample path of X_n", 
+#     ylim = c(-1, 1),
+#     xlab = "n",
+#     lwd = 2)
+#abline(h = c(-epsilon, epsilon), col = "red", lwd = 2)
+```
+
+Now let's add 9 more sample paths:
+    
+```{r, echo = FALSE, warning = FALSE}
+  #gen sample path function
+  get_path <- function(n){
+    xn <- cumsum(rnorm(n))/((1:n)^2)
+  }
+  M <- 10
+  set.seed(1)
+  paths <- replicate(M, get_path(n))
+  plot_data <- data.frame(xn = c(paths), n = rep(1:n, times = M), path = as.factor(rep(1:M, each = n)))
+  
+  ggplot(plot_data, aes(x = n, y = xn, color = path)) + 
+    geom_line()  + 
+    ggtitle("A sample path of Xn") + 
+    geom_abline(intercept = -epsilon, slope = 0, color = "red", size = 1.1, lty = "dashed") + 
+    geom_abline(intercept = epsilon, slope = 0, color = "red", size = 1.1, lty = "dashed") + 
+    annotate("rect", xmin = 3.75, xmax = 4.25, ymin = -0.75, ymax = 0.75, alpha = .2) +
+    annotate("text", x = 4, y = 0.8, label = "7/10 fall within\nepsilon bounds", col = "darkblue") + 
+    theme(legend.position = "none") +
+    scale_x_continuous("n", breaks = 1:n, labels = as.character(1:n))
+  
+  ##add what xiaoxia has below with the bars and proportion business and ggploty this bitch 
+  
+  
+  # plot(x = 1:n, 
+  #      y = xn, 
+  #      type = "l", 
+  #      main = "A sample path of X_n", 
+  #      ylim = c(-1, 1),
+  #      xlab = "n", 
+  #      lwd = 2)
+  # for (i in 1:9){
+  #   lines(x = 1:n, y = paths[,i], lwd = 2)
+  # }
+  # abline(h = c(-epsilon, epsilon), col = "red")
+  
+```
+  
+What we hope to see is that the proportion of lines falling outside of the $\epsilon$ bars goes to 0!
+    
+    
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+  #get matrix of probabilities for each n
+  probability <- t(rowSums(abs(paths) > epsilon)/M)
+  colnames(probability) <- paste0("X", 1:n)
+  #produce data table and combind probability dataset
+  table_data <- rbind(t(paths), probability)
+  rownames(table_data) <- c(paste("Sample Path", 1:M), "Probability")
+  round(table_data, 2) %>% 
+    as.data.frame() %>%
+    mutate_if(is.numeric, 
+              function(x){
+                x = cell_spec(x, 
+                              color = ifelse(x >= 0.05, "red", "black"))
+              }) %>%
+    kable(escape = F, 
+          row.names = T, 
+          caption = "<center> Probability for 10 Simuations 
+                  with sample size 6 </center>", 
+          align = "l" ) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"), 
+                  full_width = T) %>%
+    row_spec(11, bold = T, color = "black", background = "lightblue")
+```
+
+
+**Example** - Suppose we have a random sample from a Normal distribution with mean 10 and standard deviation 1. What do you think $W = (\bar{Y})^2$ converges to in probability? Take an educated guess and use the app below to explore!
+  
+- Select the value c that you guess $W$ converges to in probability.
+- Choose a sample size to go up to (start smaller and then get larger once you have a good idea).
+- Select an $\epsilon$ range.
+- Look for the proportion of lines (50 sample paths are generated) falling outside of the $\epsilon$ bars to go to 0!
+  
+```{r, echo=FALSE,message=FALSE, eval = TRUE}
+#path for data
+get_path <- function(n){
+  xn <- (cumsum(rnorm(n, mean = 10, sd = 1))/(1:n))^2
+}
+M <- 50
+shinyApp(
+  ui <- fluidPage(
+    #inputs on the side for n, p, and generating data
+    sidebarPanel(
+      numericInput("c",
+                   "c: Value to converge to",
+                   value = 0,
+                   min = -500, 
+                   max = 500),
+      numericInput("n",
+                   "n: Sample Size (1 to 1000)",
+                   min = 1,
+                   max = 1000,
+                   step= 1,
+                   value = 5),
+      sliderInput("epsilon",
+                  "epsilon: range",
+                  min = 1,
+                  max = 10,
+                  step= 0.5,
+                  value = 10),
+      actionButton("create",
+                   "Create/Update graph")
+    ),
+    mainPanel(
+      plotlyOutput("convergence")
+    )
+  ),
+  server <- function(input, output, session){
+    ps <- reactiveValues(p = c())
+    
+    observeEvent(input$create, 
+                 {
+                   n <- input$n
+                   #gen sample path function
+                   paths <- replicate(M, get_path(n))
+                   plot_data <- data.frame(xn = c(paths), 
+                                           n = rep(1:n, times = M), 
+                                           path = as.factor(rep(1:M, each = n)))
+                   
+                   ps$p <- plot_data
+                 }
+    )
+    
+    output$convergence <- renderPlotly({
+      plot_data <- ps$p
+      c <- isolate(input$c)
+      n <- isolate(input$n)
+      epsilon <- isolate(input$epsilon)
+      
+      if(length(plot_data) == 0) {
+        NULL
+      } else {
+        #add proportion in bounds to data frame
+        hover_data <- plot_data %>% 
+          group_by(n) %>% 
+          summarize(proportion = mean(abs(xn-c) < epsilon))
+        if(n < 50){
+          p <- ggplot(plot_data, aes(x = n, y = xn)) +
+            geom_line(aes(color = path, group = path)) + 
+            geom_hline(yintercept = c+epsilon, size = 1, col = "purple") + 
+            geom_hline(yintercept = c-epsilon, size = 1, col = "purple") +
+            theme_classic() + 
+            theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5), legend.position = "none") +
+            ggtitle("50 Sample Paths Visualized as the Sample Size Increases") + 
+            ylab("Path Values") + 
+            scale_x_continuous("n", breaks = 1:n, labels = as.character(1:n))
+          p2 <- ggplotly(p)
+          for (i in 1:n){
+            p2 <- p2 %>% add_polygons(x = c(hover_data$n[i]-0.5, 
+                                            hover_data$n[i]-0.5, 
+                                            hover_data$n[i]+0.5,
+                                            hover_data$n[i]+0.5), 
+                                      y = c(-1000, 1000, 1000, -1000), 
+                                      line = list(width = 0), 
+                                      fillcolor = 'rgba(0, 0, 0, 0)', 
+                                      inherit = FALSE, 
+                                      name = paste0("Proportion of Sample Paths\n within epsilon bounds (n = ", i, "): ", hover_data$proportion[i]))
+          }
+        } else {
+          p <- ggplot(plot_data, aes(x = n, y = xn)) +
+            geom_line(aes(color = path, group = path)) + 
+            geom_hline(yintercept = c+epsilon, size = 1, col = "purple") + 
+            geom_hline(yintercept = c-epsilon, size = 1, col = "purple") +
+            theme_classic() + 
+            theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5), legend.position = "none") +
+            ggtitle("50 Sample Paths Visualized as the Sample Size Increases") + 
+            ylab("Path Values")
+          p2 <- ggplotly(p)
+          for (i in c(seq(5, n, by = 10), n)){
+            p2 <- p2 %>% add_polygons(x = c(hover_data$n[i]-5, 
+                                            hover_data$n[i]-5, 
+                                            hover_data$n[i]+5,
+                                            hover_data$n[i]+5), 
+                                      y = c(-500, 500, 500, -500), 
+                                      line = list(width = 0), 
+                                      fillcolor = 'rgba(0, 0, 0, 0)', 
+                                      inherit = FALSE, 
+                                      name = paste0("Proportion of Sample Paths\n within epsilon bounds (n = ", i, "): ", hover_data$proportion[i]))
+          }
+        }
+        p2
+      }
+    })
+  }
+)
+
+
+```
+
+### Inequalities
+
+To prove convergence in probability, we'll sometimes rely on some very famous inequalities. These will help us to show the probability goes to 0 or 1.
+
+Markov's Inequality
+: If $X$ is a nonnegative RV (support has no negative values) for which $E(X)$ exists, then for $t>0$
+$$P(X\geq t)\leq \frac{E(X)}{t}$$
+
+Example: If $X\sim exp(1)$ then $P(X\geq t)=e^{-t}$ and $E(X)/t=1/t$.
+
+```{r, echo = FALSE, fig.align = 'center', out.width = "550px"}
+x <- 1:120/20
+plot(x, y = 1/x, type = "l", ylim = c(0,1), col = "blue", lwd = 2)
+lines(x, y = exp(-x), type = "l", col = "green", lwd = 2)
+legend("topright", legend = c("1/t", "exp(-t)"), col = c("blue", "green"), lwd = 2)
+```
+
+
+Chebychev's Inequality 
+: Let $X$ be a RV with mean = $\mu$ and variance = $\sigma^2$, then for $t>0$ 
+  $$P(|X-\mu|\geq t)\leq \frac{\sigma^2}{t^2}$$
+  
+Example:  If $t=\sigma k$ for $k>0$, we can apply Chebychev's to get
+$$P\left(|X-\mu|\geq k\sigma\right)\leq \frac{\sigma^2}{k^2\sigma^2}=\frac{1}{k^2}$$
+For $k=2$ we have $P\left(|X-\mu|\geq 2\sigma\right)\leq 1/4$.
+
+Practically, what can we take home from this?
+
+- At least 75\% of a RVs distribution lies within 2 standard deviations of the mean (if these moments exist)
+- Regardless of distribution! (if moments exist)
+- If $X\sim N(\mu,\sigma^2)$ we know $P(|X-\mu|\geq 2\sigma)\approx 0.05$. The bound isn't always very tight!
+  
+
+### WLLN
+
+One of the most important results regarding convergence in probability is called the Law of Large Numbers (LLN).
+
+(Weak) Law of Large Numbers (WLLN)
+: Suppose $Y_i\stackrel{iid}\sim f$ where the mean and variance of $Y_i$ exist. Then $$\bar{Y}=\frac{1}{n}\sum_{i=1}^{n}Y_i\stackrel{p}\rightarrow E(Y)=\mu$$
+
+- Big picture goal is to estimate parameters such as $\mu$
+- If we get a RS we know that $\bar{Y}$ will be a 'close' to $\mu$ for `large' samples
+- Applies to the **average of any independent random variables with the same finite mean**
+
+Note that the variance assumption is actually not needed but will help us facilitate an easy proof. Let's use our inequalities to prove this result!
+
+
+
+**Example** - Let $Y_i\stackrel{iid}{\sim}N(\mu, \sigma^2)$. What does $\bar{Y}$ converge to? What does $\frac{1}{n}\sum_{i=1}^{n}Y_i^2$ converge to?
+
+
+### Continuity Theorems
+
+The WLLN is also quite useful when combined with the continuity theorem.
+
+Continuity Theorem
+: If $Y_1,Y_2,Y_3,...$ converge to $Y$ and $g()$ is a continuous function then $g(Y_1),g(Y_2),g(Y_3)...$ converge to $g(Y)$. 
+
+**Example (exploration example proved)** - 
+Suppose we have a random sample from a Normal distribution with mean 10 and standard deviation 1. Consider $W = (\bar{Y})^2$. What does this converge to in probability?
+
+
+Note: The continuity theorem also works for convergence in distribution!
+
+**Example** - Suppose that $Y_i\stackrel{iid}\sim gamma(\alpha, \lambda)$. We have that 
+$$\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\stackrel{d}\rightarrow Z$$
+where $Z\sim N(0,1)$. By the continuity theorem we have that 
+$$\left(\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\right)^2\stackrel{d}\rightarrow Z^2$$
+and recall that a standard Normal squared is distributed as a $\chi^2_1$ or a $gamma(1/2, 1/2)$. 
+
+#### Other Standard Limit Results Work Too!
+
+Most of the common limit theorem ideas from calculus follow here as well ($\theta$ and $\lambda$ are constants below):
+
+$$\mbox{If }Y\stackrel{p}{\rightarrow}\theta, X\stackrel{p}{\rightarrow}\lambda\mbox{ then }Y\pm X\stackrel{p}{\rightarrow}\theta\pm\lambda$$
+
+
+**Example** - Consider the `biased' version of the sample variance, $S_n^2=\frac{1}{n}\sum_{i=1}^{n}(Y_i-\bar{Y})^2$.  Let's show $S_n^2\stackrel{p}{\rightarrow}\sigma^2$
+
+
+### $\stackrel{d}\rightarrow$ & $\stackrel{p}\rightarrow$ Relationship
+
+Convergence in probability implies convergence in distribution. However, the converse is not true generally (convegence in distribution does not imply convergence in probability). 
+
+**Example** - Suppose $X\sim Beta(2,2)$ then $1-X$ is also distributed as Beta(2,2) (recall the symmetry of the Beta distribution with equal $\alpha$ and $\beta$).
+
+Define a sequence of RVs to be $X_n=X$ for all $n$.  Then $X_n\stackrel{d}{\rightarrow}1-X\sim Beta(2,2)$.
+
+Now consider convergence in probability, does $X_n\stackrel{p}{\rightarrow}1-X$?  No! To converge in probability we need 
+$$P(|X_n-(1-X)|<\epsilon)=P(|X+X_n-1|<\epsilon)\rightarrow 1$$
+as n goes to infinity for **every** $\epsilon>0$. Pick an $\epsilon$, say $\epsilon = 1/2$. As $X_n$ is defined as $X$, we have
+
+\begin{eqnarray*}
+P(|X+X_n-1|<\epsilon)=P(|2X-1|<\epsilon) & = & P((1-\epsilon)/2 < X < (1+\epsilon)/2) < 1\\
+                     &= &P(1/4 < X < 3/4) <1
+\end{eqnarray*}
+for all $n$.
+
+**Convergence in distribution to a constant** - If $Y_n\stackrel{d}{\rightarrow}c$ then $Y_n\stackrel{p}\rightarrow c$.
+
+Why does it makes sense that convergence in distribution to a constant implies convergence in probability to that constant? Consider our example where we look at the maximum from a random sample of $U(0,1)$ RVs. Below are plots of the distribution of the sample max for varying $n$ values.
+
+```{r echo= FALSE}
+#######################################################################
+#Generate many samples of size n from Uniform(0,1), find max for each sample to see the distribution of max
+n<-c(3,10,100,10000)
+N<-20000
+maxes<-matrix(,nrow=N,ncol=length(n))
+
+#loop over sample sizes
+for (j in 1:length(n)){
+  #loop through data sets
+  for (i in 1:N){maxes[i,j]<-max(runif(n[j]))}
+}
+
+par(mfrow=c(1,length(n)))
+hist(maxes[,1],breaks=seq(0,1,by=0.005),main=paste("Hist of Max, n=",n[1],sep=""),xlab="max",
+ylab="Dist of max")
+hist(maxes[,2],breaks=seq(0,1,by=0.005),main=paste("Hist of Max, n=",n[2],sep=""),xlab="max",
+ylab="Dist of max")
+hist(maxes[,3],breaks=seq(0,1,by=0.005),main=paste("Hist of Max, n=",n[3],sep=""),xlab="max",
+ylab="Dist of max")
+hist(maxes[,4],breaks=seq(0,1,by=0.005),main=paste("Hist of Max, n=",n[4],sep=""),xlab="max",
+ylab="Dist of max")
+par(mfrow = c(1,1))
+```
+
+
+Another really useful theorem relating convergence results is called Slutsky's Theorem.
+
+Slutsky's Theorem
+: If $X_n\stackrel{d}\rightarrow X$ and $Y_n\stackrel{p}\rightarrow a$, then 
+
+- $X_nY_n\stackrel{d}\rightarrow aX$
+- $X_n+Y_n\stackrel{d}\rightarrow X+a$
+
+
+This theorem is extremely useful for creating hypothesis tests and confidence intervals! Recall the example we talked about when discussing the importance of the CLT:
+
+**Example:**
+
+- Suppose we know $\sigma$ and we want inference for $\mu$.
+- If we have a random sample $Y_1,...,Y_n$, we know  $\bar{Y}\stackrel{\bullet}{\sim}N(\mu,\sigma^2/n)$ ($\mu$ only unknown)
+- We can make an approximate claim about $\mu$ via a confidence interval derived from an argument similar to that below:
+
+\begin{align*}
+P(-1.96<Z<1.96) &= 0.95\\
+\Leftrightarrow P\left(-1.96<\frac{\bar{Y}-\mu}{\sigma/\sqrt{n}}<1.96\right) &= 0.95\\
+\Leftrightarrow P\left(\bar{Y}-1.96\sigma/\sqrt{n}<\mu<\bar{Y}+1.96\sigma/\sqrt{n}\right) &= 0.95\\
+\end{align*}
+
+- That is, there is a 95\% probability the RVs
+$\bar{Y}-1.96\sigma/\sqrt{n}$ and $\bar{Y}+1.96\sigma/\sqrt{n}$ capture $\mu$!
+
+Of course, $\sigma$ won't be known. Slutsky's theorem allows us to substitute a `consistent' estimator of $\sigma$ (i.e. an estimator of $\sigma^2$ that converges in probability to $\sigma$) and obtain a similar result!
+
+
+### Delta Method
+
+A common place where we'd use the CLT, LLN, and Slutsky's theorem together is when looking at **Delta Method Normality**.
+
+**Large Sample Normality and the Delta Method**
+: Let $Y_1,Y_2,...$ be a sequence of RVs such that $$\sqrt{n}(Y_n-\theta_0)\stackrel{d}{\rightarrow}N(0,\sigma^2)~~~~~~or~~~~Y_n\stackrel{\bullet}{\sim}N(\theta_0,\sigma^2/n)$$
+For a function g and value $\theta_0$ where $g^{'}(\theta_0)$ exists and is not 0 we have
+$$\sqrt{n}(g(Y_n)-g(\theta_0))\stackrel{d}{\rightarrow}N(0,(g^{'}(\theta_0))^2\sigma^2)~~~~~~or~~~~g(Y_n)\stackrel{\bullet}{\sim}N(g(\theta_0),(g^{'}(\theta_0))^2\sigma^2/n)$$
+
+**Example** - Suppose $Y \sim gamma(n, \lambda)$. Goal: make inference on $\frac{1}{\mu}$.  Provide an approximate distribution for $1/Y$ an \textbf{estimator} of $1/\mu$.
+
+
+**Example** -  Let $Y_i\stackrel{iid}{\sim}Ber(p)$ then $\bar{Y}\stackrel{\bullet}{\sim}N(p,\frac{p(1-p)}{n})$.  Goal: make inference for $\frac{p}{1-p}$ using $\frac{\bar{Y}}{1-\bar{Y}}$.
+
+
+**Example** - Suppose $Y_i\stackrel{iid}{\sim}N(\mu,\sigma^2)$ where $E(Y_i)=\mu\neq 0$.  Goal: make inference on $\frac{1}{\mu}$.  Provide 
+an approximate distribution for $1/\bar{Y}$ an \textbf{estimator} of $1/\mu$.
+
+
+
+## Recap
+
+We have two big ideas:
+
+- convergence in distribution
+- convergence in probability
+
+There are two big theorems:
+
+- CLT
+- WLLN
+
+Strategies for proving convergence in distribution:
+
+- CLT
+- Delta Method Normality
+- CDF convergence
+- MGF convergence
+- Convergence in probability implies convergence in distribution
+- Continuity theorem applied to some result
+
+Strategies for proving convergence in probability:
+
+- LLN
+- Continuity theorem
+- Convergence in distribution to a constant implies convergence in probability
+- Resort to the definition of convergence in probability and directly find the probability or use inequalities (Markov's or Chebychev's) 
+
+```{r, echo = FALSE, fig.align='center', out.width = "800px"}
+knitr::include_graphics("distr_relationship_wikipedia.jpg")
+```
 
