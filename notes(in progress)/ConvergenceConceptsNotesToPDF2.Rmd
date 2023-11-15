@@ -172,6 +172,7 @@ lines(x, y = exp(-x), type = "l", col = "green", lwd = 2)
 legend("topright", legend = c("1/t", "exp(-t)"), col = c("blue", "green"), lwd = 2)
 ```
 
+\vspace{3in}
 
 Chebychev's Inequality 
 : Let $X$ be a RV with mean = $\mu$ and variance = $\sigma^2$, then for $t>0$ 
@@ -181,7 +182,7 @@ Example:  If $t=\sigma k$ for $k>0$, we can apply Chebychev's to get
 $$P\left(|X-\mu|\geq k\sigma\right)\leq \frac{\sigma^2}{k^2\sigma^2}=\frac{1}{k^2}$$
 For $k=2$ we have $P\left(|X-\mu|\geq 2\sigma\right)\leq 1/4$.
 
-\\~\\
+\vspace{3in}
 
 Practically, what can we take home from this?
 
@@ -225,9 +226,9 @@ Suppose we have a random sample from a Normal distribution with mean 10 and stan
 Note: The continuity theorem also works for convergence in distribution!
 
 **Example** - Suppose that $Y_i\stackrel{iid}\sim gamma(\alpha, \lambda)$. We have that 
-$$\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\stackrel{d}\rightarrow Z$$
+$$\frac{\bar{Y}-\alpha/\lambda}{\frac{\sqrt{\alpha}}{\lambda\sqrt{n}}}\stackrel{d}\rightarrow Z$$
 where $Z\sim N(0,1)$. By the continuity theorem we have that 
-$$\left(\frac{\bar{Y}-\alpha/\lambda}{\frac{\alpha}{\lambda^2\sqrt{n}}}\right)^2\stackrel{d}\rightarrow Z^2$$
+$$\left(\frac{\bar{Y}-\alpha/\lambda}{\frac{\sqrt{\alpha}}{\lambda\sqrt{n}}}\right)^2\stackrel{d}\rightarrow Z^2$$
 and recall that a standard Normal squared is distributed as a $\chi^2_1$ or a $gamma(1/2, 1/2)$. 
 
 \vspace{1in}
