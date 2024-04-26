@@ -19,6 +19,679 @@ library(plotly)
 
 # Limit Theory
 
+## Motivation
+
+**Why do we care about Limit Theory?** By limit theory we mean "what is the behavior our our random variable as some quantity grows?" Usually, we concern ourselves with the sample size ($n$) being the quantity that grows. 
+
+We look at two major ideas:
+
+- Determining \textit{approximate (or large-sample or asymptotic)} distributions.  That is, distributions that can be used when some quantity is 'large' (usually the sample size).
+- Understanding whether or not a random variable is observed closer and closer to some quantity as our sample size grows. For instance, the sample mean 'converging' to the population mean $\mu$.
+
+### Motivating Example
+
+A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023](https://www.pewresearch.org/science/2023/05/16/americans-largely-positive-views-of-childhood-vaccines-hold-steady/). The survey asked participants questions related to their thoughts on vaccination. One question centered around the perceived efficacy of the MMR vaccine.
+
+<div style = "float:right">
+```{r, echo = FALSE, out.width = "400px"}
+knitr::include_graphics("../img/pew.jpg")
+```
+</div>
+
+The Center survey finds 88% of Americans say the benefits of childhood vaccines for measles, mumps and rubella (MMR) outweigh the risks, compared with just 10% who say the risks outweigh the benefits.
+
+The sample proportion of 0.88 is an estimate of the population proportion. That is, the actual proportion of U.S. adults that believe the benefits outweigh the risks. 
+
+Of course this is a single number estimate that would change if we sampled again. We can report the standard deviation of this sample proportion, called a standard error, to give us an idea of the variability in the estimate.  
+
+Assuming independence between study participants, we can find an estimated standard error for this sample proportion using techniques learned earlier:
+
+$$\widehat{SE(\hat{p})} = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}} \approx \sqrt{\frac{0.88*0.12}{10701}} = 0.0031$$
+Two big questions arise:
+
+- First, can we provide a range of values we are 'confident' the true proportion falls in?
+    + We need to know about more than just the variability of the estimator
+    + We need to understand the **distribution** of the estimator!
+        - Called the **sampling distribution**
+        - Describes the pattern in which we observe this $\hat{p}$
+    + The sampling distribution can be difficult to derive in some cases!
+- Second, does our estimator $\hat{p}$ get closer to the true value $p$ for larger sample sizes?
+    + That is, does $\hat{p}$ *converge* to $p$ as n grows?
+    + What does it even mean for a random quantity to converge?
+    
+These two questions can often be answered by looking at the *limiting* behavior (here as the sample size grows) of the estimator $\hat{p}$.
+
+
+## $\stackrel{d}{\rightarrow}$ Idea
+
+To answer the first question: "Can we provide a range of values for the parameter?", let's consider determining the *sampling distribution* through simulation. A distribution just describes the pattern in which we observe our variable. If we can simulate observing the variable, we can create many *realizations* of $\hat{p}$ to understand the *sampling distribution*. 
+
+To do this we need to make some assumptions. Namely:
+
+- We have $n$ $iid$ (independent and identically distributed) trials
+- A value for the true $p$ 
+
+Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 10.
+
+Instructions:
+
+- "n: sample size" Slider: Move the  slider to the right to increase the sample size
+- "p: true value in population" Slider: Move the  slider to the right to increase the true proportion
+- "Generate a sample proportion": Click this button to add a single randomly generated sample proportion to the plot
+- "Generate 100 sample proportions": Click this button to add 100 randomly generated sample proportions to the plot
+- "Add +/- 2 Standard Error and Overlay Smoothed Density" Check this bot to add bars corresponding to two standard errors and also add a smoothed density overlayed
+
+Put your thoughts from using the app here!
+<br><br><br><br><br><br>
+
+As long as the distribution is roughly normal, we can see that 0.95 of the distribution falls within two standard errors of $p$. For 95\% of the $\hat{p}$ values we observe, adding and subtracting two standard errors would capture the true $p$. This means we could use something like 
+
+$$\hat{p}\pm 2*\widehat{SE(\hat{p})}$$
+
+as an interval to *capture* the true $p$. (Indeed this is the usual basic interval for a proportion!)
+
+
+## $\stackrel{p}{\rightarrow}$ Idea
+
+To answer the second question:  "does our estimator $\hat{p}$ get closer to the true value $p$ for larger sample sizes?", we could consider generating sample proportions for ever increasing values of the sample size and seeing how they behave. Using the app below, we can generate many sample proportions for varying $n$, subtract off the true value of $p$, and see how that difference changes on the plot.
+
+- Start with one sample proportion at each $n$ and see the behavior of $\hat{p}-p$. 
+- Now increase the number of sample proportions generated for each $n$. What aspect of this relationship does this help us understand?
+- Increase the sample size you are considering. What happens to the observed difference as $n$ grows?
+
+Instructions:
+
+- "Maximum Sample Size": Enter a number to increase/decrease the largest sample size to consider
+- "# samples at each n" Slider: Move the slider to select the number of sample proportions to generate at each given sample size
+- "p: true value in population": Move this slider to select the true proportion from the population
+- "Create/Update graph": Click this button to create the initial graph or update the graph based off of new selections of the above values
+
+Put your thoughts from using the app here!
+<br><br><br><br><br><br>
+
+We can see that $\hat{p}-p$ seems to get closer to 0. This indicates that $\hat{p}$ is in some sense *converging* to the true value of $p$!
+
+Now that we some basic intuition, let's formalize what we are talking about.
+
+## Definitions
+
+By *limit*, *large-sample*, or *asymptotic* theory we mean we want to understand the behavior of some quantity, usually a *statistic*, as something changes, usually the sample size $n$. For instance, we will investigate the behavior of the sample mean, $\bar{Y}$, as the sample size grows. We'll look at questions like:
+
+- When the distribution of a statistic (called a **sampling distribution**) is difficult to derive *exactly*, is there a good **approximating** distribution that can be used to get **approximate** probability statements about $\bar{Y}$?
+- What value does $\bar{Y}$ *get close to* or *converge to* as the sample size grows? 
+
+Answers to these questions will allows us to do inference (confidence intervals and hypothesis tests) and understand the quality of our estimator.
+
+### Common Assumptions & Definitions
+
+We often make some assumptions about how we observe our random variables in order to investigate these types of questions. For simplicity, we often assume we have a **random sample**.
+
+Random Sample
+: $Y_1,..., Y_n$ are a random sample (RS) of size $n$ if the random variables are independent and identically distributed (iid). 
+
+We'll often say 'assume we have a random sample' from some distribution or that 'our random variables are iid' from some distribution. These are equivalent ways of stating this assumption.
+
+For the proportion example mentioned previously, we might formally state our assumption as follows:
+
+- Define $X_i = \begin{cases} 1 & \mbox{if the }i^{th}\mbox{ individual says the benefits of childhood vaccines for MMR outweigh the risks}\\ 0 & \mbox{if not}\end{cases}$
+- Then $X_i\stackrel{iid}\sim Ber(p)$ where $p$ represents the true proportion of people in the U.S. that believe the benefits outweight the risks
+- The random variable $Y = \sum_{i=1}^{n}X_i \sim Bin(n,p)$
+- We then often try to use $Y$ or $\hat{p}=Y/n$ to make inference on $p$. 
+- $Y$ and $\hat{p}$ are referred to as **statistics**. Note: $\hat{p}$ is also $\bar{X}$!
+
+Statistic
+: A function of $Y_1,Y_2,...,Y_n$ from a random sample that does not involve any unknown parameters is called a statistic.
+
+Commonly studied statistics:  
+
+- $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$
+- $S^2 = \frac{1}{n-1}\sum_{i=1}^{n}(Y_i-\bar{Y})^2$
+- $Y_{(n)} = \mbox{the maximum value from the sample}$
+
+Quantities that aren't statistics:  
+
+- $\frac{\bar{Y}-\mu}{S/\sqrt{n}}$ (since $\mu$ is unknown - if we assume $\mu$ is known (like when we do in a hypothesis test) then this is a statistic)
+- $\frac{(n-1)S^2}{\sigma^2}$ (since $\sigma^2$ is unknown)
+
+One type of convergence we'll look at is focused on the pattern in which these statistics are observed, that is, the **sampling distribution** of the statistics.
+
+Recall that a distribution is just the pattern and frequency with which we observe a random variable. With a statistic, we give this distribution the special name of **sampling distribution**. This is because we can think of how that distribution is formed by considering repeated samples from the population, each sample producing the statistic of interest.
+
+Sampling Distribution
+: The distribution of a statistic is called a sampling distribution.
+
+<br><br><br><br><br><br>
+
+
+We see that the sampling distribution of $\hat{p}$ looks like a bell curve for some combinations of $n$ and $p$. If we fix a $p$ and increase $n$, we will start to see a bell shape for large enough $n$! Later we'll see that a good **large-sample** distribution for $\hat{p}$ is the Normal distribution with mean $p$ and variance $p(1-p)/n$.  
+
+We can see that there may be a distinction between the *actual* distribution, which is a discrete distribution for $\hat{p}$, and an approximating distribution, the Normal distribution for $\hat{p}$. We call these by different names.
+
+Exact Distribution
+: The (sampling) distribution of a quantity that is valid for any sample size (or, occasionally, values of the parameters of the population distribution).
+
+Large-Sample or Approximate Distribution
+: A (sampling) distribution that is reasonable to use for a quantity for a *large* sample size (or occasionally other parameter values). 
+
+We use the notation
+$$Statistic \stackrel{\bullet}\sim f$$
+to denote a large-sample approximating distribution.
+
+In the sample proportion example, we would write
+
+$$\hat{p}\stackrel{\bullet}\sim N(p, p(1-p)/n)$$
+
+
+## Convergence in Distribution
+
+While convergence in distribution can be visually inspected with a histogram, to formally define **convergence in distribution** we use the cumulative distribution function or CDF.
+
+Recall the Cumulative Distribution Function (or CDF) of a random variable $Y$ is defined as 
+
+$$F_Y(y) = P(Y\leq y)$$
+For our binomial example, we can compare the CDF of binomial random variables to Normal random variables to see that the Binomial is 'converging' to the normal distribution in a sense! 
+
+<div style = "float:left">
+```{r, echo = FALSE, message = FALSE, out.width = "400px"}
+p <- 0.15
+n <- 20
+plot_seq <- seq(from = -0.21, to = 10, by = 0.01)
+NN <- length(plot_seq)
+bin_cdf <- pbinom(plot_seq, size = n, prob = p)
+norm_cdf <- pnorm(plot_seq, mean = n*p, sd = sqrt(n*p*(1-p)))
+
+ecdf <- data.frame(
+  y = c(bin_cdf, norm_cdf),
+  CDF = c(rep(paste0("Bin(", n, ", ", p, ")"), NN), rep(paste0("N(", n*p, ", ", round(n*p*(1-p), 2), ")"), NN)),
+  x = c(plot_seq, plot_seq)
+)
+
+ggplot(ecdf, aes(x = x, y = y, color = CDF)) + 
+  geom_line(stat = "identity") +
+  theme(text = element_text(size = 15), 
+        plot.title = element_text(hjust = 0.5), 
+        legend.text = element_text(size=15), 
+        legend.position = c(0.8, 0.15)) +
+  ggtitle("Binomial vs Normal CDF") +
+  ylab("CDF") + 
+  xlab("Observed Value")
+```
+</div>
+<div style = "float:right">
+```{r, echo = FALSE, message = FALSE,out.width = "400px"}
+p <- 0.15
+n <- 30
+plot_seq <- seq(from = -0.21, to = 25, by = 0.01)
+NN <- length(plot_seq)
+bin_cdf <- pbinom(plot_seq, size = n, prob = p)
+norm_cdf <- pnorm(plot_seq, mean = n*p, sd = sqrt(n*p*(1-p)))
+
+ecdf <- data.frame(
+  y = c(bin_cdf, norm_cdf),
+  CDF = c(rep(paste0("Bin(", n, ", ", p, ")"), NN), rep(paste0("N(", n*p, ", ", round(n*p*(1-p), 2), ")"), NN)),
+  x = c(plot_seq, plot_seq)
+)
+
+ggplot(ecdf, aes(x = x, y = y, color = CDF)) + 
+  geom_line(stat = "identity") +
+  theme(text = element_text(size = 15), 
+        plot.title = element_text(hjust = 0.5), 
+        legend.text = element_text(size=15), 
+        legend.position = c(0.8, 0.15)) +
+  ggtitle("Binomial vs Normal") +
+  ylab("CDF") + 
+  xlab("Observed Value")
+```
+</div>
+
+<div class = "clearfix"></div>
+
+Convergence in Distribution
+: Consider a sequence of random variables $Y_1,...,Y_n,...$ with corresponding CDFs $F_{Y_1}(y), ..., F_{Y_n}(y),..$. Then $Y_n$ converges in distribution to the random variable $Y$ (with CDF $F_Y(y)$) if
+$$\lim_{n \rightarrow \infty} F_{Y_n}(y)=F_{Y}(y)$$
+or equivalently
+$$\lim_{n \rightarrow \infty} |F_{Y_n}(y)-F_{Y}(y)|=0$$
+(at all points $y$ where $F_Y(y)$ is continuous). We denote this as
+$$Y_n\stackrel{d}\rightarrow Y$$
+
+The subscript $n$ notation here may be confusing. This is just to show the RV on the left is dependent on the sample size in some way. For our example with a Binomial/sample proportion, the distribution clearly depends on $n$. We could write the following to be explicit:
+
+$$Y_n \sim Bin(n, p)\mbox{   and   } \hat{p}_n = Y_n/n$$
+
+We'll prove (via the CLT) that the standardized version of these statistics converge to a standard Normal distribution! For example,
+$$Z_n = \frac{\hat{p}_n-p}{\sqrt{p(1-p)/n}} \stackrel{d}{\rightarrow}Z\sim N(0,1)$$
+
+Alternatively, for practical purposes we'll equivalently talk about 'large-sample' distributions using the $\stackrel{\bullet}{\sim}$ notation:
+$$\hat{p}_n\stackrel{\bullet}{\sim}N\left(p, \frac{p(1-p)}{n}\right)$$
+It is sometimes easier to work with MGFs rather than CDFs. In that case, we can use the following result:
+
+Convergence of MGFs
+: Consider a sequence of random variables $Y_1,...,Y_n,...$ with corresponding MGFs $m_{Y_1}(t), ..., m_{Y_n}(t),..$. Then $Y_n$ converges in distribution to the random variable $Y$ (with MGF $m_Y(t)$) if
+$$\lim_{n \rightarrow \infty} m_{Y_n}(t) = m_Y(t)$$
+
+<hr style="height:0px;border: none; border-top: 5px solid">
+
+### Proving $\stackrel{d}\rightarrow$ using CDFs
+
+**Example:** Suppose that $Y_i\stackrel{iid}\sim U(0,1)$. That is,
+$$f_Y(y) = \begin{cases}1 & 0<y<1\\0 & otherwise\end{cases}$$
+and
+$$F_Y(y) = \begin{cases} 0 & y < 0\\ y & 0\leq y < 1 \\ 1 & y\geq 1\end{cases}$$
+What does the maximum from the sample converge to in distribution as $n$ grows?
+
+Let's generate many samples, find the maximum for each sample, and look at the empirical distribution via a histogram and CDF.
+
+```{r,  echo = FALSE, message = FALSE}
+library(tidyr)
+M <- 500
+#even better way to do this for many n values
+ns <- c(10,20,50,100)
+maxu <- as.data.frame(
+  lapply(ns,
+         FUN = function(x, M){replicate(M, max(runif(n = x, 0, 1)))},
+         M = M),
+         col.names = paste0("X", ns)
+                     )
+maxu_long <- pivot_longer(maxu, cols = everything(), names_to = "n", values_to = "maximum") %>%
+  mutate(Sample_Size = factor(n, levels = paste0("X", ns), labels = paste0("n = ", ns), ordered = TRUE))
+ggplot(maxu_long, aes(x=maximum)) +
+  geom_histogram(bins = 50)+
+  facet_wrap( ~ Sample_Size,ncol = 2)+
+  theme(text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size=15),
+        legend.position = c(0.1, 0.85)) +
+  ggtitle("Distribution of Maximum of uniform (0, 1)") +
+  ylab("Frequency") +
+  xlab("Observed Maximum Value")
+
+
+ggplot(maxu_long, aes(x=maximum)) +
+  stat_ecdf()+
+  facet_wrap( ~ Sample_Size,ncol = 2)+
+  theme(text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size=15),
+        legend.position = c(0.1, 0.85)) +
+  ggtitle("Distribution of Maximum of uniform (0, 1)") +
+  ylab("Empirical CDF") +
+  xlab("Observed Maximum Value")
+```
+
+It appears that the distribution converges to a random variable that always takes on 1. We'd say there is a **point mass** at 1. If $W$ is a random variable that always takes on the constant $c$ then 
+$$f_W(w) = \begin{cases} 1 & w = c\\ 0 & otherwise\end{cases}$$
+$$F_W(w) = \begin{cases} 0 & w < c\\ 1 & w\geq c\end{cases}$$
+
+We also said we could look at 
+$$\lim_{n \rightarrow \infty} |F_{Y_n}(y)-F_{Y}(y)|=0$$
+for convergence in distribution. This difference in CDFs can be plotted in three dimensions.
+
+
+```{r, echo = FALSE}
+ns <- c(1:50)*4
+maxs <- as.data.frame(
+  lapply(ns, 
+         FUN = function(x){
+           replicate(100, max(runif(n = x)))
+         }
+  ),
+  col.names = paste0("n",ns))
+
+#now find the ecdf for each sample size (each column)
+ecdfs <- apply(X = maxs, MARGIN = 2, FUN = ecdf)
+
+#find the corresponding point mass at 1 values to compare against
+max_values <- 1:100/100
+pms <- c(rep(0, 99), 1)
+diffs <- lapply(X = 1:length(ecdfs), FUN = function(x) abs(ecdfs[[x]](max_values) - pms))
+#now we have the ns, ybars, and diffs to plot
+plot_data <- expand.grid(max_values = max_values, ns = ns)
+plot_data$diffs <- unlist(diffs) 
+wireframe(diffs ~ max_values + ns, 
+                          data = plot_data, 
+                          scales = list(arrows = FALSE), 
+                          drape = TRUE, 
+                          colorkey = TRUE, 
+                          zlab = list(expression(hat(l)[n] ~ "(x)=|" ~ hat(F)[n] ~ "(x)-" ~ F ~ "(x)|"), rot = 90), 
+                          main = "Convergence in Distribution?", 
+                          xlab="max")
+```
+
+Let's formally prove that the maximum of $n$ iid $U(0,1)$ RVs converges to a RV with a point mass at 1.
+<br><br><br>
+
+**Example:** Consider again a random sample of $U(0,1)$ RVs. What does $W = n(1-Y_{(n)})$ converge in distribution to as $n$ grows? Can we describe a rule of thumb for when the approximating distribution is reasonable?
+
+```{r,message=FALSE,echo=FALSE}
+#W = n(1-Y_{(n)})
+M <- 500
+#even better way to do this for many n values
+ns <- c(5,10,25,100)
+maxu <- as.data.frame(
+  lapply(ns,
+         FUN = function(x, M){replicate(M, x*(1-max(runif(n = x, 0, 1))))},
+         M = M),
+  col.names = paste0("X",ns)
+                      )
+maxu_long <- pivot_longer(maxu, cols = everything(), names_to = "n", values_to = "W") %>%
+  mutate(Sample_Size = factor(n, levels = paste0("X", ns), labels = paste0("n = ", ns), ordered = TRUE))
+
+ggplot(maxu_long, aes(x=W)) +
+  geom_histogram(bins = 50)+
+  facet_wrap( ~ Sample_Size, ncol = 2)+
+  theme(text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size=15),
+        legend.position = c(0.1, 0.85)) +
+  ggtitle("Distribution of n*(1-max) from U(0,1)") +
+  ylab("Frequency") +
+  xlab("Observed Maximum Value")
+
+
+ggplot(maxu_long, aes(x = W)) +
+  stat_ecdf()+
+  facet_wrap( ~ Sample_Size,ncol = 2)+
+  theme(text = element_text(size = 15),
+        plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size=15),
+        legend.position = c(0.1, 0.85)) +
+  ggtitle("Distribution of n*(1-max) from U(0,1)") +
+  ylab("Empirical CDF") +
+  xlab("Observed Maximum Value")
+
+```
+
+This one doesn't appear to be converging to a point mass. Let's use the limit of the CDF to determine what this random variable converges to.
+<br><br><br>
+
+
+Let's compare the distribution of $W = n(1-Y_{(n)})$ with $X \sim exp(1)$ via a plot of 
+$$|F_{Y_n}(y)-F_{Y}(y)|$$
+
+```{r, echo = FALSE}
+ns <- c(1:100)
+maxs <- as.data.frame(
+  lapply(ns, 
+         FUN = function(x, M){replicate(500, x*(1-max(runif(n = x, 0, 1))))}),
+  col.names = paste0("n",ns))
+
+#now find the ecdf for each sample size (each column)
+ecdfs <- apply(X = maxs, MARGIN = 2, FUN = ecdf)
+
+#find the corresponding point mass at 1 values to compare against
+max_values <- 1:50/10
+exp_cdfs <- pexp(max_values, rate = 1)
+diffs <- lapply(X = 1:length(ecdfs), FUN = function(x) abs(ecdfs[[x]](max_values) - exp_cdfs))
+#now we have the ns, ybars, and diffs to plot
+plot_data <- expand.grid(max_values = max_values, ns = ns)
+plot_data$diffs <- unlist(diffs) 
+wireframe(diffs ~ max_values + ns, 
+                          data = plot_data, 
+                          scales = list(arrows = FALSE), 
+                          drape = TRUE, 
+                          colorkey = TRUE, 
+                          zlab = list(expression(hat(l)[n] ~ "(x)=|" ~ hat(F)[n] ~ "(x)-" ~ F ~ "(x)|"), rot = 90), 
+                          main = "Convergence in Distribution?", 
+                          xlab="W")
+```
+
+
+### Proving $\stackrel{d}\rightarrow$ using MGFs
+
+**Example:** Suppose $Y\sim Bin(n,p)$ where $np \rightarrow \lambda$ as $n$ grows.  Show $Y\stackrel{d}\rightarrow Poi(\lambda)$. 
+
+First, let's compare plots to see that the relationship seems to hold. We'll create three different binomial and poisson plots with the same ratio for $n$ and $p$. 
+
+Consider how well do the PMFs match up for the following situations:
+
+```{r, echo = FALSE}
+#Binomial convergence to Poisson
+#choose n and p combinations so that np is always 5
+n <- c(10, 100, 1000)
+p <- c(0.5, 0.05, 0.005) 
+
+#number of datasets to create
+N <- 100000
+x <- 0:17
+```
+
+- $n = 10, p = 0.5 \rightarrow n*p = 5$
+
+```{r echo = FALSE}
+
+i <- 1
+plot(x, 
+     y = dbinom(x,
+                size = n[i], 
+                prob = p[i]), 
+     type = "h",
+     col = "red",
+     lwd = 2,
+     xlab = "# of successes", 
+     ylab = "PMF value", 
+     main = paste0("Bin/Poi: n=", n[i], ", p=", p[i]))
+    #overlay poisson with mean np
+lines(x + 0.2, 
+      dpois(x, lambda = n[i]*p[i]), 
+      type = "h", 
+      col = "blue", 
+      lwd = 2)
+legend(x = "topright", legend = c("Binomial", "Poisson"), col = c("red", "blue"), lwd = 2)
+```
+
+- $n = 100, p = 0.05 \rightarrow n*p = 5$
+
+```{r echo = FALSE}
+
+i <- 2
+plot(x, 
+     y = dbinom(x,
+                size = n[i], 
+                prob = p[i]), 
+     type = "h",
+     col = "red",
+     lwd = 2,
+     xlab = "# of successes", 
+     ylab = "PMF value", 
+     main = paste0("Bin/Poi: n=", n[i], ", p=", p[i]))
+    #overlay poisson with mean np
+lines(x + 0.2, 
+      dpois(x, lambda = n[i]*p[i]), 
+      type = "h", 
+      col = "blue", 
+      lwd = 2)
+legend(x = "topright", legend = c("Binomial", "Poisson"), col = c("red", "blue"), lwd = 2)
+```
+
+- $n = 1000, p = 0.005 \rightarrow n*p = 5$
+
+```{r echo = FALSE}
+i <- 3
+plot(x, 
+     y = dbinom(x,
+                size = n[i], 
+                prob = p[i]), 
+     type = "h",
+     col = "red",
+     lwd = 2,
+     xlab = "# of successes", 
+     ylab = "PMF value", 
+     main = paste0("Bin/Poi: n=", n[i], ", p=", p[i]))
+    #overlay poisson with mean np
+lines(x + 0.2, 
+      dpois(x, lambda = n[i]*p[i]), 
+      type = "h", 
+      col = "blue", 
+      lwd = 2)
+legend(x = "topright", legend = c("Binomial", "Poisson"), col = c("red", "blue"), lwd = 2)
+```
+
+
+<hr>
+
+**Example:** After we learn about the central limit theorem (CLT), we'll see a (relatively) easy way to prove that a $Y\sim Gamma(n, \lambda)$, properly standardized, converges to a standard normal distribution.  That is, 
+$$W = \frac{Y-n/\lambda}{\sqrt{n}/\lambda}\stackrel{d}{\rightarrow} Z \sim N(0,1)$$
+We can prove it using MGFs directly. Let's look through the proof below:
+
+Goal: Start with the MGF of the standardized random variable and try to show it converges to a standard 
+normal MGF ($e^{t^2/2}$) as $n\rightarrow\infty$.
+
+
+\begin{align*} 
+m_Z(t) &= E\left(e^{t\left(\frac{Y-n/\lambda}{\sqrt{n}/\lambda}\right)}\right)\\
+       &= E\left(e^{\frac{t\lambda}{\sqrt{n}}Y}\right)e^{-t\sqrt{n}}\\
+       &= \left(\frac{1}{1-\frac{(\lambda t)/\sqrt{n}}{\lambda}}\right)^{n}e^{-t\sqrt{n}}\\
+       &= \left(\frac{e^{-t/\sqrt{n}}}{1-t/\sqrt{n}}\right)^{n}\\
+\end{align*}
+
+As we want the limit of this quantity as $n$ goes to infinity, consider that this involves $n$ in the term and is raised to the $n$. We saw the result:
+
+$$\lim_{n\rightarrow\infty}(1+a_n/n)^n=e^a$$
+where $\lim_{n\rightarrow\infty}a_n=a$.  A rewrite can allow us to use this!
+
+\begin{align*}
+      &= \left(1+\frac{n\left(\frac{e^{-t/\sqrt{n}}}{1-t/\sqrt{n}}-1\right)}{n}\right)^{n}\\
+\end{align*}
+
+Now we can just consider what happens to the numerator of the second term as 
+$n$ grows.  That is, we just need to consider
+$$\lim_{n\rightarrow\infty}n\left(\frac{e^{-t/\sqrt{n}}}{1-t/\sqrt{n}}-1\right)$$
+Using a common denominator and then applying a Taylor series expansion of the 
+$e$ term about 0,
+$$e^{-t/\sqrt{n}}=1-t/\sqrt{n}+t^2/(2n)-t^3/(3!n^{3/2})+...,$$
+we can rewrite this as
+\begin{align*}
+    &= \lim_{n\rightarrow\infty}n\left(\frac{t^2/(2n)-t^3/(3!n^{3/2})+...}{1-t/\sqrt{n}}\right)\\
+    &= \lim_{n\rightarrow\infty}\left(\frac{t^2/2-t^3/(3!n^{1/2})+...}{1-t/\sqrt{n}}\right)\\
+    &= t^2/2\\
+\end{align*}
+
+Thus, our MGF converges $e^{t^2/2}$. This is the MGF of a standard normal random variable! Therefore,
+
+$$W = \frac{Y-n/\lambda}{\sqrt{n/\lambda^2}}\stackrel{d}{\rightarrow} Z \sim N(0,1)$$
+
+
+### Central Limit Theorem
+
+One of the most important theorems in statistics is the Central Limit Theorem (CLT). The CLT gives us a general result about the large-sample behavior of a sample mean.
+
+Central Limit Theorem (CLT)
+: Suppose that $Y_i\stackrel{iid}\sim f_Y$ where $E(Y)=\mu$ and $Var(Y)=\sigma^2 < \infty$.  Define $\bar{Y}=\frac{1}{n} \sum_{i=1}^{n} Y_i$ and $Z \sim N(0, 1)$. Then the standardized sample mean converges in distribution to a standard normal random variable.
+$$\frac{\bar{Y}-\mu}{\sigma/\sqrt{n}} \stackrel {d} {\rightarrow} Z$$
+
+Practically, we can say that a good approximating distribution or large-sample distribution for $\bar{Y}$ is
+$$\bar{Y}\stackrel{\bullet}\sim N(\mu, \sigma^2/n)$$
+
+
+#### CLT Applied to a Sample Proportion
+
+**Example:** A common application of the CLT is to the sample proportion from a Binomial experiment.
+
+For example, if $X_i\stackrel{iid}\sim Bin(1, p)$ with mean $E(Y) = p$ and variance $Var(Y) = p(1-p)$. 
+
+Define $Y = \sum_{i=1}^n X_i$. We know $Y\sim Bin(n, p)$. The sample proportion is then
+$$\hat{p}=\frac{Y}{n} = \frac{\sum_{i=1}^n X_i}{n}$$ 
+By the CLT, we can say that the sampling distribution of $\hat{p}$ can be well approximated by a Normal distribution with mean $E(X_i) = p$ and variance $Var(X_i)/n = p(1-p)/n$.
+
+We might state this as either 
+
+$$\frac{\hat{p}-p}{\sqrt{p(1-p)/n}} \stackrel{d}\rightarrow Z\sim N(0,1)$$
+or 
+
+$$\hat{p}\stackrel{\bullet}\sim N(p, p(1-p)/n)$$
+
+You've likely seen the Normal approximation to the Binomial before. You may even know a rule of thumb for using it. The app below simulates sample proportions from a given binomial distribution. Use the app below to 
+
+- Explore the relationship between $\hat{p}$ and the corresponding Normal distribution (the larger the $M$ value the more precisely the graph mimics the exact distribution of $\hat{p}$)
+- Either verify the rule of thumb you know or try and come up with a rule of thumb for when the approximation is reasonable
+
+Put your thoughts from using the app here!
+<br><br><br><br><br><br>
+
+
+#### CLT Applied to a Sum 
+
+Recall the result: 
+
+- If $X\sim N(\mu, \sigma^2)$ then $aX+b\sim N(a\mu+b,a^2\sigma^2)$
+
+That is, a Normal random variable multiplied by a constant is still Normally distributed, just with a different mean and variance. 
+- This tells us that if the CLT is applicable to the sample average, then we can also apply it to the corresponding summation as well!
+
+Under the same assumptions as the CLT, since $n\bar{Y} = \sum_{i=1}^{n}Y_i$ we have the following result:
+$$\frac{\sum_{i=1}^{n} Y_i -n\mu}{\sqrt{n}\sigma}\stackrel{\bullet}{\sim}N(0, 1)$$
+or
+
+$$\sum_{i=1}^{n} Y_i \stackrel{\bullet}{\sim}N(n\mu, n\sigma^2)$$
+
+<hr>
+
+**Example:** Based on this result, what is a good large-sample distribution for $Y\sim Bin(n, p)$?
+
+<hr>
+
+
+#### CLT Applied to a Gamma 
+
+**Example:** Earlier we proved that $Y\sim Gamma(n, \lambda)$, properly standardized, converges to a standard normal distribution. That is, 
+$$W = \frac{Y-n/\lambda}{\sqrt{n}/\lambda}\stackrel{d}{\rightarrow} Z \sim N(0,1)$$
+
+Rather than use MGFs, we can apply the CLT in a clever way!
+
+First, note that for $Y\sim gamma(n,\lambda)$ we can think of $Y$ as $Y=X_1+X_2+...+X_{n}$, where $X_i\stackrel{iid}\sim gamma(1,\lambda)$. Here we know that $E(X_i) = 1/\lambda$ and $Var(X_i) = 1/\lambda^2$. By the CLT applied to a sum we know
+
+$$\frac{\sum_{i=1}^{n} X_i -n(1/\lambda)}{\sqrt{n}(1/\lambda)} = \frac{Y-n/\lambda}{\sqrt{n/\lambda^2}}\stackrel{\bullet}{\sim}Z$$
+
+where $Z\sim N(0,1)$. That means we can approximate a gamma random variable by 
+$$Y \stackrel{\bullet}{\sim} N(n/\lambda, n/\lambda^2)$$
+
+Alternatively, we could apply the CLT to an average instead of a sum. Instead use $X_i\stackrel{iid}{\sim}gamma(1,\lambda/n)$ then $Y$ can be thought of as an average of these $X$'s
+$$Y=\frac{1}{n}\sum_{i=1}^{n}X_i=\bar{X}\sim gamma(n,\lambda)$$
+We know that $E(X_i) = n/\lambda$ and $Var(X_i) = n^2/lambda^2$. Since we are now viewing this as an average of iid random variables we can apply the CLT.  
+$$\frac{\bar{X}-n\lambda}{\sqrt{(n^2/\lambda^2)/n}}=\frac{\bar{X}-n\lambda}{\sqrt{n/\lambda^2}}\stackrel{d}\rightarrow Z$$
+where $Z\sim N(0,1)$.  
+
+
+##### Convergence Exploration
+
+- Suppose that $Y \sim Gamma(n, \lambda)$. Or, assume that $Y = \sum_{i=1}^{n} X_i$ where $X_i\stackrel{iid}\sim Gamma(1, \lambda)$. 
+$$f_Y(y) = \frac{\lambda^\alpha}{\Gamma(\alpha)}y^{\alpha -1}e^{-\lambda y}$$
+with mean $E(Y) = \alpha/\lambda$ and variance $Var(Y) = \alpha/\lambda^2$.
+- We again showed we can approximate a gamma by a Normal distribution.  
+- Can you develop a rule of thumb around $\alpha$ ($n$ here) and $\lambda$ for when a Normal distribution may be a reasonable approximation?  Remember we look for the following in each graph:  
+    + Histogram: when does it become a symmetric bell-shape?
+    + CDF comparison: When do the CDFs essentially overlap?
+
+Put your thoughts from using the app here!
+<br><br><br><br><br><br>
+
+
+### CLT Importance 
+
+Practically, why is the CLT so important? 
+
+- The CLT gives us a distribution we can use to find probabilities when we deal with most sample sums and sample means.
+- Knowing a large-sample distribution allows us to find (approximate) probabilities when exact probabilities may be too difficult to find.
+- This means we can do approximate inference in many cases!
+
+**Example:**
+
+- Suppose we know $\sigma$ and we want inference for $\mu$.
+- If we have a random sample $Y_1,...,Y_n$, we know  $\bar{Y}\stackrel{\bullet}{\sim}N(\mu,\sigma^2/n)$ ($\mu$ only unknown)
+- We can make an approximate claim about $\mu$ via a confidence interval derived from an argument similar to that below:
+
+\begin{align*}
+P(-1.96<Z<1.96) &= 0.95\\
+\Leftrightarrow P\left(-1.96<\frac{\bar{Y}-\mu}{\sigma/\sqrt{n}}<1.96\right) &= 0.95\\
+\Leftrightarrow P\left(\bar{Y}-1.96\sigma/\sqrt{n}<\mu<\bar{Y}+1.96\sigma/\sqrt{n}\right) &= 0.95\\
+\end{align*}
+
+- That is, there is a 95\% probability the RVs
+$\bar{Y}-1.96\sigma/\sqrt{n}$ and $\bar{Y}+1.96\sigma/\sqrt{n}$ capture $\mu$!
+- In practice we observe a value for $\bar{Y}$ as $\bar{y}$. We then lose the ability to talk about probability but instead asy we are 95\% confident the observed interval contains $\mu$.
+- Note: No assumption about $Y$'s distribution made other than finite variance!
+
+
 ## Convergence in Probability
 
 ### Definition 
@@ -336,7 +1009,7 @@ $$\sqrt{n}(g(Y_n)-g(\theta_0))\stackrel{d}{\rightarrow}N(0,(g^{'}(\theta_0))^2\s
 
 \vspace{1in}
 
-**Example** - Suppose $Y \sim gamma(n, \lambda)$. Goal: make inference on $\frac{1}{\mu}$.  Provide an approximate distribution for $1/Y$ an \textbf{estimator} of $1/\mu$.
+**Example** - Suppose $Y_i \stackrel{iid}\sim gamma(\alpha, \lambda)$. Goal: make inference on $\frac{1}{\mu}$.  Provide an approximate distribution for $1/\bar{Y}$ an \textbf{estimator} of $1/\mu$.
 
 \vspace{3in}
 

@@ -1598,7 +1598,7 @@ A common place where we'd use the CLT, LLN, and Slutsky's theorem together is wh
 For a function g and value $\theta_0$ where $g^{'}(\theta_0)$ exists and is not 0 we have
 $$\sqrt{n}(g(Y_n)-g(\theta_0))\stackrel{d}{\rightarrow}N(0,(g^{'}(\theta_0))^2\sigma^2)~~~~~~or~~~~g(Y_n)\stackrel{\bullet}{\sim}N(g(\theta_0),(g^{'}(\theta_0))^2\sigma^2/n)$$
 
-**Example** - Suppose $Y \sim gamma(n, \lambda)$. Goal: make inference on $\frac{1}{\mu}$.  Provide an approximate distribution for $1/Y$ an \textbf{estimator} of $1/\mu$.
+**Example** - Suppose $Y_i \stackrel{iid}\sim gamma(\alpha, \lambda)$. Goal: make inference on $\frac{1}{\mu}$.  Provide an approximate distribution for $1/\bar{Y}$ an \textbf{estimator} of $1/\mu$.
 
 
 **Example** -  Let $Y_i\stackrel{iid}{\sim}Ber(p)$ then $\bar{Y}\stackrel{\bullet}{\sim}N(p,\frac{p(1-p)}{n})$.  Goal: make inference for $\frac{p}{1-p}$ using $\frac{\bar{Y}}{1-\bar{Y}}$.
