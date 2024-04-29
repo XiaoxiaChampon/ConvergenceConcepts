@@ -21,26 +21,24 @@ library(plotly)
 
 ## Motivation
 
-**Why do we care about Limit Theory?** By limit theory we mean "what is the behavior our our random variable as some quantity grows?" Usually, we concern ourselves with the sample size ($n$) being the quantity that grows. 
+By limit theory we mean "what is the behavior our our random variable as some quantity grows?" Usually, we concern ourselves with the sample size ($n$) being the quantity that grows. We'll look at two major ideas:
 
-We look at two major ideas:
-
-- Determining \textit{approximate (or large-sample or asymptotic)} distributions.  That is, distributions that can be used when some quantity is 'large' (usually the sample size).
-- Understanding whether or not a random variable is observed closer and closer to some quantity as our sample size grows. For instance, the sample mean 'converging' to the population mean $\mu$.
+- \vspace{0.25in}
+- \vspace{0.25in}
 
 ### Motivating Example
 
 A [Pew Research Center survey of 10,701 U.S. adults was conducted in March 2023](https://www.pewresearch.org/science/2023/05/16/americans-largely-positive-views-of-childhood-vaccines-hold-steady/). The survey asked participants questions related to their thoughts on vaccination. One question centered around the perceived efficacy of the MMR vaccine.
 
 <div style = "float:right">
-```{r, echo = FALSE, out.width = "400px"}
+```{r, echo = FALSE, out.width = "250px"}
 knitr::include_graphics("../img/pew.jpg")
 ```
 </div>
 
 The Center survey finds 88% of Americans say the benefits of childhood vaccines for measles, mumps and rubella (MMR) outweigh the risks, compared with just 10% who say the risks outweigh the benefits.
 
-The sample proportion of 0.88 is an estimate of the population proportion. That is, the actual proportion of U.S. adults that believe the benefits outweigh the risks. 
+The sample proportion of 0.88 is an **estimate of the population proportion**. That is, the actual proportion of U.S. adults that believe the benefits outweigh the risks (call the true proportion $p$). 
 
 Of course this is a single number estimate that would change if we sampled again. We can report the standard deviation of this sample proportion, called a standard error, to give us an idea of the variability in the estimate.  
 
@@ -49,29 +47,25 @@ Assuming independence between study participants, we can find an estimated stand
 $$\widehat{SE(\hat{p})} = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}} \approx \sqrt{\frac{0.88*0.12}{10701}} = 0.0031$$
 Two big questions arise:
 
-- First, can we provide a range of values we are 'confident' the true proportion falls in?
-    + We need to know about more than just the variability of the estimator
-    + We need to understand the **distribution** of the estimator!
-        - Called the **sampling distribution**
-        - Describes the pattern in which we observe this $\hat{p}$
-    + The sampling distribution can be difficult to derive in some cases!
-- Second, does our estimator $\hat{p}$ get closer to the true value $p$ for larger sample sizes?
-    + That is, does $\hat{p}$ *converge* to $p$ as n grows?
-    + What does it even mean for a random quantity to converge?
-    
+- First, can we provide a range of values we are 'confident' the true proportion falls in?\vspace{2.75in}
+- Second, does our estimator $\hat{p}$ get closer to the true value $p$ for larger sample sizes?\vspace{1.75in}
+
 These two questions can often be answered by looking at the *limiting* behavior (here as the sample size grows) of the estimator $\hat{p}$.
 
+\newpage
 
 ## $\stackrel{d}{\rightarrow}$ Idea
 
-To answer the first question: "Can we provide a range of values for the parameter?", let's consider determining the *sampling distribution* through simulation. A distribution just describes the pattern in which we observe our variable. If we can simulate observing the variable, we can create many *realizations* of $\hat{p}$ to understand the *sampling distribution*. 
+To answer the first question: "Can we provide a range of values for the parameter?", let's consider determining the *sampling distribution* through simulation. 
+
+A distribution just describes the pattern in which we observe our variable. If we can simulate observing the variable, we can create many *realizations* of $\hat{p}$ to understand the *sampling distribution*. 
 
 To do this we need to make some assumptions. Namely:
 
 - We have $n$ $iid$ (independent and identically distributed) trials
 - A value for the true $p$ 
 
-Let's use the app below to consider the sampling distribution when $p$ is 0.9 and $n$ is 10.
+Let's use the app at <https://shiny.stat.ncsu.edu/jbpost2/ConvergenceNotes/> to consider the sampling distribution when $p$ is 0.9 and $n$ is 10.
 
 Instructions:
 
