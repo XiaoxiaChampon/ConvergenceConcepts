@@ -1,0 +1,12 @@
+name: convergenceconcepts
+title: ConvergenceConcepts
+username: jbpost2
+account: jbpost2
+server: shiny.stat.ncsu.edu
+hostUrl: https://shiny.stat.ncsu.edu/__api__
+appId: 8
+bundleId: 14
+url: https://shiny.stat.ncsu.edu/content/464d5f03-9f8a-49e3-b50b-20a4ff8085e2/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

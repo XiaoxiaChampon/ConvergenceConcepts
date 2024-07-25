@@ -27,7 +27,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #add library
 library(shiny)
 library(shinydashboard)
-library(ConvergenceConcepts)
+#library(ConvergenceConcepts)
 library(ggplot2)
 library(tidyr)
 library(dplyr)
@@ -580,7 +580,7 @@ diffs <- lapply(X = 1:length(ecdfs), FUN = function(x) abs(ecdfs[[x]](max_values
 #now we have the ns, ybars, and diffs to plot
 plot_data <- expand.grid(max_values = max_values, ns = ns)
 plot_data$diffs <- unlist(diffs) 
-wireframe(diffs ~ max_values + ns, 
+lattice::wireframe(diffs ~ max_values + ns, 
                           data = plot_data, 
                           scales = list(arrows = FALSE), 
                           drape = TRUE, 
@@ -658,7 +658,7 @@ diffs <- lapply(X = 1:length(ecdfs), FUN = function(x) abs(ecdfs[[x]](max_values
 #now we have the ns, ybars, and diffs to plot
 plot_data <- expand.grid(max_values = max_values, ns = ns)
 plot_data$diffs <- unlist(diffs) 
-wireframe(diffs ~ max_values + ns, 
+lattice::wireframe(diffs ~ max_values + ns, 
                           data = plot_data, 
                           scales = list(arrows = FALSE), 
                           drape = TRUE, 
@@ -990,7 +990,7 @@ shinyApp(
         # close3d()
         # rglwidget(scene)
         if(length(plot_data)>0){
-          print(wireframe(diffs ~ ybars + ns, 
+          print(lattice::wireframe(diffs ~ ybars + ns, 
                           data = plot_data, 
                           scales = list(arrows = FALSE), 
                           drape = TRUE, 
